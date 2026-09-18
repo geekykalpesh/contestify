@@ -34,8 +34,9 @@ const CATEGORIES = [
 
 // 30 Distinct Accounts
 const ACCOUNTS = [
-  // Admin User (1)
+  // Admin & Standard Demo Users
   { name: "Admin User", email: "admin@gmail.com", role: "admin", residency: "Chhattisgarh" },
+  { name: "Demo User", email: "user@gmail.com", role: "user", residency: "Chhattisgarh" },
 
   // Chhattisgarh Contest Eligible Creators (24)
   { name: "Aarav Sharma (Grand Prize Candidate)", email: "aarav@creator.com", residency: "Chhattisgarh" },
@@ -123,12 +124,18 @@ const seedDatabase = async () => {
     const salt = await bcrypt.genSalt(10);
     const defaultPasswordHash = await bcrypt.hash("password123", salt);
     const adminPasswordHash = await bcrypt.hash("admin", salt);
+    const demoUserPasswordHash = await bcrypt.hash("user", salt);
 
     const userDocs = await User.create(
       ACCOUNTS.map((acc, index) => ({
         name: acc.name,
         email: acc.email,
-        passwordHash: acc.email === "admin@gmail.com" ? adminPasswordHash : defaultPasswordHash,
+        passwordHash:
+          acc.email === "admin@gmail.com"
+            ? adminPasswordHash
+            : acc.email === "user@gmail.com"
+            ? demoUserPasswordHash
+            : defaultPasswordHash,
         residency: acc.residency,
         role: acc.role || "user",
         kycDetails: acc.role === "admin" ? null : {

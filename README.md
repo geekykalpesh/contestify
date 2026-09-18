@@ -40,6 +40,7 @@ docker exec creator-contest-user-service-container node /app/scripts/seed.js; cu
 | Role | Email | Password | Access / Notes |
 | :--- | :--- | :--- | :--- |
 | **Admin User** | `admin@gmail.com` | `admin` | Full Access to Admin Dashboard & Winner Cascade Controls |
+| **Standard User** | `user@gmail.com` | `user` | Standard Creator / User Account |
 | **Grand Prize Winner** | `aarav@creator.com` | `password123` | Creator Account (Grand Prize Winner Candidate) |
 | **Multi-Category Leader** | `ananya@creator.com` | `password123` | Creator Account (Tech & Fashion Leader) |
 | **Consistency Winner #1** | `rohan@creator.com` | `password123` | Creator Account (Food Vlogger) |
