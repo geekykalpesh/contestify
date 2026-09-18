@@ -6,10 +6,10 @@ An enterprise-grade microservices platform for managing video reel contests, cre
 
 ## 🎥 Platform Video Overview & Live Demo
 
-https://raw.githubusercontent.com/geekykalpesh/contestify/main/contestify.mp4
+https://github.com/geekykalpesh/contestify/raw/main/contestify.mp4
 
 <p align="center">
-  <video src="https://raw.githubusercontent.com/geekykalpesh/contestify/main/contestify.mp4" controls="controls" muted="muted" width="100%" style="max-width: 100%; border-radius: 12px;">
+  <video src="https://github.com/geekykalpesh/contestify/raw/main/contestify.mp4" controls="controls" width="100%" style="max-width: 100%; border-radius: 12px;">
     Your browser does not support the video tag.
   </video>
 </p>
