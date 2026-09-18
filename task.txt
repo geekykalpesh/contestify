@@ -1,0 +1,72 @@
+Take-Home Assignment: Creator Contest
+Platform
+Role: Full-Stack Developer
+Time: 8–12 hours
+Stack: React (frontend)+ Express.js (backend), 2 microservices — User Service
+(MongoDB) and Admin Service (PostgreSQL + Prisma)
+Expectation: We’re looking for an optimized, robust, and scalable implementation —
+not just a working prototype. See “What We’re Evaluating” below for what that means
+concretely.
+
+What to Build
+1. User Service (MongoDB) –
+Signup/login (hashed passwords, JWT). - Profile with residency field — user can set
+residency to “Chhattisgarh”; only Chhattisgarh residents are contest-eligible. - Create
+posts (media + caption + category, 10 fixed categories). - Other users can like,
+comment, and view posts. Store counts per post.
+2. Ranking Engine (feeds Admin Service)
+Score = (Likes × 1) + (Comments × 3) + (Views × 0.2) per post. - Tie-break:
+Comments → Views → earliest timestamp. - Build 3 rankings: Global (best post per
+creator), Per-Category (best post per creator per category), Consistency (only
+creators with 3+ posts in all 4 weeks; score = top-3 posts/week summed across 4
+weeks). - Allocate 33 prizes, strictly in priority order, one prize per person (once won,
+excluded from all later tiers):
+1. Grand Prize (1)
+2. Consistency 1st (1)
+3. Consistency 2nd (1)
+4. Top Performers (10, distinct people)
+5. Category 1st (10, one per category)
+6. Category 2nd (10, one per category)
+If someone tops 2+ categories, they get only their strongest one; the other slot
+cascades down. - If a category runs out of eligible people for 2nd place, leave it
+unawarded (don’t backfill).
+3. Admin Service (PostgreSQL + Prisma)
+Admin can view all winners by tier. - Admin can send a KYC request per winner and
+mark it passed/failed. - If KYC fails, that winner is removed entirely (like “already
+won”) and the slot cascades to the next eligible person — can chain multiple times.
+4. Frontend (React)
+Simple screens: signup/login, update residency, create post, feed with
+like/comment, admin winner table with KYC actions. Basic design only — no need for
+polish. - Media handling should be done properly, though: real file upload (not just a
+text URL field), client-side validation (type/size), a preview before submit, and
+correct rendering of images/video in the feed. On the backend, validate and store
+uploaded media properly (type/size limits, safe filenames, organized storage), even if
+using local disk instead of cloud storage.
+
+Architecture Rules
+&amp; Two independent services, each with its own DB — no shared database
+access.
+&amp; Admin Service gets post/interaction/residency data from the User Service via
+API, not direct DB access.
+Deliverables
+&amp; Both service codebases + React frontend(s).
+&amp; Prisma schema/migrations for Admin Service.
+&amp; A sample dataset covering: multi-category leader, tie score, someone
+missing consistency by one week, an ineligible (non-Chhattisgarh) user, an
+exhausted category, and a KYC failure cascade.
+&amp; Basic tests for the ranking/cascade/KYC logic.
+&amp; A short README: your data model, API contract between services, and any
+assumptions you made.
+What We’re Evaluating
+&amp; Correctness of the cascade/ranking/KYC logic and edge-case handling.
+&amp; Robustness — input validation, proper error handling/status codes, no silent
+failures, safe handling of concurrent interactions (e.g., double-likes, race
+conditions on the cascade).
+&amp; Optimization — sensible indexing on MongoDB and Postgres (e.g., on category,
+participant, week, score), avoiding N+1 queries or recomputing full rankings
+when unnecessary.
+&amp; Scalability — clean separation between the two services, an API contract that
+wouldn’t break if either service’s data volume or team grew, and code
+structured so new prize tiers, categories, or interaction types could be added
+without a rewrite.
+&amp; Code and README clarity.

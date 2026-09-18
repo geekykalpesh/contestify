@@ -1,0 +1,415 @@
+const fs = require("fs");
+const path = require("path");
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+require("dotenv").config({ path: path.join(__dirname, "../user-service/.env") });
+
+const userModelPath = fs.existsSync(path.join(__dirname, "../user-service/src/models/User.js"))
+  ? path.join(__dirname, "../user-service/src/models/User.js")
+  : path.join(__dirname, "../src/models/User.js");
+
+const User = require(userModelPath);
+const Post = require(userModelPath.replace("User", "Post"));
+const Like = require(userModelPath.replace("User", "Like"));
+const Comment = require(userModelPath.replace("User", "Comment"));
+const View = require(userModelPath.replace("User", "View"));
+
+const MONGODB_URI =
+  process.env.MONGODB_URI ||
+  process.env.SEED_MONGODB_URI ||
+  "mongodb://127.0.0.1:27017/creator_contest_user_db";
+
+const CATEGORIES = [
+  "Tech",
+  "Art",
+  "Music",
+  "Gaming",
+  "Fitness",
+  "Food",
+  "Travel",
+  "Fashion",
+  "Education",
+  "Entertainment"
+];
+
+// 30 Distinct Accounts
+const ACCOUNTS = [
+  // Admin User (1)
+  { name: "Admin User", email: "admin@gmail.com", role: "admin", residency: "Chhattisgarh" },
+
+  // Chhattisgarh Contest Eligible Creators (24)
+  { name: "Aarav Sharma (Grand Prize Candidate)", email: "aarav@creator.com", residency: "Chhattisgarh" },
+  { name: "Ananya Patel (Multi-Category Leader)", email: "ananya@creator.com", residency: "Chhattisgarh" },
+  { name: "Rohan Verma (Consistency Winner 1)", email: "rohan@creator.com", residency: "Chhattisgarh" },
+  { name: "Priya Singh (Consistency Winner 2)", email: "priya@creator.com", residency: "Chhattisgarh" },
+  { name: "Vikram Malhotra (Consistency Near-Miss)", email: "vikram@creator.com", residency: "Chhattisgarh" },
+  { name: "Neha Gupta (Tie Winner - Comments)", email: "neha@creator.com", residency: "Chhattisgarh" },
+  { name: "Karan Johar (Tie RunnerUp - Fewer Comments)", email: "karan@creator.com", residency: "Chhattisgarh" },
+  { name: "Sneha Reddy (Gaming Creator)", email: "sneha@creator.com", residency: "Chhattisgarh" },
+  { name: "Amitabh Kumar (Education Sole Creator)", email: "amitabh@creator.com", residency: "Chhattisgarh" },
+  { name: "Deepika Padukone", email: "deepika@creator.com", residency: "Chhattisgarh" },
+  { name: "Ranbir Kapoor", email: "ranbir@creator.com", residency: "Chhattisgarh" },
+  { name: "Alia Bhatt", email: "alia@creator.com", residency: "Chhattisgarh" },
+  { name: "Varun Dhawan", email: "varun@creator.com", residency: "Chhattisgarh" },
+  { name: "Kriti Sanon", email: "kriti@creator.com", residency: "Chhattisgarh" },
+  { name: "Siddharth Malhotra", email: "siddharth@creator.com", residency: "Chhattisgarh" },
+  { name: "Kiara Advani", email: "kiara@creator.com", residency: "Chhattisgarh" },
+  { name: "Ayushmann Khurrana", email: "ayushmann@creator.com", residency: "Chhattisgarh" },
+  { name: "Bhumi Pednekar", email: "bhumi@creator.com", residency: "Chhattisgarh" },
+  { name: "Rajkummar Rao", email: "rajkummar@creator.com", residency: "Chhattisgarh" },
+  { name: "Shraddha Kapoor", email: "shraddha@creator.com", residency: "Chhattisgarh" },
+  { name: "Vicky Kaushal", email: "vicky@creator.com", residency: "Chhattisgarh" },
+  { name: "Katrina Kaif", email: "katrina@creator.com", residency: "Chhattisgarh" },
+  { name: "Kartik Aaryan", email: "kartik@creator.com", residency: "Chhattisgarh" },
+  { name: "Rashmika Mandanna", email: "rashmika@creator.com", residency: "Chhattisgarh" },
+  { name: "Tiger Shroff", email: "tiger@creator.com", residency: "Chhattisgarh" },
+
+  // Non-Chhattisgarh Ineligible Creators (5)
+  { name: "Delhi Top Performer (Ineligible)", email: "delhi_pro@creator.com", residency: "Delhi" },
+  { name: "Mumbai Fitness Star (Ineligible)", email: "mumbai_pro@creator.com", residency: "Maharashtra" },
+  { name: "Bangalore Techie (Ineligible)", email: "bangalore_tech@creator.com", residency: "Karnataka" },
+  { name: "Kolkata Artist (Ineligible)", email: "kolkata_art@creator.com", residency: "Other State" },
+  { name: "Punjab Music Producer (Ineligible)", email: "punjab_fit@creator.com", residency: "Other State" }
+];
+
+const seedDatabase = async () => {
+  try {
+    console.log("==================================================");
+    console.log("🚀 Starting Seeding with 139 Real Video Reels & 30 Accounts");
+    console.log("==================================================");
+
+    await mongoose.connect(MONGODB_URI);
+    console.log("✅ Connected to MongoDB:", MONGODB_URI);
+
+    // 1. Copy & Sanitize Real Video Reels from video_reels_100plus to user-service/uploads
+    const sourceDir = path.join(__dirname, "../video_reels_100plus");
+    const targetDir = path.join(__dirname, "../user-service/uploads");
+
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    let reelFiles = [];
+    if (fs.existsSync(sourceDir)) {
+      const sourceFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".mp4"));
+      console.log(`📁 Found ${sourceFiles.length} real video reels in video_reels_100plus.`);
+
+      sourceFiles.forEach((file, index) => {
+        const cleanName = `reel_${String(index + 1).padStart(3, "0")}.mp4`;
+        const srcPath = path.join(sourceDir, file);
+        const destPath = path.join(targetDir, cleanName);
+
+        // Copy file if not present or different size
+        if (!fs.existsSync(destPath) || fs.statSync(destPath).size !== fs.statSync(srcPath).size) {
+          fs.copyFileSync(srcPath, destPath);
+        }
+        reelFiles.push(`/uploads/${cleanName}`);
+      });
+      console.log(`✅ Synced ${reelFiles.length} video reel files to user-service/uploads.`);
+    } else {
+      console.warn("⚠️ video_reels_100plus directory not found! Using fallback video URLs.");
+      reelFiles = Array.from({ length: 30 }, (_, i) => `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4`);
+    }
+
+    // 2. Clear Existing MongoDB Collections
+    await User.deleteMany({});
+    await Post.deleteMany({});
+    await Like.deleteMany({});
+    await Comment.deleteMany({});
+    await View.deleteMany({});
+    console.log("✅ Cleared existing MongoDB collections.");
+
+    // 3. Create Users with Hashed Passwords
+    const salt = await bcrypt.genSalt(10);
+    const defaultPasswordHash = await bcrypt.hash("password123", salt);
+    const adminPasswordHash = await bcrypt.hash("admin", salt);
+
+    const userDocs = await User.create(
+      ACCOUNTS.map((acc, index) => ({
+        name: acc.name,
+        email: acc.email,
+        passwordHash: acc.email === "admin@gmail.com" ? adminPasswordHash : defaultPasswordHash,
+        residency: acc.residency,
+        role: acc.role || "user",
+        kycDetails: acc.role === "admin" ? null : {
+          aadharNumber: `1234 5678 ${String(1000 + index).slice(0, 4)}`,
+          aadharMobile: `98765432${String(10 + index).slice(0, 2)}`,
+          dob: "1997-08-15",
+          aadharImage: `/uploads/reel_${String((index % 10) + 1).padStart(3, "0")}.mp4`,
+          status: acc.email === "vikram@creator.com" ? "PENDING" : "PASSED",
+          submittedAt: new Date()
+        }
+      }))
+    );
+
+    const userMap = {};
+    userDocs.forEach((u) => {
+      userMap[u.email] = u;
+    });
+
+    console.log(`✅ Created ${userDocs.length} User Accounts (Password for all: 'password123' / admin: 'admin').`);
+
+    // 4. Generate 4-Week Date Offsets
+    const now = new Date();
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const WEEK_MS = 7 * DAY_MS;
+
+    const getWeekDate = (weekNum, dayInWeek = 1) => {
+      // weekNum: 1, 2, 3, 4
+      const daysAgo = (4 - weekNum) * 7 + (7 - dayInWeek);
+      return new Date(now.getTime() - daysAgo * DAY_MS);
+    };
+
+    const postsToInsert = [];
+    let reelIndex = 0;
+
+    const getNextReel = () => {
+      const url = reelFiles[reelIndex % reelFiles.length];
+      reelIndex++;
+      return url;
+    };
+
+    // --- SCENARIO 1: Grand Prize Winner (Aarav Sharma) ---
+    // Aarav posts a viral Tech reel in Week 3 with top single post score
+    postsToInsert.push({
+      userId: userMap["aarav@creator.com"]._id,
+      caption: "🚀 AI Superintelligence Revolution 2026! #Tech #AI #Future",
+      category: "Tech",
+      mediaUrl: getNextReel(),
+      mediaType: "video",
+      likeCount: 450,
+      commentCount: 90,
+      viewCount: 1500, // Score = 450*1 + 90*3 + 1500*0.2 = 450 + 270 + 300 = 1020.0
+      createdAt: getWeekDate(3, 4)
+    });
+
+    // --- SCENARIO 2: Multi-Category Leader (Ananya Patel) ---
+    // Ananya has top posts in BOTH Tech (Score 800) and Fashion (Score 750).
+    // Her strongest is Tech, so Fashion cascades down!
+    postsToInsert.push({
+      userId: userMap["ananya@creator.com"]._id,
+      caption: "💻 Quantum Computing Breakthrough Demo #Tech",
+      category: "Tech",
+      mediaUrl: getNextReel(),
+      mediaType: "video",
+      likeCount: 350,
+      commentCount: 70,
+      viewCount: 1200, // Score = 350 + 210 + 240 = 800.0
+      createdAt: getWeekDate(2, 3)
+    });
+    postsToInsert.push({
+      userId: userMap["ananya@creator.com"]._id,
+      caption: "👗 Cyberpunk Streetwear Collection 2026 #Fashion",
+      category: "Fashion",
+      mediaUrl: getNextReel(),
+      mediaType: "video",
+      likeCount: 320,
+      commentCount: 60,
+      viewCount: 1250, // Score = 320 + 180 + 250 = 750.0 (Cascades!)
+      createdAt: getWeekDate(3, 2)
+    });
+
+    // --- SCENARIO 3: Consistency Winners (Rohan & Priya) ---
+    // Rohan & Priya post 3+ videos EVERY SINGLE WEEK (W1, W2, W3, W4)
+    for (let w = 1; w <= 4; w++) {
+      for (let p = 1; p <= 3; p++) {
+        postsToInsert.push({
+          userId: userMap["rohan@creator.com"]._id,
+          caption: `Rohan Consistency Food Vlog W${w} Reel #${p}`,
+          category: "Food",
+          mediaUrl: getNextReel(),
+          mediaType: "video",
+          likeCount: 60 + w * 10 + p * 2,
+          commentCount: 12 + w,
+          viewCount: 300 + w * 50,
+          createdAt: getWeekDate(w, p * 2)
+        });
+
+        postsToInsert.push({
+          userId: userMap["priya@creator.com"]._id,
+          caption: `Priya Travel Diary W${w} Reel #${p}`,
+          category: "Travel",
+          mediaUrl: getNextReel(),
+          mediaType: "video",
+          likeCount: 50 + w * 8 + p * 2,
+          commentCount: 10 + w,
+          viewCount: 250 + w * 40,
+          createdAt: getWeekDate(w, p * 2)
+        });
+      }
+    }
+
+    // --- SCENARIO 4: Consistency Near-Miss (Vikram) ---
+    // Vikram posts 3 videos in W1, W2, W4, but ONLY 2 videos in W3 (Misses consistency!)
+    for (const w of [1, 2, 4]) {
+      for (let p = 1; p <= 3; p++) {
+        postsToInsert.push({
+          userId: userMap["vikram@creator.com"]._id,
+          caption: `Vikram Fitness Motivation W${w} Reel #${p}`,
+          category: "Fitness",
+          mediaUrl: getNextReel(),
+          mediaType: "video",
+          likeCount: 80,
+          commentCount: 15,
+          viewCount: 400,
+          createdAt: getWeekDate(w, p * 2)
+        });
+      }
+    }
+    // Only 2 posts in Week 3
+    postsToInsert.push({
+      userId: userMap["vikram@creator.com"]._id,
+      caption: "Vikram Fitness Motivation W3 Reel #1",
+      category: "Fitness",
+      mediaUrl: getNextReel(),
+      mediaType: "video",
+      likeCount: 80,
+      commentCount: 15,
+      viewCount: 400,
+      createdAt: getWeekDate(3, 1)
+    });
+    postsToInsert.push({
+      userId: userMap["vikram@creator.com"]._id,
+      caption: "Vikram Fitness Motivation W3 Reel #2",
+      category: "Fitness",
+      mediaUrl: getNextReel(),
+      mediaType: "video",
+      likeCount: 80,
+      commentCount: 15,
+      viewCount: 400,
+      createdAt: getWeekDate(3, 3)
+    });
+
+    // --- SCENARIO 5: Tie Score Break (Neha vs Karan) ---
+    // Both Neha & Karan have Score = 150.0 in Art category, but Neha has MORE comments!
+    // Neha: 60 Likes, 20 Comments (60), 150 Views (30) = 150.0
+    // Karan: 90 Likes, 10 Comments (30), 150 Views (30) = 150.0
+    postsToInsert.push({
+      userId: userMap["neha@creator.com"]._id,
+      caption: "🎨 Neha Digital Sculpture Art (20 Comments Tie Winner)",
+      category: "Art",
+      mediaUrl: getNextReel(),
+      mediaType: "video",
+      likeCount: 60,
+      commentCount: 20,
+      viewCount: 150,
+      createdAt: getWeekDate(2, 2)
+    });
+    postsToInsert.push({
+      userId: userMap["karan@creator.com"]._id,
+      caption: "🎨 Karan Oil Painting Masterpiece (10 Comments Tie RunnerUp)",
+      category: "Art",
+      mediaUrl: getNextReel(),
+      mediaType: "video",
+      likeCount: 90,
+      commentCount: 10,
+      viewCount: 150,
+      createdAt: getWeekDate(2, 4)
+    });
+
+    // --- SCENARIO 6: Ineligible Non-Chhattisgarh Top Post (Delhi Pro) ---
+    // Delhi Pro has a massive post (Score = 1200.0), but residency = "Delhi" -> INELIGIBLE!
+    postsToInsert.push({
+      userId: userMap["delhi_pro@creator.com"]._id,
+      caption: "🔥 Delhi Pro Viral Stunt (Ineligible for Prizes - Delhi Residency)",
+      category: "Entertainment",
+      mediaUrl: getNextReel(),
+      mediaType: "video",
+      likeCount: 500,
+      commentCount: 100,
+      viewCount: 2000, // Score = 500 + 300 + 400 = 1200.0
+      createdAt: getWeekDate(4, 1)
+    });
+
+    // --- SCENARIO 7: Exhausted Category (Education) ---
+    // Only 1 Chhattisgarh creator (Amitabh) posts in Education category -> 2nd place left unawarded
+    postsToInsert.push({
+      userId: userMap["amitabh@creator.com"]._id,
+      caption: "📚 Master Mathematics in 60 Seconds #Education",
+      category: "Education",
+      mediaUrl: getNextReel(),
+      mediaType: "video",
+      likeCount: 120,
+      commentCount: 25,
+      viewCount: 500, // Score = 120 + 75 + 100 = 295.0
+      createdAt: getWeekDate(1, 5)
+    });
+
+    // --- SCENARIO 8: Gaming Category (Sneha Reddy) ---
+    postsToInsert.push({
+      userId: userMap["sneha@creator.com"]._id,
+      caption: "🎮 Esports World Final Clutch Play #Gaming",
+      category: "Gaming",
+      mediaUrl: getNextReel(),
+      mediaType: "video",
+      likeCount: 220,
+      commentCount: 40,
+      viewCount: 800, // Score = 220 + 120 + 160 = 500.0
+      createdAt: getWeekDate(3, 5)
+    });
+
+    // --- Fill Remaining Creators Across 4 Weeks & 10 Categories ---
+    const remainingCreators = [
+      "deepika@creator.com",
+      "ranbir@creator.com",
+      "alia@creator.com",
+      "varun@creator.com",
+      "kriti@creator.com",
+      "siddharth@creator.com",
+      "kiara@creator.com",
+      "ayushmann@creator.com",
+      "bhumi@creator.com",
+      "rajkummar@creator.com",
+      "shraddha@creator.com",
+      "vicky@creator.com",
+      "katrina@creator.com",
+      "kartik@creator.com",
+      "rashmika@creator.com",
+      "tiger@creator.com",
+      "mumbai_pro@creator.com",
+      "bangalore_tech@creator.com",
+      "kolkata_art@creator.com",
+      "punjab_fit@creator.com"
+    ];
+
+    remainingCreators.forEach((email, creatorIndex) => {
+      const userObj = userMap[email];
+      if (!userObj) return;
+
+      // Create 2 to 4 reels per creator spread across 4 weeks
+      for (let w = 1; w <= 4; w++) {
+        const cat = CATEGORIES[(creatorIndex + w) % CATEGORIES.length];
+        const likes = Math.floor(Math.random() * 80) + 15;
+        const comments = Math.floor(Math.random() * 15) + 2;
+        const views = Math.floor(Math.random() * 300) + 50;
+
+        postsToInsert.push({
+          userId: userObj._id,
+          caption: `${userObj.name} - ${cat} Reel W${w}`,
+          category: cat,
+          mediaUrl: getNextReel(),
+          mediaType: "video",
+          likeCount: likes,
+          commentCount: comments,
+          viewCount: views,
+          createdAt: getWeekDate(w, (creatorIndex % 5) + 1)
+        });
+      }
+    });
+
+    // 5. Bulk Insert Posts
+    const createdPosts = await Post.insertMany(postsToInsert);
+    console.log(`✅ Seeded ${createdPosts.length} Video Posts with real .mp4 video reel media.`);
+
+    console.log("==================================================");
+    console.log("🎉 Seeding Completed Successfully!");
+    console.log("==================================================");
+
+    process.exit(0);
+  } catch (error) {
+    console.error("💥 Seed Database Error:", error);
+    process.exit(1);
+  }
+};
+
+seedDatabase();

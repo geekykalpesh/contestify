@@ -1,0 +1,94 @@
+services:
+  creator-contest-mongodb:
+    image: mongo:latest
+    container_name: creator-contest-mongodb-container
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: creator_contest_user_db
+    volumes:
+      - mongo_data:/data/db
+
+  creator-contest-postgres:
+    image: postgres:16-alpine
+    container_name: creator-contest-postgres-container
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: creator_contest_admin_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  creator-contest-redis:
+    build:
+      context: ./redis-service
+      dockerfile: Dockerfile
+    image: creator-contest-redis:latest
+    container_name: creator-contest-redis-container
+    restart: always
+    ports:
+      - "6379:6379"
+
+  creator-contest-user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    image: creator-contest-user-service:latest
+    container_name: creator-contest-user-service-container
+    restart: always
+    ports:
+      - "5001:5001"
+    environment:
+      PORT: 5001
+      NODE_ENV: production
+      MONGODB_URI: mongodb://creator-contest-mongodb:27017/creator_contest_user_db
+      JWT_SECRET: super-secret-jwt-key-for-creator-contest
+      INTERNAL_SERVICE_SECRET: internal-secret-token-creator-contest
+      REDIS_URL: redis://creator-contest-redis:6379
+    volumes:
+      - ./user-service/uploads:/app/uploads
+      - ./scripts:/app/scripts
+      - ./video_reels_100plus:/app/video_reels_100plus
+    depends_on:
+      - creator-contest-mongodb
+      - creator-contest-redis
+
+  creator-contest-admin-service:
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    image: creator-contest-admin-service:latest
+    container_name: creator-contest-admin-service-container
+    restart: always
+    ports:
+      - "5002:5002"
+    environment:
+      PORT: 5002
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@creator-contest-postgres:5432/creator_contest_admin_db?schema=public
+      USER_SERVICE_URL: http://creator-contest-user-service:5001
+      INTERNAL_SERVICE_SECRET: internal-secret-token-creator-contest
+    depends_on:
+      - creator-contest-postgres
+      - creator-contest-user-service
+
+  creator-contest-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: creator-contest-frontend:latest
+    container_name: creator-contest-frontend-container
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - creator-contest-user-service
+      - creator-contest-admin-service
+
+volumes:
+  mongo_data:
+  postgres_data:

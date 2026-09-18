@@ -1,0 +1,187 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const { AppError } = require("../middleware/errorHandler");
+const { JWT_SECRET } = require("../middleware/authMiddleware");
+
+const isAdminEmail = (email) => {
+  const e = (email || "").toLowerCase();
+  return e === "admin@gmail.com" || e === "admin@creator.com";
+};
+
+const registerUser = async ({ name, email, password, residency, avatarUrl }) => {
+  const existingUser = await User.findOne({ email: email.toLowerCase() });
+  if (existingUser) {
+    throw new AppError("Email already registered", 409);
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(password, salt);
+
+  const role = isAdminEmail(email) ? "admin" : "user";
+
+  const user = await User.create({
+    name,
+    email: email.toLowerCase(),
+    passwordHash,
+    residency: residency || "Chhattisgarh",
+    avatarUrl: avatarUrl || "",
+    role
+  });
+
+  const token = jwt.sign(
+    { id: user._id, email: user.email, residency: user.residency, role: user.role },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  return {
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      residency: user.residency,
+      avatarUrl: user.avatarUrl,
+      role: user.role,
+      createdAt: user.createdAt
+    }
+  };
+};
+
+const loginUser = async ({ email, password }) => {
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user) {
+    throw new AppError("Invalid email or password", 401);
+  }
+
+  const isMatch = await bcrypt.compare(password, user.passwordHash);
+  if (!isMatch) {
+    throw new AppError("Invalid email or password", 401);
+  }
+
+  const userRole = user.role === "admin" || isAdminEmail(user.email) ? "admin" : "user";
+
+  const token = jwt.sign(
+    { id: user._id, email: user.email, residency: user.residency, role: userRole },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  return {
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      residency: user.residency,
+      avatarUrl: user.avatarUrl || "",
+      role: userRole,
+      createdAt: user.createdAt
+    }
+  };
+};
+
+const updateResidency = async (userId, residency) => {
+  if (!residency || typeof residency !== "string") {
+    throw new AppError("Residency field is required", 400);
+  }
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { residency: residency.trim() },
+    { new: true, runValidators: true }
+  ).select("-passwordHash");
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
+};
+
+const updateAvatar = async (userId, avatarUrl) => {
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { avatarUrl },
+    { new: true }
+  ).select("-passwordHash");
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
+};
+
+const updateKycDetails = async (userId, { aadharNumber, aadharMobile, dob, aadharImage }) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  // 1. Aadhaar Card Number validation (must be 12 digits)
+  const cleanAadhaar = (aadharNumber || "").replace(/\D/g, "");
+  if (!cleanAadhaar || cleanAadhaar.length !== 12) {
+    throw new AppError("Aadhaar Card Number must be exactly 12 numeric digits (e.g. 1234 5678 9012)", 400);
+  }
+
+  // 2. Mobile Number validation (must be exactly 10 digits)
+  const cleanMobile = (aadharMobile || "").replace(/\D/g, "");
+  if (!cleanMobile || cleanMobile.length !== 10) {
+    throw new AppError("Aadhaar attached mobile number must be exactly 10 numeric digits", 400);
+  }
+  if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+    throw new AppError("Aadhaar attached mobile number must be a valid 10-digit mobile number starting with 6, 7, 8, or 9", 400);
+  }
+
+  // 3. DOB validation
+  if (!dob) {
+    throw new AppError("Date of Birth is required", 400);
+  }
+  const dobDate = new Date(dob);
+  const now = new Date();
+  if (isNaN(dobDate.getTime()) || dobDate > now) {
+    throw new AppError("Please provide a valid Date of Birth in the past", 400);
+  }
+
+  // Calculate age
+  let age = now.getFullYear() - dobDate.getFullYear();
+  const m = now.getMonth() - dobDate.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < dobDate.getDate())) {
+    age--;
+  }
+  if (age < 18) {
+    throw new AppError(`You must be at least 18 years old to submit KYC verification (Current age: ${age})`, 400);
+  }
+
+  // 4. Document Image check
+  const finalImage = aadharImage || user.kycDetails?.aadharImage;
+  if (!finalImage) {
+    throw new AppError("Aadhaar Card photo / document image is required for KYC submission", 400);
+  }
+
+  const formattedAadhaar = cleanAadhaar.replace(/(\d{4})(\d{4})(\d{4})/, "$1 $2 $3");
+
+  user.kycDetails = {
+    aadharNumber: formattedAadhaar,
+    aadharMobile: aadharMobile.trim(),
+    dob,
+    aadharImage: finalImage,
+    status: "PENDING",
+    submittedAt: new Date()
+  };
+
+  await user.save();
+  const result = user.toObject();
+  delete result.passwordHash;
+  return result;
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  updateResidency,
+  updateAvatar,
+  updateKycDetails
+};

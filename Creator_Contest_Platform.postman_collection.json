@@ -1,0 +1,354 @@
+{
+	"info": {
+		"_postman_id": "creator-contest-platform-senior-collection",
+		"name": "Creator Contest Platform Microservices",
+		"description": "Production Postman Collection for Creator Contest Platform (User Service Port 5001 & Admin Service Port 5002)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "user_service_url",
+			"value": "http://localhost:5001",
+			"type": "string"
+		},
+		{
+			"key": "admin_service_url",
+			"value": "http://localhost:5002",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "internalSecret",
+			"value": "internal-secret-token-creator-contest",
+			"type": "string"
+		},
+		{
+			"key": "winnerId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Health Checks",
+			"item": [
+				{
+					"name": "User Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{user_service_url}}/health",
+							"host": ["{{user_service_url}}"],
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Admin Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{admin_service_url}}/health",
+							"host": ["{{admin_service_url}}"],
+							"path": ["health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Authentication & User Profile",
+			"item": [
+				{
+					"name": "Login (Admin User)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.token) {",
+									"    pm.collectionVariables.set('authToken', jsonData.data.token);",
+									"    console.log('Saved Admin authToken:', jsonData.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@gmail.com\",\n  \"password\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{user_service_url}}/api/auth/login",
+							"host": ["{{user_service_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Login (Creator Candidate - Aarav)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.token) {",
+									"    pm.collectionVariables.set('authToken', jsonData.data.token);",
+									"    console.log('Saved Creator authToken:', jsonData.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"aarav@creator.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{user_service_url}}/api/auth/login",
+							"host": ["{{user_service_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Get Logged In User / Me",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{user_service_url}}/api/auth/me",
+							"host": ["{{user_service_url}}"],
+							"path": ["api", "auth", "me"]
+						}
+					}
+				},
+				{
+					"name": "Submit KYC Verification (Aadhaar & Mobile Validation)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "aadharNumber",
+									"value": "1234 5678 9012",
+									"type": "text"
+								},
+								{
+									"key": "aadharMobile",
+									"value": "9876543210",
+									"type": "text"
+								},
+								{
+									"key": "dob",
+									"value": "1997-08-15",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{user_service_url}}/api/auth/kyc",
+							"host": ["{{user_service_url}}"],
+							"path": ["api", "auth", "kyc"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Posts & Media Feed (User Service)",
+			"item": [
+				{
+					"name": "Get Unseen Video Reels Feed (Redis Filter)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{user_service_url}}/api/posts/feed?page=1&limit=10",
+							"host": ["{{user_service_url}}"],
+							"path": ["api", "posts", "feed"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get My Posts & Profile Metrics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{user_service_url}}/api/posts/my-posts",
+							"host": ["{{user_service_url}}"],
+							"path": ["api", "posts", "my-posts"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Admin & Contest Ranking Engine (Admin Service)",
+			"item": [
+				{
+					"name": "Fetch 33 Contest Winners Table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.winners && jsonData.data.winners.length > 0) {",
+									"    pm.collectionVariables.set('winnerId', jsonData.data.winners[0].id);",
+									"    console.log('Saved winnerId:', jsonData.data.winners[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{admin_service_url}}/api/admin/winners",
+							"host": ["{{admin_service_url}}"],
+							"path": ["api", "admin", "winners"]
+						}
+					}
+				},
+				{
+					"name": "Calculate & Re-compute Contest Winners",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{admin_service_url}}/api/admin/calculate-winners",
+							"host": ["{{admin_service_url}}"],
+							"path": ["api", "admin", "calculate-winners"]
+						}
+					}
+				},
+				{
+					"name": "Fail Winner KYC (Triggers Real-Time Disqualification Cascade)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"FAILED\",\n  \"reason\": \"Test KYC Rejection Cascade\"\n}"
+						},
+						"url": {
+							"raw": "{{admin_service_url}}/api/admin/kyc/{{winnerId}}",
+							"host": ["{{admin_service_url}}"],
+							"path": ["api", "admin", "kyc", "{{winnerId}}"]
+						}
+					}
+				},
+				{
+					"name": "Pass Winner KYC (Restores Contest Eligibility)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"PASSED\",\n  \"reason\": \"KYC Verified Successfully\"\n}"
+						},
+						"url": {
+							"raw": "{{admin_service_url}}/api/admin/kyc/{{winnerId}}",
+							"host": ["{{admin_service_url}}"],
+							"path": ["api", "admin", "kyc", "{{winnerId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Internal Microservice APIs",
+			"item": [
+				{
+					"name": "Get Internal Contest Metric Data (User Service -> Admin Service)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-internal-secret",
+								"value": "{{internalSecret}}"
+							}
+						],
+						"url": {
+							"raw": "{{user_service_url}}/api/internal/contest-data",
+							"host": ["{{user_service_url}}"],
+							"path": ["api", "internal", "contest-data"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

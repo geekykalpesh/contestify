@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment Variables (Allow default dev .env files for 0-config setup)
+!user-service/.env
+!admin-service/.env
+!**/.env.example
+
+# Production & Build Outputs
+dist/
+build/
+out/
+**/dist/
+**/build/
+
+# Logs & Debug
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+**/*.log
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker Data Volumes
+mongo_data/
+postgres_data/
+
+# Uploaded Media Files & Bulk Reel Datasets
+user-service/uploads/*
+!user-service/uploads/.gitkeep
+video_reels_100plus/
+
