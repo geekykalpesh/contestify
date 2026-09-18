@@ -4,6 +4,21 @@ An enterprise-grade microservices platform for managing video reel contests, cre
 
 ---
 
+## 🎥 Platform Video Overview & Live Demo
+
+https://raw.githubusercontent.com/geekykalpesh/contestify/main/contestify.mp4
+
+<p align="center">
+  <video src="https://raw.githubusercontent.com/geekykalpesh/contestify/main/contestify.mp4" controls="controls" muted="muted" width="100%" style="max-width: 100%; border-radius: 12px;">
+    Your browser does not support the video tag.
+  </video>
+</p>
+
+> [!TIP]
+> Click play above to watch the full platform walkthrough video directly inside GitHub! You can also view or download the raw overview video file: [`contestify.mp4`](./contestify.mp4).
+
+---
+
 ## ⚡ 1-Click Instant Copy-Paste Commands for Interviewers
 
 If you are an interviewer or evaluator, run these **2 terminal commands** from the project root directory to launch all 6 microservices, seed 31 user accounts and 123 video reels, and calculate the 33 contest prize winners:
