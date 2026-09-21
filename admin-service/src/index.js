@@ -9,6 +9,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Root Landing Route
+app.get("/", (req, res) => {
+  res.status(200).json({
+    service: "Creator Contest Admin Microservice API",
+    status: "ONLINE",
+    healthCheck: "/health",
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health Check Endpoint
 app.get("/health", (req, res) => {
   res.status(200).json({

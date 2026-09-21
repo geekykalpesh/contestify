@@ -26,6 +26,16 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Static media file serving
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
+// Root Landing Route
+app.get("/", (req, res) => {
+  res.status(200).json({
+    service: "Creator Contest User Microservice API",
+    status: "ONLINE",
+    healthCheck: "/health",
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health Check Endpoint
 app.get("/health", (req, res) => {
   res.status(200).json({
