@@ -19,15 +19,18 @@ git clone https://github.com/geekykalpesh/contestify.git
 cd contestify
 ```
 
-### Step 2: Launch All 6 Microservices in Docker
+### Step 2: Add Video Reels (Optional / Custom Media)
+Place all downloaded `.mp4` video reel files into the **`video_reels_100plus`** folder in the root project directory (`contestify/video_reels_100plus`).
+
+### Step 3: Launch All 6 Microservices in Docker
 ```bash
 docker compose up -d --build
 ```
 
-### Step 3: Seed Database & Calculate Initial Contest Winners
+### Step 4: Seed Database & Calculate Initial Contest Winners
+Run this command to sync videos from `video_reels` to `user-service/uploads`, seed MongoDB, and compute contest winners:
 ```bash
-docker exec creator-contest-user-service-container node /app/scripts/seed.js
-curl.exe -X POST http://localhost:5002/api/admin/calculate-winners
+docker exec creator-contest-user-service-container node /app/scripts/seed.js; curl.exe -X POST http://localhost:5002/api/admin/calculate-winners
 ```
 
 🎉 **That's it! Everything is running live!**

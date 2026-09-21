@@ -21,14 +21,18 @@ https://github.com/geekykalpesh/contestify/raw/main/contestify.mp4
 
 ## ⚡ 1-Click Instant Copy-Paste Commands for Interviewers
 
-If you are an interviewer or evaluator, run these **2 terminal commands** from the project root directory to launch all 6 microservices, seed 31 user accounts and 123 video reels, and calculate the 33 contest prize winners:
+If you are an interviewer or evaluator, follow these steps to launch all 6 microservices, seed 31 user accounts and 123 video reels, and calculate the 33 contest prize winners:
 
-### Command 1: Launch Microservices in Docker
+### Step 1: Add Video Reels (Optional / Custom Media)
+Place all downloaded `.mp4` video reel files into the **`video_reels_100plus`** folder in the root directory (`contestify/video_reels_100plus`).
+
+### Step 2: Launch Microservices in Docker
 ```bash
 docker compose up -d --build
 ```
 
-### Command 2: Seed Database & Calculate 33 Winners
+### Step 3: Seed Database & Calculate 33 Winners
+Run this command to automatically sync all `.mp4` files from `video_reels` to `user-service/uploads`, seed MongoDB, and calculate contest winners:
 ```bash
 docker exec creator-contest-user-service-container node /app/scripts/seed.js; curl.exe -X POST http://localhost:5002/api/admin/calculate-winners
 ```

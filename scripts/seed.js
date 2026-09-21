@@ -82,9 +82,16 @@ const seedDatabase = async () => {
     await mongoose.connect(MONGODB_URI);
     console.log("✅ Connected to MongoDB:", MONGODB_URI);
 
-    // 1. Copy & Sanitize Real Video Reels from video_reels_100plus to user-service/uploads
-    const sourceDir = path.join(__dirname, "../video_reels_100plus");
-    const targetDir = path.join(__dirname, "../user-service/uploads");
+    // 1. Copy & Sanitize Real Video Reels from video_reels_100plus / video_reels to uploads
+    const sourceDir = fs.existsSync(path.join(__dirname, "../video_reels_100plus"))
+      ? path.join(__dirname, "../video_reels_100plus")
+      : fs.existsSync(path.join(__dirname, "../video_reels"))
+      ? path.join(__dirname, "../video_reels")
+      : path.join(__dirname, "../video_reels_100plus");
+
+    const targetDir = fs.existsSync(path.join(__dirname, "../uploads"))
+      ? path.join(__dirname, "../uploads")
+      : path.join(__dirname, "../user-service/uploads");
 
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
@@ -106,9 +113,21 @@ const seedDatabase = async () => {
         }
         reelFiles.push(`/uploads/${cleanName}`);
       });
-      console.log(`✅ Synced ${reelFiles.length} video reel files to user-service/uploads.`);
-    } else {
-      console.warn("⚠️ video_reels_100plus directory not found! Using fallback video URLs.");
+      if (reelFiles.length > 0) {
+        console.log(`✅ Synced ${reelFiles.length} video reel files to user-service/uploads.`);
+      }
+    }
+
+    if (reelFiles.length === 0 && fs.existsSync(targetDir)) {
+      const uploadFiles = fs.readdirSync(targetDir).filter((f) => f.endsWith(".mp4"));
+      if (uploadFiles.length > 0) {
+        uploadFiles.forEach((file) => reelFiles.push(`/uploads/${file}`));
+        console.log(`✅ Found ${reelFiles.length} existing video reel files in user-service/uploads.`);
+      }
+    }
+
+    if (reelFiles.length === 0) {
+      console.warn("⚠️ No video reels found! Using fallback sample video URLs.");
       reelFiles = Array.from({ length: 30 }, (_, i) => `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4`);
     }
 
