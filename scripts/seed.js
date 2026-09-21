@@ -1,5 +1,11 @@
 const fs = require("fs");
 const path = require("path");
+
+const userServiceNodeModules = path.join(__dirname, "../user-service/node_modules");
+if (fs.existsSync(userServiceNodeModules)) {
+  module.paths.unshift(userServiceNodeModules);
+}
+
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 require("dotenv").config({ path: path.join(__dirname, "../user-service/.env") });
@@ -8,11 +14,12 @@ const userModelPath = fs.existsSync(path.join(__dirname, "../user-service/src/mo
   ? path.join(__dirname, "../user-service/src/models/User.js")
   : path.join(__dirname, "../src/models/User.js");
 
-const User = require(userModelPath);
-const Post = require(userModelPath.replace("User", "Post"));
-const Like = require(userModelPath.replace("User", "Like"));
-const Comment = require(userModelPath.replace("User", "Comment"));
-const View = require(userModelPath.replace("User", "View"));
+const modelsDir = path.dirname(userModelPath);
+const User = require(path.join(modelsDir, "User.js"));
+const Post = require(path.join(modelsDir, "Post.js"));
+const Like = require(path.join(modelsDir, "Like.js"));
+const Comment = require(path.join(modelsDir, "Comment.js"));
+const View = require(path.join(modelsDir, "View.js"));
 
 const MONGODB_URI =
   process.env.MONGODB_URI ||
