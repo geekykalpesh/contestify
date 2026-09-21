@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { likePostThunk, commentPostThunk, deleteCommentThunk, optimisticLike, bufferPostView, flushViewBuffer, setGlobalMuted } from "../store/feedSlice";
 import { userApi } from "../services/api";
 import { useToast } from "../context/ToastContext";
+import { getMediaUrl } from "../config";
 
 import { Heart, MessageSquare, Eye, Share2, Award, Play, Pause, Send, Volume2, VolumeX, X, Trash2 } from "lucide-react";
 
@@ -180,9 +181,7 @@ export const PostCard = ({ post, inModal = false, onClose }) => {
   const isOwnPost = postOwnerId && currentUserId && postOwnerId.toString() === currentUserId.toString();
   const avatarUrlToUse = post.userId?.avatarUrl || (isOwnPost ? user?.avatarUrl : null);
 
-  const mediaSource = post.mediaUrl.startsWith("http")
-    ? post.mediaUrl
-    : `http://localhost:5001${post.mediaUrl}`;
+  const mediaSource = getMediaUrl(post.mediaUrl);
 
   return (
     <div
@@ -195,7 +194,7 @@ export const PostCard = ({ post, inModal = false, onClose }) => {
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full ig-ring p-0.5 shadow-sm overflow-hidden shrink-0">
             {avatarUrlToUse ? (
               <img
-                src={avatarUrlToUse.startsWith("http") ? avatarUrlToUse : `http://localhost:5001${avatarUrlToUse}`}
+                src={getMediaUrl(avatarUrlToUse)}
                 alt={post.userId?.name || "Creator"}
                 className="w-full h-full rounded-full object-cover"
               />

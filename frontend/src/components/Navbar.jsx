@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../store/authSlice";
 import { toggleTheme } from "../store/themeSlice";
 import { Camera, Film, Trophy, Sun, Moon, LogOut, LogIn, UserPlus } from "lucide-react";
+import { getMediaUrl } from "../config";
 
 export const Navbar = () => {
   const dispatch = useDispatch();
@@ -73,7 +74,7 @@ export const Navbar = () => {
                 <div className="w-8 h-8 rounded-full ig-ring p-0.5 overflow-hidden">
                   {user.avatarUrl ? (
                     <img
-                      src={user.avatarUrl.startsWith("http") ? user.avatarUrl : `http://localhost:5001${user.avatarUrl}`}
+                      src={getMediaUrl(user.avatarUrl)}
                       alt={user.name}
                       className="w-full h-full rounded-full object-cover"
                     />

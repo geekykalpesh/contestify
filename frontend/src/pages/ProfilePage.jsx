@@ -4,6 +4,7 @@ import { updateResidencyStatus, updateAvatarThunk, updateKycThunkUser } from "..
 import { userApi } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { PostCard } from "../components/PostCard";
+import { getMediaUrl } from "../config";
 import {
   Grid,
   List,
@@ -295,7 +296,7 @@ export const ProfilePage = () => {
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 ig-ring shadow-xl overflow-hidden">
                 {user.avatarUrl ? (
                   <img
-                    src={user.avatarUrl.startsWith("http") ? user.avatarUrl : `http://localhost:5001${user.avatarUrl}`}
+                    src={getMediaUrl(user.avatarUrl)}
                     alt={user.name}
                     className="w-full h-full rounded-full object-cover"
                   />
@@ -419,9 +420,7 @@ export const ProfilePage = () => {
           ) : (
             <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {myPosts.map((post) => {
-                const mediaSource = post.mediaUrl.startsWith("http")
-                  ? post.mediaUrl
-                  : `http://localhost:5001${post.mediaUrl}`;
+                const mediaSource = getMediaUrl(post.mediaUrl);
 
                 return (
                   <div

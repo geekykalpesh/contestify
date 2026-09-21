@@ -2,6 +2,7 @@ import React from "react";
 import { X, Heart, MessageCircle, Eye, Calendar, Award, ShieldCheck, FileText, CheckCircle, XCircle } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { updateKycThunk } from "../store/adminSlice";
+import { getMediaUrl } from "../config";
 
 export const AdminWinnerModal = ({ winner, onClose }) => {
   const dispatch = useDispatch();
@@ -122,7 +123,7 @@ export const AdminWinnerModal = ({ winner, onClose }) => {
                 <span className="text-[10px] text-[var(--text-muted)] block">Uploaded Aadhaar Card Image:</span>
                 <div className="relative aspect-video max-h-48 rounded-xl overflow-hidden border border-[var(--border-main)] bg-black">
                   <img
-                    src={kyc.aadharImage.startsWith("http") ? kyc.aadharImage : `http://localhost:5001${kyc.aadharImage}`}
+                    src={getMediaUrl(kyc.aadharImage)}
                     alt="Aadhaar Card Document"
                     className="w-full h-full object-contain"
                   />

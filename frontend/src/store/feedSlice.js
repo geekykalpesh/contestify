@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { userApi } from "../services/api";
+import { USER_SERVICE_URL } from "../config";
 
 export const fetchFeed = createAsyncThunk(
   "feed/fetchFeed",
@@ -62,7 +63,7 @@ export const flushViewBuffer = createAsyncThunk(
       const token = localStorage.getItem("auth_token");
 
       // Use fetch with keepalive: true to guarantee completion even during page refresh / unload!
-      await fetch("http://localhost:5001/api/posts/batch-view", {
+      await fetch(`${USER_SERVICE_URL}/api/posts/batch-view`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

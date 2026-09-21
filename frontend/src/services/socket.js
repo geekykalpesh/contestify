@@ -1,6 +1,7 @@
 import { io } from "socket.io-client";
+import { USER_SERVICE_URL } from "../config";
 
-const SOCKET_URL = "http://localhost:5001";
+const SOCKET_URL = USER_SERVICE_URL;
 
 export const socket = io(SOCKET_URL, {
   autoConnect: true,

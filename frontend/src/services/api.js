@@ -1,7 +1,8 @@
 import axios from "axios";
+import { USER_SERVICE_URL, ADMIN_SERVICE_URL } from "../config";
 
-const USER_API_BASE = "http://localhost:5001/api";
-const ADMIN_API_BASE = "http://localhost:5002/api";
+const USER_API_BASE = `${USER_SERVICE_URL}/api`;
+const ADMIN_API_BASE = `${ADMIN_SERVICE_URL}/api`;
 
 export const userApi = axios.create({
   baseURL: USER_API_BASE
