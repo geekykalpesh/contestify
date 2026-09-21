@@ -19,28 +19,43 @@ https://github.com/geekykalpesh/contestify/raw/main/contestify.mp4
 
 ---
 
-## ⚡ 1-Click Instant Copy-Paste Commands for Interviewers
+## 🚀 Complete Step-by-Step Setup Guide (Zero Configuration)
 
-If you are an interviewer or evaluator, follow these steps to launch all 6 microservices, seed 31 user accounts and 123 video reels, and calculate the 33 contest prize winners:
+If you are cloning this repository on a new computer, follow these **5 simple steps** to get the application up and running with live video reels and calculated contest winners:
 
-### Step 1: Add Video Reels (Optional / Custom Media)
-Place all downloaded `.mp4` video reel files into the **`video_reels_100plus`** folder in the root directory (`contestify/video_reels_100plus`).
+### Step 1: Clone Repository & Open Directory
+Open your terminal and run:
+```bash
+git clone https://github.com/geekykalpesh/contestify.git
+cd contestify
+```
 
-### Step 2: Launch Microservices in Docker
+### Step 2: Download & Place Video Reels from Google Drive
+1. Open the Google Drive link to download the media assets zip:
+   📥 **[Download Google Drive Video Reels Zip](https://drive.google.com/file/d/196tVBHxImEiVJD30cR4dnfl6QqmgZS42/view?usp=sharing)**
+2. Download `uploads.zip` to your computer and extract all files.
+3. Move/paste all extracted `.mp4` video reel files into the **`video_reels_100plus`** folder located in the root directory:
+   ```text
+   contestify/video_reels_100plus/
+   ```
+
+### Step 3: Launch All 6 Microservices in Docker
+Build and start all containers (Frontend, User Service, Admin Service, MongoDB, PostgreSQL, and Redis):
 ```bash
 docker compose up -d --build
 ```
 
-### Step 3: Seed Database & Calculate 33 Winners
-Run this command to automatically sync all `.mp4` files from `video_reels` to `user-service/uploads`, seed MongoDB, and calculate contest winners:
+### Step 4: Seed Database & Calculate 33 Contest Winners
+Run this single command in your terminal to automatically sync all `.mp4` files from `video_reels_100plus` into `user-service/uploads`, seed MongoDB with 30 user accounts & 123 posts, and calculate the 33 contest prize winners:
 ```bash
 docker exec creator-contest-user-service-container node /app/scripts/seed.js; curl.exe -X POST http://localhost:5002/api/admin/calculate-winners
 ```
 
-🎉 **Live System URLs**:
-- **React Frontend**: `http://localhost:3000`
-- **User Service API**: `http://localhost:5001`
-- **Admin Service API**: `http://localhost:5002`
+### Step 5: Access the Live Application
+Open your browser and navigate to:
+- 🌐 **React Frontend Web App**: `http://localhost:3000`
+- 📡 **User Microservice API**: `http://localhost:5001`
+- ⚙️ **Admin Microservice API**: `http://localhost:5002`
 
 ---
 
@@ -114,44 +129,4 @@ git commit -m "feat: complete production-ready creator contest platform with mic
 git push origin main
 ```
 
----
 
-## ✉️ Professional Email Submission Template
-
-**Subject**: Full-Stack Submission: Creator Contest Microservices Platform
-
-**Body**:
-
-Dear Evaluator / Team,
-
-I have completed the development and testing of the **Creator Contest Platform**, built using a production-ready Node.js, Express, React, PostgreSQL, MongoDB, Redis, and Docker microservices architecture.
-
-### Key Technical Highlights:
-1. **Microservices Architecture**:
-   - `User Service` (Express + MongoDB + Redis): User authentication, profile, video reel uploads, reactions, and unseen feed filtering.
-   - `Admin Service` (Express + PostgreSQL + Prisma): Decoupled ranking engine, 33-prize priority allocation hierarchy, and real-time KYC audit logging.
-   - `Frontend` (React + Redux Toolkit + Tailwind CSS v4): Instagram-style UI, drag-and-drop document upload with strict 10-digit mobile number validation, minute-by-minute creator deep-dive modals, and real-time KYC verification toggles.
-
-2. **Real-Time KYC & Prize Allocation Cascade**:
-   - Toggling a creator's KYC status to `FAILED` in the Admin Panel automatically excludes them from contest eligibility, promotes next-in-line creators across category & consistency slots in real-time, and logs an audit entry in PostgreSQL.
-
-3. **Repository & 1-Click Setup**:
-   - **GitHub Repository**: https://github.com/geekykalpesh/contestify
-   - **Google Drive Assets**: https://drive.google.com/file/d/196tVBHxImEiVJD30cR4dnfl6QqmgZS42/view?usp=sharing
-   - **Pre-Configured Environment**: All `.env` files (`user-service/.env` & `admin-service/.env`) are tracked in the repository for **100% zero-configuration setup**.
-   - **Quickstart Commands**:
-     ```bash
-     docker compose up -d --build
-     docker exec creator-contest-user-service-container node /app/scripts/seed.js; curl.exe -X POST http://localhost:5002/api/admin/calculate-winners
-     ```
-
-### Demo Credentials:
-- **Admin**: `admin@gmail.com` / `admin`
-- **Creator Candidate**: `aarav@creator.com` / `password123`
-
-Comprehensive documentation, database schema diagrams, API references, single connection strings for pgAdmin 4 / MongoDB Compass, and Postman collections are included in the repository `README.md` and `/docs` directory.
-
-Thank you for your time and review.
-
-Best regards,  
-Kalpesh
