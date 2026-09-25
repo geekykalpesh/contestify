@@ -21,8 +21,59 @@ export const AdminAuditLogsTable = ({ auditLogs = [] }) => {
         </p>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* MOBILE CARDS VIEW (< md) */}
+      <div className="block md:hidden divide-y divide-[var(--border-main)] text-xs">
+        {loading ? (
+          <div className="p-6 text-center text-xs text-slate-400">Loading audit logs...</div>
+        ) : auditLogs.length === 0 ? (
+          <div className="p-8 text-center text-xs text-[var(--text-muted)] font-sans">
+            No KYC audit log records in PostgreSQL DB yet.
+          </div>
+        ) : (
+          auditLogs.map((log) => {
+            const isPass = log.newStatus === "PASSED";
+            const isFail = log.newStatus === "FAILED";
+
+            return (
+              <div key={log.id} className="p-3.5 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-[var(--text-primary)] text-xs truncate">{log.userEmail}</span>
+                  {isPass ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold shrink-0">
+                      <CheckCircle2 className="w-3 h-3" /> PASSED
+                    </span>
+                  ) : isFail ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-bold shrink-0">
+                      <XCircle className="w-3 h-3" /> FAILED
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-bold shrink-0">
+                      {log.newStatus}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] font-mono">
+                  <span>Prev: {log.previousStatus || "PENDING"}</span>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    <span>{new Date(log.createdAt).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {log.notes && (
+                  <p className="text-[11px] text-[var(--text-secondary)] italic pt-1 border-t border-[var(--border-main)]/50">
+                    "{log.notes}"
+                  </p>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* DESKTOP TABLE VIEW (hidden md:block) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-[var(--border-main)] bg-slate-500/10 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">

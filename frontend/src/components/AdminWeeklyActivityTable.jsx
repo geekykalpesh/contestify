@@ -46,8 +46,104 @@ export const AdminWeeklyActivityTable = ({ weeklyActivity = [] }) => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* MOBILE CARDS VIEW (< md) */}
+        <div className="block md:hidden divide-y divide-[var(--border-main)]">
+          {loading ? (
+            <div className="p-6 text-center text-xs text-slate-400">Loading weekly activity...</div>
+          ) : filtered.length === 0 ? (
+            <div className="p-8 text-center text-xs text-[var(--text-muted)]">No activity matching search criteria.</div>
+          ) : (
+            filtered.map((user) => {
+              const isConsistent = user.isConsistencyEligible;
+              const w1 = user.week1Count || 0;
+              const w2 = user.week2Count || 0;
+              const w3 = user.week3Count || 0;
+              const w4 = user.week4Count || 0;
+              const usernameDisplay = user.username || user.userEmail?.split("@")[0] || (user.userName ? user.userName.toLowerCase().replace(/\s+/g, "_") : "unknown");
+
+              return (
+                <div
+                  key={user.userId}
+                  onClick={() => setSelectedCreator(user)}
+                  className="p-3.5 space-y-2.5 hover:bg-slate-500/5 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/profile/${usernameDisplay || user.userId}`);
+                        }}
+                        className="text-left group cursor-pointer"
+                      >
+                        <div className="font-extrabold text-sky-400 group-hover:underline inline-flex items-center gap-1 text-xs">
+                          <span>@{usernameDisplay}</span>
+                          <ExternalLink className="w-3 h-3 opacity-60" />
+                        </div>
+                        <div className="text-[11px] text-[var(--text-secondary)] font-medium">
+                          {(user.userName || "").replace(/\s*\([^)]*\)/g, "").trim()}
+                        </div>
+                      </button>
+                      <div className="text-[10px] text-[var(--text-muted)] font-mono">{user.userEmail}</div>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      {isConsistent ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                          <CheckCircle2 className="w-3 h-3" /> Eligible (3+/wk)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-500/10 text-[var(--text-muted)] border border-slate-500/20 text-[10px] font-semibold">
+                          <XCircle className="w-3 h-3 text-rose-400" /> Ineligible
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 4 Weeks Grid Badges */}
+                  <div className="grid grid-cols-4 gap-1.5 pt-1 text-center font-mono">
+                    <div className="p-1.5 rounded-lg bg-slate-500/10 border border-[var(--border-main)]/50">
+                      <div className="text-[9px] uppercase text-[var(--text-muted)] font-bold">W1</div>
+                      <div className={`text-xs font-extrabold ${w1 >= 3 ? "text-emerald-400" : "text-amber-400"}`}>{w1}</div>
+                    </div>
+                    <div className="p-1.5 rounded-lg bg-slate-500/10 border border-[var(--border-main)]/50">
+                      <div className="text-[9px] uppercase text-[var(--text-muted)] font-bold">W2</div>
+                      <div className={`text-xs font-extrabold ${w2 >= 3 ? "text-emerald-400" : "text-amber-400"}`}>{w2}</div>
+                    </div>
+                    <div className="p-1.5 rounded-lg bg-slate-500/10 border border-[var(--border-main)]/50">
+                      <div className="text-[9px] uppercase text-[var(--text-muted)] font-bold">W3</div>
+                      <div className={`text-xs font-extrabold ${w3 >= 3 ? "text-emerald-400" : "text-amber-400"}`}>{w3}</div>
+                    </div>
+                    <div className="p-1.5 rounded-lg bg-slate-500/10 border border-[var(--border-main)]/50">
+                      <div className="text-[9px] uppercase text-[var(--text-muted)] font-bold">W4</div>
+                      <div className={`text-xs font-extrabold ${w4 >= 3 ? "text-emerald-400" : "text-amber-400"}`}>{w4}</div>
+                    </div>
+                  </div>
+
+                  {/* Footer Row */}
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-[var(--border-main)]/50">
+                    <div className="text-xs font-bold text-[var(--text-primary)] font-mono">
+                      Total: {user.totalPosts} posts • <span className="text-amber-400">{user.consistencyScore || 0} pts</span>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCreator(user);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-semibold text-[10px] transition-colors cursor-pointer"
+                    >
+                      <Eye className="w-3 h-3" /> Details
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* DESKTOP TABLE VIEW (hidden md:block) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-[var(--border-main)] bg-slate-500/10 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">

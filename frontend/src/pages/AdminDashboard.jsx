@@ -73,36 +73,36 @@ export const AdminDashboard = () => {
   const totalPostsDisplay = (stats.totalPosts || summary?.totalEligiblePosts || 0).toLocaleString();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-2.5 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-6">
       {/* Admin Header & Live System Status */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-[var(--border-main)] pb-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 sm:gap-4 border-b border-[var(--border-main)] pb-4 sm:pb-6">
         <div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/40 shadow-lg shadow-amber-500/10">
-              <Trophy className="w-6 h-6 animate-pulse" />
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/40 shadow-lg shadow-amber-500/10 shrink-0">
+              <Trophy className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">
-                  Contestify Admin Command Center
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h1 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] tracking-tight">
+                  Contestify Admin Center
                 </h1>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[10px] font-extrabold tracking-wider uppercase font-mono">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[9px] sm:text-[10px] font-extrabold tracking-wider uppercase font-mono">
                   <Server className="w-3 h-3 text-indigo-400" />
                   10M User Engine
                 </span>
               </div>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                Real-Time 33-Prize Priority Allocation Cascade • Indexed Server Queries • Postgres KYC Ledger
+              <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] mt-0.5">
+                Real-Time 33-Prize Priority Allocation Cascade • Indexed Server Queries
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full md:w-auto">
           <button
             onClick={handleRefreshAll}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             <span>{loading ? "Re-computing Engine..." : "Re-compute & Sync All Data"}</span>
@@ -112,7 +112,7 @@ export const AdminDashboard = () => {
 
       {/* Sync Notice Alert */}
       {syncNotice && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2 animate-fadeIn">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span className="font-semibold">{syncNotice}</span>
         </div>
@@ -120,7 +120,7 @@ export const AdminDashboard = () => {
 
       {/* Error Alert */}
       {error && (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
           Admin Service Notice: {error}
         </div>
       )}
@@ -129,85 +129,85 @@ export const AdminDashboard = () => {
       {loading ? (
         <KpiCardsShimmer count={5} />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4">
           {/* Card 1: Total Users */}
           <div
             onClick={() => handleStatCardClick("residency", "ALL")}
-            className="ig-card p-4 rounded-2xl border border-sky-500/30 bg-gradient-to-br from-sky-500/10 to-transparent hover:border-sky-500/60 transition-all cursor-pointer group"
+            className="ig-card p-3 sm:p-4 rounded-2xl border border-sky-500/30 bg-gradient-to-br from-sky-500/10 to-transparent hover:border-sky-500/60 transition-all cursor-pointer group"
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
+            <div className="flex items-center justify-between text-[11px] sm:text-xs font-semibold text-[var(--text-secondary)]">
               <span>Total Registered</span>
-              <Users className="w-4 h-4 text-sky-400 group-hover:scale-110 transition-transform" />
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400 group-hover:scale-110 transition-transform shrink-0" />
             </div>
-            <div className="text-2xl font-black text-sky-400 mt-2 font-mono">
+            <div className="text-xl sm:text-2xl font-black text-sky-400 mt-1.5 font-mono">
               {totalUsersDisplay}
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
-              <span>Indexed in Mongo & Postgres</span>
+            <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] mt-0.5 truncate font-mono">
+              <span>Mongo & Postgres</span>
             </div>
           </div>
 
           {/* Card 2: CG Eligible */}
           <div
             onClick={() => handleStatCardClick("residency", "Chhattisgarh")}
-            className="ig-card p-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent hover:border-emerald-500/60 transition-all cursor-pointer group"
+            className="ig-card p-3 sm:p-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent hover:border-emerald-500/60 transition-all cursor-pointer group"
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
-              <span>CG Eligible Residents</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+            <div className="flex items-center justify-between text-[11px] sm:text-xs font-semibold text-[var(--text-secondary)]">
+              <span>CG Eligible</span>
+              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 group-hover:scale-110 transition-transform shrink-0" />
             </div>
-            <div className="text-2xl font-black text-emerald-400 mt-2 font-mono">
+            <div className="text-xl sm:text-2xl font-black text-emerald-400 mt-1.5 font-mono">
               {cgEligibleDisplay}
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
-              <span>Verified Residency Rule</span>
+            <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] mt-0.5 truncate font-mono">
+              <span>Verified Rule</span>
             </div>
           </div>
 
           {/* Card 3: Pending KYC Queue */}
           <div
             onClick={() => handleStatCardClick("kycStatus", "PENDING")}
-            className="ig-card p-4 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent hover:border-amber-500/60 transition-all cursor-pointer group relative overflow-hidden"
+            className="ig-card p-3 sm:p-4 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent hover:border-amber-500/60 transition-all cursor-pointer group relative overflow-hidden"
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
-              <span>Pending KYC Queue</span>
-              <FileCheck className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+            <div className="flex items-center justify-between text-[11px] sm:text-xs font-semibold text-[var(--text-secondary)]">
+              <span>Pending KYC</span>
+              <FileCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
             </div>
-            <div className="text-2xl font-black text-amber-400 mt-2 font-mono">
+            <div className="text-xl sm:text-2xl font-black text-amber-400 mt-1.5 font-mono">
               {pendingKycDisplay}
             </div>
-            <div className="text-[10px] text-amber-400/80 mt-1 flex items-center gap-1 font-semibold">
-              <span>Click to Review Queue →</span>
+            <div className="text-[9px] sm:text-[10px] text-amber-400/80 mt-0.5 flex items-center gap-1 font-semibold truncate">
+              <span>Review Queue →</span>
             </div>
           </div>
 
           {/* Card 4: 33 Prizes Allocated */}
           <div
             onClick={() => setActiveTab("WINNERS")}
-            className="ig-card p-4 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-transparent hover:border-purple-500/60 transition-all cursor-pointer group"
+            className="ig-card p-3 sm:p-4 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-transparent hover:border-purple-500/60 transition-all cursor-pointer group"
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
-              <span>33 Prizes Allocated</span>
-              <Award className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+            <div className="flex items-center justify-between text-[11px] sm:text-xs font-semibold text-[var(--text-secondary)]">
+              <span>Prizes Allocated</span>
+              <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400 group-hover:scale-110 transition-transform shrink-0" />
             </div>
-            <div className="text-2xl font-black text-purple-400 mt-2 font-mono">
+            <div className="text-xl sm:text-2xl font-black text-purple-400 mt-1.5 font-mono">
               {prizesAwardedDisplay} / 33
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
-              <span>Priority Cascade Hierarchy</span>
+            <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] mt-0.5 truncate font-mono">
+              <span>Priority Hierarchy</span>
             </div>
           </div>
 
           {/* Card 5: Total Posts Evaluated */}
-          <div className="ig-card p-4 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 to-transparent hover:border-indigo-500/60 transition-all">
-            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
-              <span>Total Media Posts</span>
-              <Activity className="w-4 h-4 text-indigo-400" />
+          <div className="ig-card p-3 sm:p-4 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 to-transparent hover:border-indigo-500/60 transition-all col-span-2 sm:col-span-1">
+            <div className="flex items-center justify-between text-[11px] sm:text-xs font-semibold text-[var(--text-secondary)]">
+              <span>Media Posts Evaluated</span>
+              <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400 shrink-0" />
             </div>
-            <div className="text-2xl font-black text-indigo-400 mt-2 font-mono">
+            <div className="text-xl sm:text-2xl font-black text-indigo-400 mt-1.5 font-mono">
               {totalPostsDisplay}
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
+            <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] mt-0.5 truncate font-mono">
               <span>Likes + Comments + Views</span>
             </div>
           </div>
@@ -215,53 +215,53 @@ export const AdminDashboard = () => {
       )}
 
       {/* Navigation Tabs Bar */}
-      <div className="flex items-center gap-2 border-b border-[var(--border-main)] pb-2 overflow-x-auto">
+      <div className="flex items-center justify-start border-b border-[var(--border-main)] pb-2 overflow-x-auto no-scrollbar flex-nowrap gap-1.5 sm:gap-2">
         <button
           onClick={() => setActiveTab("WINNERS")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === "WINNERS"
               ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm"
               : "text-[var(--text-secondary)] hover:bg-slate-500/10 hover:text-[var(--text-primary)]"
           }`}
         >
-          <Trophy className="w-4 h-4 text-amber-500" />
-          <span>🏆 33 Prize Allocation Cascade ({winners.length})</span>
+          <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
+          <span>🏆 33 Prize Cascade ({winners.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab("PARTICIPANTS")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === "PARTICIPANTS"
               ? "bg-sky-500/20 text-sky-400 border border-sky-500/40 shadow-sm"
               : "text-[var(--text-secondary)] hover:bg-slate-500/10 hover:text-[var(--text-primary)]"
           }`}
         >
-          <Users className="w-4 h-4 text-sky-400" />
-          <span>👥 Millions Creator Directory (Paginated)</span>
+          <Users className="w-4 h-4 text-sky-400 shrink-0" />
+          <span>👥 Creator Directory</span>
         </button>
 
         <button
           onClick={() => setActiveTab("WEEKLY")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === "WEEKLY"
               ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 shadow-sm"
               : "text-[var(--text-secondary)] hover:bg-slate-500/10 hover:text-[var(--text-primary)]"
           }`}
         >
-          <Calendar className="w-4 h-4 text-indigo-400" />
-          <span>📅 Weekly Activity Audit ({weeklyActivity.length})</span>
+          <Calendar className="w-4 h-4 text-indigo-400 shrink-0" />
+          <span>📅 Weekly Activity ({weeklyActivity.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab("LOGS")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === "LOGS"
               ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm"
               : "text-[var(--text-secondary)] hover:bg-slate-500/10 hover:text-[var(--text-primary)]"
           }`}
         >
-          <Shield className="w-4 h-4 text-emerald-400" />
-          <span>🛡️ KYC Audit Trail ({kycAuditLogs.length})</span>
+          <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>🛡️ KYC Audit ({kycAuditLogs.length})</span>
         </button>
       </div>
 

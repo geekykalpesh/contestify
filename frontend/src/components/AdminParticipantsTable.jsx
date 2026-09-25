@@ -220,8 +220,124 @@ export const AdminParticipantsTable = () => {
           </div>
         </div>
 
-        {/* Table Content */}
-        <div className="overflow-x-auto relative min-h-[300px]">
+        {/* MOBILE CARDS VIEW (< md) */}
+        <div className="block md:hidden divide-y divide-[var(--border-main)]">
+          {paginatedUsers.length === 0 ? (
+            <div className="p-8 text-center text-xs text-[var(--text-muted)]">
+              No creators found matching current filter query parameters.
+            </div>
+          ) : (
+            paginatedUsers.map((p) => {
+              const uid = p.id || p.userId;
+              const isSelected = selectedUserIds.includes(uid);
+              const isCG = p.residency === "Chhattisgarh";
+              const kyc = p.kycStatus || "NOT_SUBMITTED";
+
+              return (
+                <div
+                  key={uid}
+                  onClick={() => setSelectedCreator(p)}
+                  className={`p-3.5 space-y-2.5 transition-colors cursor-pointer ${
+                    isSelected ? "bg-sky-500/10" : ""
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => dispatch(toggleUserSelection(uid))}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-slate-600 text-sky-500 focus:ring-0 cursor-pointer shrink-0"
+                      />
+                      <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-xs border border-indigo-500/30 shrink-0">
+                        {(p.username || p.userName || p.name || "U")[0].toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/profile/${p.username || uid}`);
+                          }}
+                          className="text-left group cursor-pointer"
+                        >
+                          <div className="font-extrabold text-sky-400 group-hover:underline inline-flex items-center gap-1 text-xs truncate">
+                            <span>@{p.username || p.userEmail?.split("@")[0] || (p.userName || p.name || "").toLowerCase().replace(/\s+/g, "_")}</span>
+                            <ExternalLink className="w-3 h-3 opacity-60" />
+                          </div>
+                          <div className="text-[11px] text-[var(--text-secondary)] font-medium truncate">
+                            {(p.userName || p.name || "").replace(/\s*\([^)]*\)/g, "").trim()}
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      {kyc === "PASSED" ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <CheckCircle2 className="w-3 h-3" /> PASSED
+                        </span>
+                      ) : kyc === "FAILED" ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                          <XCircle className="w-3 h-3" /> FAILED
+                        </span>
+                      ) : kyc === "PENDING" ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                          <Clock className="w-3 h-3" /> PENDING
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-500/10 text-[var(--text-muted)]">
+                          Not Submitted
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Badges & Metrics Row */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[var(--border-main)]/50 text-[11px]">
+                    <div>
+                      {isCG ? (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                          CG Resident
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-slate-500/10 text-[var(--text-muted)] border border-slate-500/20 text-[10px] font-semibold">
+                          Outside CG
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 font-mono text-[11px]">
+                      <span className="text-rose-400">♥ {p.totalLikes || 0}</span>
+                      <span className="text-sky-400">💬 {p.totalComments || 0}</span>
+                      <span className="text-indigo-400">👁 {p.totalViews || 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Actions & Max Score Bar */}
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <span className="font-extrabold text-amber-400 font-mono text-xs">
+                      Max: {p.maxScore || 0} pts
+                    </span>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCreator(p);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-semibold text-[10px] transition-colors cursor-pointer"
+                    >
+                      <Eye className="w-3 h-3" /> Inspect Details
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* DESKTOP TABLE VIEW (hidden md:block) */}
+        <div className="hidden md:block overflow-x-auto relative min-h-[300px]">
           {participantsLoading && (
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-10 flex items-center justify-center">
               <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 border border-sky-500/30 text-sky-400 text-xs font-bold shadow-xl animate-pulse">

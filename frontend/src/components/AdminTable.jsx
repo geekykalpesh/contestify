@@ -117,7 +117,118 @@ export const AdminTable = ({ winners = [], summary, onRefresh }) => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* MOBILE CARD VIEW (< md) */}
+        <div className="block md:hidden divide-y divide-[var(--border-main)]">
+          {loading ? (
+            <div className="p-6 text-center text-xs text-slate-400">Loading winners...</div>
+          ) : filteredWinners.length === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-500">No winners found matching current filter.</div>
+          ) : (
+            filteredWinners.map((w, idx) => {
+              const isUnawarded = w.userId === "UNAWARDED";
+              const isFailed = w.kycStatus === "FAILED";
+              const isPassed = w.kycStatus === "PASSED";
+              const usernameDisplay = w.username || w.userEmail?.split("@")[0] || (w.userName ? w.userName.toLowerCase().replace(/\s+/g, "_") : "unknown");
+
+              return (
+                <div
+                  key={`${w.tier}_${w.tierCategory || idx}`}
+                  className={`p-3.5 space-y-2.5 transition-colors ${
+                    isFailed ? "bg-rose-500/5" : isPassed ? "bg-emerald-500/5" : ""
+                  }`}
+                >
+                  {/* Top Bar: Priority #, Tier, KYC Badge */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-mono font-bold text-sky-400 text-xs px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/20 shrink-0">
+                        #{w.priorityIndex || idx + 1}
+                      </span>
+                      <span className="font-bold text-[var(--text-primary)] text-xs truncate">
+                        {w.tier.replace(/_/g, " ")}
+                      </span>
+                    </div>
+
+                    {isUnawarded ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-500/10 text-[var(--text-muted)] shrink-0">N/A</span>
+                    ) : isPassed ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+                        <CheckCircle className="w-3 h-3" /> PASSED
+                      </span>
+                    ) : isFailed ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0">
+                        <XCircle className="w-3 h-3" /> FAILED
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+                        <AlertCircle className="w-3 h-3" /> PENDING
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Winner Profile & Details */}
+                  {!isUnawarded && (
+                    <div className="flex items-start justify-between gap-2 pt-1 border-t border-[var(--border-main)]/50">
+                      <div>
+                        <button
+                          onClick={(e) => handleProfileClick(e, usernameDisplay || w.userId)}
+                          className="text-left group cursor-pointer"
+                        >
+                          <div className="font-extrabold text-sky-400 group-hover:underline inline-flex items-center gap-1 text-xs">
+                            <span>@{usernameDisplay}</span>
+                            <ExternalLink className="w-3 h-3 opacity-70" />
+                          </div>
+                          <div className="text-[11px] text-[var(--text-secondary)] font-medium">
+                            {(w.userName || "").replace(/\s*\([^)]*\)/g, "").trim()}
+                          </div>
+                        </button>
+                        <div className="text-[10px] text-[var(--text-muted)] font-mono">{w.userEmail}</div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <div className="text-[10px] uppercase text-[var(--text-muted)] font-semibold">Score</div>
+                        <div className="font-extrabold text-amber-400 font-mono text-sm">{w.score || 0} pts</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions Bar */}
+                  {!isUnawarded && (
+                    <div className="flex items-center justify-between gap-2 pt-2">
+                      <button
+                        onClick={() => setInspectWinner(w)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-semibold text-[10px] transition-colors cursor-pointer"
+                      >
+                        <Eye className="w-3 h-3" /> Inspect Post
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        {w.kycStatus !== "PASSED" && (
+                          <button
+                            onClick={() => handleKycStatusChange(w.userId, "PASSED")}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] shadow-sm transition-colors cursor-pointer"
+                          >
+                            Pass KYC
+                          </button>
+                        )}
+                        {w.kycStatus !== "FAILED" && (
+                          <button
+                            onClick={() => handleKycStatusChange(w.userId, "FAILED")}
+                            className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] shadow-sm transition-colors cursor-pointer"
+                          >
+                            Fail KYC
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* DESKTOP TABLE VIEW (hidden md:block) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-[var(--border-main)] bg-slate-500/10 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
