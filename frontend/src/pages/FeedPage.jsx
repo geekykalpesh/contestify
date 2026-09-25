@@ -33,7 +33,7 @@ export const FeedPage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activePost, setActivePost] = useState(null);
-  const [isCommentsOpen, setIsCommentsOpen] = useState(true); // Open by default like YouTube Shorts!
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 
   const observerRef = useRef(null);
 

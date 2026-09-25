@@ -154,17 +154,17 @@ export const NotificationDropdown = () => {
       {isOpen && (
         <div
           className={`fixed sm:absolute inset-x-3 sm:inset-auto sm:right-0 top-16 sm:top-auto sm:mt-2 w-auto sm:w-96 max-h-[82vh] sm:max-h-[80vh] flex flex-col rounded-2xl border shadow-2xl z-50 animate-slideUp overflow-hidden transition-colors ${
-            isDark ? "bg-[#121212] border-[#2b2b2b] text-slate-100" : "bg-white border-slate-200 text-slate-900 shadow-2xl"
+            isDark ? "bg-[#141414] border-slate-800 text-slate-100 shadow-black/60" : "bg-white border-slate-200 text-slate-900 shadow-2xl"
           }`}
         >
           {/* Header */}
           <div className={`p-3.5 border-b flex items-center justify-between shrink-0 ${
-            isDark ? "border-[#272727] bg-[#0f0f0f]" : "border-slate-200 bg-white"
+            isDark ? "border-slate-800 bg-[#1a1a1a] text-white" : "border-slate-100 bg-slate-50/80 text-slate-900"
           }`}>
             <div className="flex items-center gap-2">
               <span className="font-bold text-sm">Notifications</span>
               {unreadCount > 0 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-500 border border-rose-500/30">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                   {unreadCount} new
                 </span>
               )}
@@ -173,7 +173,7 @@ export const NotificationDropdown = () => {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-[11px] font-semibold text-sky-500 hover:text-sky-600 flex items-center gap-1 cursor-pointer"
+                className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>Mark all read</span>
@@ -182,7 +182,7 @@ export const NotificationDropdown = () => {
           </div>
 
           {/* List */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-2 space-y-1.5 no-scrollbar">
             {loading && notifications.length === 0 ? (
               <div className="text-center text-xs text-slate-500 py-10">Loading notifications...</div>
             ) : notifications.length === 0 ? (
@@ -196,14 +196,14 @@ export const NotificationDropdown = () => {
                   <div
                     key={n._id}
                     onClick={() => !n.read && handleMarkSingleRead(n._id)}
-                    className={`p-2.5 rounded-xl flex items-start gap-3 transition-colors cursor-pointer group relative ${
+                    className={`p-3 rounded-xl flex items-start gap-3 transition-colors cursor-pointer group relative ${
                       !n.read
                         ? isDark
-                          ? "bg-slate-800/50 hover:bg-slate-800"
-                          : "bg-sky-50/70 hover:bg-sky-50"
+                          ? "bg-slate-800/60 hover:bg-slate-800 border-l-4 border-l-sky-500"
+                          : "bg-sky-50/90 hover:bg-sky-100/80 border-l-4 border-l-sky-500"
                         : isDark
-                        ? "hover:bg-slate-900"
-                        : "hover:bg-slate-50"
+                        ? "hover:bg-slate-900 text-slate-300"
+                        : "hover:bg-slate-50 text-slate-800"
                     }`}
                   >
                     {/* Icon / Avatar */}
@@ -212,14 +212,20 @@ export const NotificationDropdown = () => {
                         <img
                           src={getMediaUrl(n.senderId.avatarUrl)}
                           alt={senderName}
-                          className="w-9 h-9 rounded-full object-cover shadow-sm border border-slate-300 dark:border-slate-700"
+                          className={`w-9 h-9 rounded-full object-cover shadow-xs border ${
+                            isDark ? "border-slate-700" : "border-slate-200"
+                          }`}
                         />
                       ) : (
-                        <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs text-slate-700 dark:text-slate-200">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs ${
+                          isDark ? "bg-slate-800 text-slate-100 border border-slate-700" : "bg-sky-100 text-sky-900 border border-sky-200"
+                        }`}>
                           {senderName[0].toUpperCase()}
                         </div>
                       )}
-                      <div className="absolute -bottom-1 -right-1 p-0.5 rounded-full bg-white dark:bg-slate-900 shadow">
+                      <div className={`absolute -bottom-1 -right-1 p-0.5 rounded-full shadow ${
+                        isDark ? "bg-slate-900 border border-slate-700" : "bg-white border border-slate-200"
+                      }`}>
                         {getNotificationIcon(n.type)}
                       </div>
                     </div>
@@ -227,10 +233,14 @@ export const NotificationDropdown = () => {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs leading-relaxed">
-                        <span className="font-bold text-slate-900 dark:text-slate-100 mr-1">{senderName}</span>
-                        <span className="text-slate-700 dark:text-slate-300">{n.message}</span>
+                        <span className={`font-bold mr-1.5 ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+                          {senderName}
+                        </span>
+                        <span className={`font-medium ${isDark ? "text-slate-300" : "text-slate-800"}`}>
+                          {n.message}
+                        </span>
                       </p>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 block font-medium">
+                      <span className={`text-[10px] mt-0.5 block font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                         {formatTimeAgo(n.createdAt)}
                       </span>
                     </div>
@@ -246,8 +256,8 @@ export const NotificationDropdown = () => {
           </div>
 
           {/* Footer */}
-          <div className={`p-2.5 border-t text-center text-[10px] text-slate-500 font-medium ${
-            isDark ? "border-[#272727] bg-[#0f0f0f]" : "border-slate-200 bg-slate-50"
+          <div className={`p-2.5 border-t text-center text-[10px] font-semibold ${
+            isDark ? "border-slate-800 bg-[#101010] text-slate-400" : "border-slate-100 bg-slate-50 text-slate-500"
           }`}>
             Real-time notifications enabled ⚡
           </div>
