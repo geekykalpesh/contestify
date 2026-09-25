@@ -48,20 +48,26 @@ const upload = multer({
 
 // Middleware to enforce specific size limit based on media type
 const validateFileSize = (req, res, next) => {
-  if (!req.file) {
+  const mediaFile = req.file || (req.files && req.files.media && req.files.media[0]);
+  if (!mediaFile) {
     return res.status(400).json({ success: false, message: "Media file is required" });
   }
 
-  const isImage = ALLOWED_MIME_TYPES.image.includes(req.file.mimetype);
+  const isImage = ALLOWED_MIME_TYPES.image.includes(mediaFile.mimetype);
   const limit = isImage ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
 
-  if (req.file.size > limit) {
+  if (mediaFile.size > limit) {
     // Delete invalid file from disk
-    fs.unlink(req.file.path, () => {});
+    fs.unlink(mediaFile.path, () => {});
     return res.status(400).json({
       success: false,
       message: `File size exceeds the limit of ${isImage ? "10MB" : "50MB"}`
     });
+  }
+
+  // Attach target file to req.file for standard access downstream
+  if (!req.file && mediaFile) {
+    req.file = mediaFile;
   }
 
   next();
@@ -69,6 +75,10 @@ const validateFileSize = (req, res, next) => {
 
 module.exports = {
   uploadSingleMedia: upload.single("media"),
+  uploadPostMedia: upload.fields([
+    { name: "media", maxCount: 1 },
+    { name: "thumbnail", maxCount: 1 }
+  ]),
   uploadSingleAvatar: upload.single("avatar"),
   uploadKycDoc: upload.single("aadharImage"),
   validateFileSize

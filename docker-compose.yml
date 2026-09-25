@@ -42,17 +42,16 @@ services:
     restart: always
     ports:
       - "5001:5001"
+    env_file:
+      - ./user-service/.env
     environment:
       PORT: 5001
       NODE_ENV: production
-      MONGODB_URI: mongodb://creator-contest-mongodb:27017/creator_contest_user_db
-      JWT_SECRET: super-secret-jwt-key-for-creator-contest
-      INTERNAL_SERVICE_SECRET: internal-secret-token-creator-contest
-      REDIS_URL: redis://creator-contest-redis:6379
     volumes:
       - ./user-service/uploads:/app/uploads
       - ./scripts:/app/scripts
       - ./video_reels_100plus:/app/video_reels_100plus
+      - ./user-service/src:/app/src
     depends_on:
       - creator-contest-mongodb
       - creator-contest-redis

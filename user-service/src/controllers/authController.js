@@ -2,10 +2,10 @@ const authService = require("../services/authService");
 
 const signup = async (req, res, next) => {
   try {
-    const name = req.body.name || req.body.username;
-    const { email, password, residency } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: "Name/username, email, and password are required" });
+    const { name, email, username, password, residency, dob } = req.body;
+    const fullName = name || username;
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ success: false, message: "Name, email, and password are required" });
     }
 
     let avatarUrl = "";
@@ -13,7 +13,7 @@ const signup = async (req, res, next) => {
       avatarUrl = `/uploads/${req.file.filename}`;
     }
 
-    const result = await authService.registerUser({ name, email, password, residency, avatarUrl });
+    const result = await authService.registerUser({ name: fullName, email, username, password, residency, dob, avatarUrl });
     return res.status(201).json({
       success: true,
       message: "User registered successfully",
@@ -26,15 +26,29 @@ const signup = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Email and password are required" });
+    const identifier = req.body.identifier || req.body.email || req.body.username;
+    const { password } = req.body;
+    if (!identifier || !password) {
+      return res.status(400).json({ success: false, message: "Username/Email and password are required" });
     }
 
-    const result = await authService.loginUser({ email, password });
+    const result = await authService.loginUser({ identifier, password });
     return res.status(200).json({
       success: true,
       message: "Login successful",
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkAvailability = async (req, res, next) => {
+  try {
+    const { username, email } = req.query;
+    const result = await authService.checkAvailability({ username, email });
+    return res.status(200).json({
+      success: true,
       data: result
     });
   } catch (error) {
@@ -112,6 +126,7 @@ const updateKyc = async (req, res, next) => {
 module.exports = {
   signup,
   login,
+  checkAvailability,
   getMe,
   updateResidency,
   updateAvatar,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { userApi } from "../services/api";
 import { useToast } from "../context/ToastContext";
-import { X, UploadCloud, Film, Image as ImageIcon, Sparkles } from "lucide-react";
+import { X, UploadCloud, Film, Image as ImageIcon, Sparkles, Sliders, Camera, Check } from "lucide-react";
 
 const CATEGORIES = [
   "Tech",
@@ -26,7 +26,19 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Cover / Thumbnail Selection States (Instagram Style)
+  const [coverMode, setCoverMode] = useState("scrub"); // 'scrub' | 'upload'
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [scrubTime, setScrubTime] = useState(0);
+  const [thumbnailData, setThumbnailData] = useState(null); // Base64 canvas data
+  const [thumbnailFile, setThumbnailFile] = useState(null); // Custom image file
+  const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState(null);
+
   const fileInputRef = useRef(null);
+  const coverFileInputRef = useRef(null);
+  const videoScrubberRef = useRef(null);
+  const canvasRef = useRef(null);
 
   // Prevent browser default behavior of opening dropped files in a new tab when modal is open
   useEffect(() => {
@@ -67,13 +79,69 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
     }
 
     setFile(selected);
-    setMediaType(isVideo ? "video" : "image");
-    setPreviewUrl(URL.createObjectURL(selected));
+    const type = isVideo ? "video" : "image";
+    setMediaType(type);
+
+    const url = URL.createObjectURL(selected);
+    setPreviewUrl(url);
+
+    // Reset cover selections
+    setThumbnailData(null);
+    setThumbnailFile(null);
+    setThumbnailPreviewUrl(null);
+    setScrubTime(0);
   };
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     processSelectedFile(selected);
+  };
+
+  // Video Loaded Metadata -> Get duration & capture initial frame
+  const handleLoadedMetadata = () => {
+    if (videoScrubberRef.current) {
+      const dur = videoScrubberRef.current.duration || 0;
+      setVideoDuration(dur);
+      captureCurrentFrame();
+    }
+  };
+
+  // Handle Scrub Range Change
+  const handleScrubChange = (e) => {
+    const time = parseFloat(e.target.value);
+    setScrubTime(time);
+    if (videoScrubberRef.current) {
+      videoScrubberRef.current.currentTime = time;
+    }
+  };
+
+  // Capture frame from video HTML5 canvas
+  const captureCurrentFrame = () => {
+    if (!videoScrubberRef.current || !canvasRef.current) return;
+    const video = videoScrubberRef.current;
+    const canvas = canvasRef.current;
+
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 360;
+
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      setThumbnailData(dataUrl);
+      setThumbnailFile(null);
+      setThumbnailPreviewUrl(dataUrl);
+    }
+  };
+
+  // Handle Custom Cover Image Upload
+  const handleCustomCoverChange = (e) => {
+    const customFile = e.target.files[0];
+    if (customFile && customFile.type.startsWith("image/")) {
+      setThumbnailFile(customFile);
+      setThumbnailData(null);
+      setThumbnailPreviewUrl(URL.createObjectURL(customFile));
+    }
   };
 
   const handleDragEnter = (e) => {
@@ -126,6 +194,12 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
       formData.append("category", category);
       formData.append("media", file);
 
+      if (thumbnailFile) {
+        formData.append("thumbnail", thumbnailFile);
+      } else if (thumbnailData) {
+        formData.append("thumbnailData", thumbnailData);
+      }
+
       await userApi.post("/posts", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
@@ -133,6 +207,9 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
       setCaption("");
       setFile(null);
       setPreviewUrl(null);
+      setThumbnailData(null);
+      setThumbnailFile(null);
+      setThumbnailPreviewUrl(null);
       toast.success("Your post has been published successfully!", "Post Published");
       onClose();
       if (onPostCreated) onPostCreated();
@@ -144,8 +221,11 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="ig-card w-full max-w-lg rounded-2xl p-6 shadow-2xl relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto">
+      {/* Off-screen canvas for frame capture */}
+      <canvas ref={canvasRef} className="hidden" />
+
+      <div className="ig-card w-full max-w-lg rounded-2xl p-6 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 rounded-lg hover:bg-slate-500/10 transition-colors"
@@ -173,7 +253,14 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
             {previewUrl ? (
               <div className="relative rounded-xl overflow-hidden aspect-video bg-black border border-[var(--border-main)] group">
                 {mediaType === "video" ? (
-                  <video src={previewUrl} controls className="w-full h-full object-contain" />
+                  <video
+                    ref={videoScrubberRef}
+                    src={previewUrl}
+                    controls
+                    onLoadedMetadata={handleLoadedMetadata}
+                    onSeeked={captureCurrentFrame}
+                    className="w-full h-full object-contain"
+                  />
                 ) : (
                   <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
                 )}
@@ -182,6 +269,9 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
                   onClick={() => {
                     setFile(null);
                     setPreviewUrl(null);
+                    setThumbnailData(null);
+                    setThumbnailFile(null);
+                    setThumbnailPreviewUrl(null);
                   }}
                   className="absolute top-2 right-2 bg-black/80 text-white hover:bg-black p-1.5 rounded-lg text-xs font-semibold backdrop-blur-sm"
                 >
@@ -218,6 +308,104 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
               </div>
             )}
           </div>
+
+          {/* Instagram-Style Cover/Thumbnail Selector (Video Only) */}
+          {mediaType === "video" && previewUrl && (
+            <div className="p-3.5 rounded-xl bg-slate-500/5 border border-[var(--border-main)] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-primary)]">
+                  <Camera className="w-4 h-4 text-sky-400" />
+                  <span>Choose Cover Thumbnail</span>
+                </div>
+                <div className="flex bg-[var(--bg-main)] p-0.5 rounded-lg border border-[var(--border-main)] text-[11px] font-medium">
+                  <button
+                    type="button"
+                    onClick={() => setCoverMode("scrub")}
+                    className={`px-2.5 py-1 rounded-md transition-colors ${
+                      coverMode === "scrub"
+                        ? "bg-sky-500 text-white font-bold shadow-sm"
+                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    Scrub Frame
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCoverMode("upload")}
+                    className={`px-2.5 py-1 rounded-md transition-colors ${
+                      coverMode === "upload"
+                        ? "bg-sky-500 text-white font-bold shadow-sm"
+                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    Upload Custom
+                  </button>
+                </div>
+              </div>
+
+              {coverMode === "scrub" ? (
+                <div className="space-y-2">
+                  <label className="flex justify-between items-center text-[11px] text-[var(--text-secondary)]">
+                    <span>Drag slider to pick cover timestamp:</span>
+                    <span className="font-mono font-bold text-sky-400">{scrubTime.toFixed(1)}s / {videoDuration.toFixed(1)}s</span>
+                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={videoDuration || 10}
+                    step={0.1}
+                    value={scrubTime}
+                    onChange={handleScrubChange}
+                    className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={captureCurrentFrame}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 text-[11px] font-semibold border border-sky-500/30"
+                    >
+                      <Camera className="w-3 h-3" />
+                      <span>Set Current Frame as Cover</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => coverFileInputRef.current?.click()}
+                    className="w-full py-2.5 px-3 border border-dashed border-[var(--border-main)] rounded-lg hover:border-sky-500 bg-[var(--bg-main)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center gap-2"
+                  >
+                    <ImageIcon className="w-4 h-4 text-sky-400" />
+                    <span>Upload Custom Cover Image (.jpg, .png, .webp)</span>
+                  </button>
+                  <input
+                    type="file"
+                    ref={coverFileInputRef}
+                    accept="image/*"
+                    onChange={handleCustomCoverChange}
+                    className="hidden"
+                  />
+                </div>
+              )}
+
+              {/* Cover Preview Tile */}
+              {thumbnailPreviewUrl && (
+                <div className="flex items-center gap-3 pt-1 border-t border-[var(--border-main)]/50">
+                  <div className="w-16 h-12 rounded-lg overflow-hidden border border-sky-500/50 bg-black shrink-0 relative">
+                    <img src={thumbnailPreviewUrl} alt="Cover Preview" className="w-full h-full object-cover" />
+                    <span className="absolute bottom-0.5 right-0.5 bg-emerald-500 text-white rounded-full p-0.5">
+                      <Check className="w-2.5 h-2.5" />
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-emerald-400">Cover Thumbnail Ready</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">This cover will be shown on feed & profiles before video plays.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Caption */}
           <div>

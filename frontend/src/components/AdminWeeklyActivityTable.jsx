@@ -1,14 +1,17 @@
 import React, { useState } from "react";
-import { Calendar, CheckCircle2, XCircle, Search, Eye, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Calendar, CheckCircle2, XCircle, Search, Eye, Sparkles, ExternalLink } from "lucide-react";
 import { AdminCreatorDetailsModal } from "./AdminCreatorDetailsModal";
 
 export const AdminWeeklyActivityTable = ({ weeklyActivity = [] }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCreator, setSelectedCreator] = useState(null);
 
   const filtered = weeklyActivity.filter((item) =>
     item.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.userEmail?.toLowerCase().includes(searchTerm.toLowerCase())
+    item.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -24,7 +27,7 @@ export const AdminWeeklyActivityTable = ({ weeklyActivity = [] }) => {
               </h3>
             </div>
             <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-              Audit creator posting frequency per week. Minimum 3 posts per week required for Grand Champion & Consistency Bonus eligibility. Click any creator to view minute tracking details.
+              Audit creator posting frequency per week. Minimum 3 posts per week required for Grand Champion & Consistency Bonus eligibility. Click @username to view their profile.
             </p>
           </div>
 
@@ -45,7 +48,7 @@ export const AdminWeeklyActivityTable = ({ weeklyActivity = [] }) => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-[var(--border-main)] bg-slate-500/10 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-                <th className="py-3 px-4">Creator Profile</th>
+                <th className="py-3 px-4">Creator Profile (@Username)</th>
                 <th className="py-3 px-4 text-center">W1 (Aug 1 - 7)</th>
                 <th className="py-3 px-4 text-center">W2 (Aug 8 - 14)</th>
                 <th className="py-3 px-4 text-center">W3 (Aug 15 - 21)</th>
@@ -64,6 +67,7 @@ export const AdminWeeklyActivityTable = ({ weeklyActivity = [] }) => {
                   const w2 = user.week2Count || 0;
                   const w3 = user.week3Count || 0;
                   const w4 = user.week4Count || 0;
+                  const usernameDisplay = user.username || user.userEmail?.split("@")[0] || (user.userName ? user.userName.toLowerCase().replace(/\s+/g, "_") : "unknown");
 
                   return (
                     <tr
@@ -72,11 +76,23 @@ export const AdminWeeklyActivityTable = ({ weeklyActivity = [] }) => {
                       className="hover:bg-slate-500/5 transition-colors cursor-pointer"
                     >
                       <td className="py-3 px-4">
-                        <div className="font-bold text-[var(--text-primary)]">{user.userName}</div>
-                        <div className="text-[11px] text-[var(--text-secondary)] font-mono">{user.userEmail}</div>
-                        <span className="inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded bg-slate-500/10 text-[var(--text-muted)] mt-0.5">
-                          {user.residency || "Chhattisgarh"}
-                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/profile/${usernameDisplay || user.userId}`);
+                          }}
+                          className="text-left group cursor-pointer"
+                          title={`Click to view profile of @${usernameDisplay}`}
+                        >
+                          <div className="font-extrabold text-sky-400 group-hover:underline inline-flex items-center gap-1 text-xs">
+                            <span>@{usernameDisplay}</span>
+                            <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                          <div className="text-[11px] text-[var(--text-secondary)] font-medium mt-0.5">
+                            {(user.userName || "").replace(/\s*\([^)]*\)/g, "").trim()}
+                          </div>
+                        </button>
+                        <div className="text-[10px] text-[var(--text-muted)] font-mono">{user.userEmail}</div>
                       </td>
 
                       {/* Week 1 */}
@@ -141,7 +157,7 @@ export const AdminWeeklyActivityTable = ({ weeklyActivity = [] }) => {
                             e.stopPropagation();
                             setSelectedCreator(user);
                           }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-semibold text-[10px] transition-colors"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-semibold text-[10px] transition-colors cursor-pointer"
                         >
                           <Eye className="w-3 h-3" /> Details
                         </button>

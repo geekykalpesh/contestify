@@ -3,14 +3,17 @@ const { streamLocalVideo } = require("../services/mediaService");
 
 const createPost = async (req, res, next) => {
   try {
-    const { caption, category } = req.body;
-    const file = req.file;
+    const { caption, category, thumbnailData } = req.body;
+    const file = req.file || (req.files && req.files.media && req.files.media[0]);
+    const thumbnailFile = req.files && req.files.thumbnail && req.files.thumbnail[0];
 
     const post = await postService.createPost({
       userId: req.user._id,
       caption,
       category,
-      file
+      file,
+      thumbnailFile,
+      thumbnailData
     });
 
     return res.status(201).json({
@@ -168,6 +171,32 @@ const deleteComment = async (req, res, next) => {
   }
 };
 
+const globalSearch = async (req, res, next) => {
+  try {
+    const { q } = req.query;
+    const result = await postService.globalSearch(q || "");
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getUserProfile = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const result = await postService.getUserPosts(userId);
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createPost,
   getFeed,
@@ -178,5 +207,7 @@ module.exports = {
   batchLogViews,
   streamVideo,
   getMyPosts,
-  resetSeenReels
+  resetSeenReels,
+  globalSearch,
+  getUserProfile
 };

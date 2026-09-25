@@ -70,6 +70,14 @@ export function App() {
                   }
                 />
                 <Route
+                  path="/profile/:identifier"
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/admin"
                   element={
                     <AdminRoute>

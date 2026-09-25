@@ -15,6 +15,14 @@ const userSchema = new mongoose.Schema(
       trim: true,
       index: true
     },
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true,
+      index: true
+    },
     passwordHash: {
       type: String,
       required: true
@@ -29,10 +37,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: ""
     },
+    dob: {
+      type: String,
+      default: ""
+    },
     role: {
       type: String,
       enum: ["user", "admin"],
-      default: "user"
+      default: "user",
+      index: true
     },
     kycDetails: {
       aadharNumber: { type: String, default: "" },
@@ -42,7 +55,8 @@ const userSchema = new mongoose.Schema(
       status: {
         type: String,
         enum: ["NOT_SUBMITTED", "PENDING", "PASSED", "FAILED"],
-        default: "NOT_SUBMITTED"
+        default: "NOT_SUBMITTED",
+        index: true
       },
       rejectionReason: { type: String, default: "" },
       submittedAt: { type: Date }
@@ -50,5 +64,11 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// High-Scale Indexes for Millions of Users
+userSchema.index({ name: "text", email: "text", username: "text" });
+userSchema.index({ "kycDetails.status": 1, residency: 1 });
+userSchema.index({ createdAt: -1 });
+userSchema.index({ residency: 1, createdAt: -1 });
 
 module.exports = mongoose.model("User", userSchema);

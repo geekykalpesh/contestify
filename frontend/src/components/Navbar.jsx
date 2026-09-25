@@ -5,6 +5,8 @@ import { logout } from "../store/authSlice";
 import { toggleTheme } from "../store/themeSlice";
 import { Camera, Film, Trophy, Sun, Moon, LogOut, LogIn, UserPlus } from "lucide-react";
 import { getMediaUrl } from "../config";
+import { GlobalSearchInput } from "./GlobalSearchInput";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 export const Navbar = () => {
   const dispatch = useDispatch();
@@ -16,35 +18,28 @@ export const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-40 bg-[var(--bg-card)] border-b border-[var(--border-main)] px-4 py-3 transition-colors duration-200">
-      <div className="max-w-5xl mx-auto flex items-center justify-between">
+      <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
         {/* Brand Logo - Authentic Instagram Style */}
-        <Link to="/" className="flex items-center gap-2.5 group">
+        <Link to="/" className="flex items-center gap-2.5 group shrink-0">
           <div className="w-9 h-9 rounded-xl ig-ring p-0.5 flex items-center justify-center shadow-md">
             <div className="w-full h-full bg-[var(--bg-main)] rounded-[10px] flex items-center justify-center">
               <Camera className="w-5 h-5 text-[var(--text-primary)]" />
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 hidden sm:flex">
             <span className="text-3xl font-ig-logo text-[var(--text-primary)] tracking-wide">
               Contestify
             </span>
           </div>
         </Link>
 
+        {/* Global Instagram-Style Search Bar */}
+        <div className="flex-1 max-w-xs sm:max-w-sm">
+          <GlobalSearchInput />
+        </div>
+
         {/* Navigation Links */}
         <div className="flex items-center gap-2 sm:gap-4">
-          <Link
-            to="/"
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              location.pathname === "/"
-                ? "bg-slate-500/10 text-[var(--text-primary)] font-bold"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            }`}
-          >
-            <Film className="w-4 h-4" />
-            <span className="hidden sm:inline">Feed</span>
-          </Link>
-
           {isAdmin && (
             <Link
               to="/admin"
@@ -59,10 +54,13 @@ export const Navbar = () => {
             </Link>
           )}
 
+          {/* Real-time Notifications Center Bell */}
+          {user && <NotificationDropdown />}
+
           {/* Light / Dark Mode Toggle Button */}
           <button
             onClick={() => dispatch(toggleTheme())}
-            className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-500/10 transition-colors"
+            className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-500/10 transition-colors cursor-pointer"
             title={mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {mode === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}

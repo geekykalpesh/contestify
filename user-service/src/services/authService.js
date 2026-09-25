@@ -9,10 +9,17 @@ const isAdminEmail = (email) => {
   return e === "admin@gmail.com" || e === "admin@creator.com";
 };
 
-const registerUser = async ({ name, email, password, residency, avatarUrl }) => {
-  const existingUser = await User.findOne({ email: email.toLowerCase() });
+const registerUser = async ({ name, email, username, password, residency, dob, avatarUrl }) => {
+  const cleanEmail = email.toLowerCase().trim();
+  const existingUser = await User.findOne({ email: cleanEmail });
   if (existingUser) {
-    throw new AppError("Email already registered", 409);
+    throw new AppError("This email is already registered. Please log in.", 409);
+  }
+
+  const generatedUsername = (username || email.split("@")[0]).toLowerCase().trim().replace(/[^a-z0-9_]/g, "");
+  const existingUsername = await User.findOne({ username: generatedUsername });
+  if (existingUsername) {
+    throw new AppError("This username is already taken. Please choose another.", 409);
   }
 
   const salt = await bcrypt.genSalt(10);
@@ -22,9 +29,11 @@ const registerUser = async ({ name, email, password, residency, avatarUrl }) => 
 
   const user = await User.create({
     name,
-    email: email.toLowerCase(),
+    email: cleanEmail,
+    username: generatedUsername,
     passwordHash,
     residency: residency || "Chhattisgarh",
+    dob: dob || "",
     avatarUrl: avatarUrl || "",
     role
   });
@@ -41,7 +50,9 @@ const registerUser = async ({ name, email, password, residency, avatarUrl }) => 
       id: user._id,
       name: user.name,
       email: user.email,
+      username: user.username,
       residency: user.residency,
+      dob: user.dob,
       avatarUrl: user.avatarUrl,
       role: user.role,
       createdAt: user.createdAt
@@ -49,18 +60,29 @@ const registerUser = async ({ name, email, password, residency, avatarUrl }) => 
   };
 };
 
-const loginUser = async ({ email, password }) => {
-  const user = await User.findOne({ email: email.toLowerCase() });
+const loginUser = async ({ email, identifier, password }) => {
+  const input = (identifier || email || "").toLowerCase().trim();
+  if (!input) {
+    throw new AppError("Username or email address is required", 400);
+  }
+
+  const user = await User.findOne({
+    $or: [{ email: input }, { username: input }]
+  });
+
   if (!user) {
-    throw new AppError("Invalid email or password", 401);
+    throw new AppError("Invalid username, email, or password", 401);
   }
 
   const isMatch = await bcrypt.compare(password, user.passwordHash);
   if (!isMatch) {
-    throw new AppError("Invalid email or password", 401);
+    throw new AppError("Invalid username, email, or password", 401);
   }
 
   const userRole = user.role === "admin" || isAdminEmail(user.email) ? "admin" : "user";
+
+  // Fallback username if null
+  const effectiveUsername = user.username || user.email.split("@")[0];
 
   const token = jwt.sign(
     { id: user._id, email: user.email, residency: user.residency, role: userRole },
@@ -74,12 +96,31 @@ const loginUser = async ({ email, password }) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      username: effectiveUsername,
       residency: user.residency,
       avatarUrl: user.avatarUrl || "",
       role: userRole,
       createdAt: user.createdAt
     }
   };
+};
+
+const checkAvailability = async ({ username, email }) => {
+  const result = { usernameAvailable: true, emailAvailable: true };
+
+  if (username && typeof username === "string" && username.trim()) {
+    const u = username.toLowerCase().trim();
+    const existingUser = await User.findOne({ username: u });
+    result.usernameAvailable = !existingUser;
+  }
+
+  if (email && typeof email === "string" && email.trim()) {
+    const e = email.toLowerCase().trim();
+    const existingEmail = await User.findOne({ email: e });
+    result.emailAvailable = !existingEmail;
+  }
+
+  return result;
 };
 
 const updateResidency = async (userId, residency) => {
@@ -181,6 +222,7 @@ const updateKycDetails = async (userId, { aadharNumber, aadharMobile, dob, aadha
 module.exports = {
   registerUser,
   loginUser,
+  checkAvailability,
   updateResidency,
   updateAvatar,
   updateKycDetails

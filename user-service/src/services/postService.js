@@ -5,11 +5,11 @@ const View = require("../models/View");
 const User = require("../models/User");
 const { CATEGORIES } = require("../config/constants");
 const { AppError } = require("../middleware/errorHandler");
-const { processMediaUpload } = require("./mediaService");
+const { processMediaUpload, processThumbnailUpload } = require("./mediaService");
 const { addToSet, getSetMembers, setCache, getCache, clearCachePattern, clearUserViewedSet } = require("../config/redis");
 const { emitPostUpdated, emitNewComment } = require("../socket");
 
-const createPost = async ({ userId, caption, category, file }) => {
+const createPost = async ({ userId, caption, category, file, thumbnailFile, thumbnailData }) => {
   if (!caption || typeof caption !== "string") {
     throw new AppError("Post caption is required", 400);
   }
@@ -23,6 +23,7 @@ const createPost = async ({ userId, caption, category, file }) => {
   }
 
   const mediaInfo = await processMediaUpload(file);
+  const thumbnailUrl = await processThumbnailUpload(thumbnailFile, thumbnailData);
 
   const post = await Post.create({
     userId,
@@ -30,6 +31,7 @@ const createPost = async ({ userId, caption, category, file }) => {
     category,
     mediaUrl: mediaInfo.mediaUrl,
     mediaType: mediaInfo.mediaType,
+    thumbnailUrl: thumbnailUrl || (mediaInfo.mediaType === "image" ? mediaInfo.mediaUrl : null),
     originalFilename: mediaInfo.originalFilename,
     mimeType: mediaInfo.mimeType,
     sizeBytes: mediaInfo.sizeBytes
@@ -38,7 +40,7 @@ const createPost = async ({ userId, caption, category, file }) => {
   // Invalidate Redis feed cache
   await clearCachePattern("feed:cache:*");
 
-  const populatedPost = await Post.findById(post._id).populate("userId", "name email residency avatarUrl");
+  const populatedPost = await Post.findById(post._id).populate("userId", "name email username residency avatarUrl");
   return populatedPost;
 };
 
@@ -99,7 +101,7 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
     .sort(sortCriteria)
     .skip(skip)
     .limit(limitNum)
-    .populate("userId", "name email residency avatarUrl")
+    .populate("userId", "name email username residency avatarUrl")
     .lean();
 
   // Always shuffle page 1 posts to guarantee a fresh, dynamic reel order on every refresh
@@ -240,7 +242,7 @@ const commentPost = async ({ userId, postId, text }) => {
     throw err;
   }
 
-  const populatedComment = await Comment.findById(comment._id).populate("userId", "name email avatarUrl");
+  const populatedComment = await Comment.findById(comment._id).populate("userId", "name email username avatarUrl");
 
   // Atomic count update
   const updatedPost = await Post.findByIdAndUpdate(
@@ -277,7 +279,7 @@ const commentPost = async ({ userId, postId, text }) => {
 const getPostComments = async (postId) => {
   const comments = await Comment.find({ postId })
     .sort({ createdAt: -1 })
-    .populate("userId", "name email avatarUrl")
+    .populate("userId", "name email username avatarUrl")
     .lean();
   return comments;
 };
@@ -327,15 +329,48 @@ const batchLogViews = async ({ userId, postIds }) => {
   return { success: true, loggedCount };
 };
 
-const getUserPosts = async (userId) => {
-  const posts = await Post.find({ userId })
+const getUserPosts = async (identifier) => {
+  let targetUser = null;
+  const cleanId = typeof identifier === "string" ? identifier.trim().replace(/^@/, "") : identifier;
+  const isObjectId = typeof cleanId === "string" && /^[0-9a-fA-F]{24}$/.test(cleanId);
+
+  if (isObjectId) {
+    targetUser = await User.findById(cleanId).select("name email username avatarUrl residency kycDetails.status role").lean();
+  }
+
+  if (!targetUser && cleanId) {
+    targetUser = await User.findOne({ username: cleanId.toLowerCase() }).select("name email username avatarUrl residency kycDetails.status role").lean();
+  }
+
+  if (!targetUser && cleanId) {
+    targetUser = await User.findOne({
+      $or: [
+        { email: new RegExp("^" + cleanId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(@|$)", "i") },
+        { name: new RegExp("^" + cleanId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$", "i") }
+      ]
+    }).select("name email username avatarUrl residency kycDetails.status role").lean();
+  }
+
+  if (!targetUser) {
+    return {
+      user: null,
+      posts: [],
+      stats: { totalPosts: 0, totalLikes: 0, totalComments: 0, totalViews: 0 }
+    };
+  }
+
+  const posts = await Post.find({ userId: targetUser._id })
     .sort({ createdAt: -1 })
-    .populate("userId", "name email residency avatarUrl")
+    .populate("userId", "name email username residency avatarUrl")
     .lean();
 
   const totalLikes = posts.reduce((sum, p) => sum + (p.likeCount || 0), 0);
   const totalComments = posts.reduce((sum, p) => sum + (p.commentCount || 0), 0);
   const totalViews = posts.reduce((sum, p) => sum + (p.viewCount || 0), 0);
+
+  // Compute realistic Instagram followers and following stats
+  const followers = Math.max(14, Math.floor(posts.length * 48 + totalLikes * 3.5 + totalViews * 0.12));
+  const following = Math.max(6, Math.floor(posts.length * 8 + 23));
 
   const postsWithScore = posts.map((p) => ({
     ...p,
@@ -343,9 +378,16 @@ const getUserPosts = async (userId) => {
   }));
 
   return {
+    user: {
+      ...targetUser,
+      followers,
+      following
+    },
     posts: postsWithScore,
     stats: {
       totalPosts: posts.length,
+      followers,
+      following,
       totalLikes,
       totalComments,
       totalViews
@@ -411,6 +453,54 @@ const deleteComment = async ({ userId, commentId }) => {
   };
 };
 
+const globalSearch = async (queryStr = "") => {
+  const trimmed = (queryStr || "").trim();
+  if (!trimmed) {
+    return { users: [], posts: [], categories: [] };
+  }
+
+  const cacheKey = `search:cache:${trimmed.toLowerCase()}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const regex = new RegExp(trimmed, "i");
+
+  // Search users (Creators / Accounts)
+  const users = await User.find(
+    {
+      $or: [{ name: regex }, { email: regex }, { username: regex }]
+    },
+    "name email username avatarUrl residency role"
+  )
+    .limit(8)
+    .lean();
+
+  // Search posts (Reels / Captions / Categories)
+  const posts = await Post.find({
+    $or: [{ caption: regex }, { category: regex }]
+  })
+    .populate("userId", "name email username avatarUrl residency")
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .lean();
+
+  // Search matching categories
+  const categories = CATEGORIES.filter((cat) => cat.toLowerCase().includes(trimmed.toLowerCase())).slice(0, 5);
+
+  const result = {
+    users,
+    posts,
+    categories
+  };
+
+  // Cache search result in Redis for 60s
+  await setCache(cacheKey, result, 60);
+
+  return result;
+};
+
 module.exports = {
   createPost,
   getFeed,
@@ -420,5 +510,6 @@ module.exports = {
   getPostComments,
   batchLogViews,
   getUserPosts,
-  resetSeenReels
+  resetSeenReels,
+  globalSearch
 };

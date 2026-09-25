@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useParams } from "react-router-dom";
 import { updateResidencyStatus, updateAvatarThunk, updateKycThunkUser } from "../store/authSlice";
 import { userApi } from "../services/api";
 import { useToast } from "../context/ToastContext";
@@ -28,20 +29,32 @@ import {
 
 export const ProfilePage = () => {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
+  const { identifier, userId } = useParams();
+  const rawIdentifier = identifier || userId;
+  const profileIdentifier = rawIdentifier ? rawIdentifier.replace(/^@/, "").trim() : "";
+  const { user: currentUser } = useSelector((state) => state.auth);
   const { toast } = useToast();
 
+  const isOwnProfile =
+    !profileIdentifier ||
+    (currentUser &&
+      (currentUser._id === profileIdentifier ||
+        currentUser.id === profileIdentifier ||
+        (currentUser.username && currentUser.username.toLowerCase() === profileIdentifier.toLowerCase()) ||
+        (currentUser.email && currentUser.email.split("@")[0].toLowerCase() === profileIdentifier.toLowerCase())));
+
   const [activeTab, setActiveTab] = useState("grid"); // "grid" | "feed" | "settings" | "kyc"
+  const [profileUser, setProfileUser] = useState(null);
   const [myPosts, setMyPosts] = useState([]);
   const [stats, setStats] = useState({ totalPosts: 0, totalLikes: 0, totalComments: 0, totalViews: 0 });
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
 
-  const [residency, setResidency] = useState(user?.residency || "Other");
+  const [residency, setResidency] = useState(currentUser?.residency || "Other");
   const [updatingResidency, setUpdatingResidency] = useState(false);
 
   // KYC Form state
-  const kycData = user?.kycDetails || {};
+  const kycData = currentUser?.kycDetails || {};
   const [aadharNumber, setAadharNumber] = useState(kycData.aadharNumber || "");
   const [aadharMobile, setAadharMobile] = useState(kycData.aadharMobile || "");
   const [dob, setDob] = useState(kycData.dob || "");
@@ -68,18 +81,16 @@ export const ProfilePage = () => {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      fetchUserPosts();
-    }
-  }, [user]);
+    fetchProfileData();
+  }, [profileIdentifier, currentUser]);
 
   useEffect(() => {
-    if (user?.kycDetails) {
-      setAadharNumber(user.kycDetails.aadharNumber || "");
-      setAadharMobile(user.kycDetails.aadharMobile || "");
-      setDob(user.kycDetails.dob || "");
+    if (currentUser?.kycDetails) {
+      setAadharNumber(currentUser.kycDetails.aadharNumber || "");
+      setAadharMobile(currentUser.kycDetails.aadharMobile || "");
+      setDob(currentUser.kycDetails.dob || "");
     }
-  }, [user?.kycDetails]);
+  }, [currentUser?.kycDetails]);
 
   // Close modal on Escape key press
   useEffect(() => {
@@ -92,30 +103,50 @@ export const ProfilePage = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedPost]);
 
-  const fetchUserPosts = async () => {
+  const fetchProfileData = async () => {
     try {
       setLoadingPosts(true);
-      const res = await userApi.get("/posts/my-posts");
-      setMyPosts(res.data.data.posts);
-      setStats(res.data.data.stats);
+      if (!profileIdentifier || isOwnProfile) {
+        setProfileUser(currentUser);
+        const res = await userApi.get("/posts/my-posts");
+        setMyPosts(res.data.data.posts || []);
+        setStats(res.data.data.stats || { totalPosts: 0, totalLikes: 0, totalComments: 0, totalViews: 0 });
+      } else {
+        const res = await userApi.get(`/posts/user/${encodeURIComponent(profileIdentifier)}`);
+        setProfileUser(res.data.data.user || null);
+        setMyPosts(res.data.data.posts || []);
+        setStats(res.data.data.stats || { totalPosts: 0, totalLikes: 0, totalComments: 0, totalViews: 0 });
+      }
     } catch (err) {
-      console.error("Failed to fetch user posts", err);
+      console.error("Failed to fetch profile data", err);
+      setProfileUser(null);
     } finally {
       setLoadingPosts(false);
     }
   };
 
-  if (!user) {
+  const displayUser = profileUser || (isOwnProfile ? currentUser : null);
+
+  if (loadingPosts) {
     return (
-      <div className="max-w-md mx-auto my-12 text-center ig-card p-8 rounded-3xl">
-        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Please Login</h2>
-        <p className="text-xs text-[var(--text-secondary)]">You need to log in to view your profile.</p>
+      <div className="max-w-4xl mx-auto px-4 py-24 text-center flex flex-col items-center justify-center space-y-4">
+        <div className="w-12 h-12 rounded-full border-4 border-sky-500 border-t-transparent animate-spin" />
+        <p className="text-xs font-semibold text-[var(--text-secondary)]">Loading Creator Profile...</p>
       </div>
     );
   }
 
-  const isCG = user.residency === "Chhattisgarh";
-  const kycStatus = kycData.status || "NOT_SUBMITTED";
+  if (!displayUser) {
+    return (
+      <div className="max-w-md mx-auto my-12 text-center ig-card p-8 rounded-3xl">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">User Not Found</h2>
+        <p className="text-xs text-[var(--text-secondary)]">The requested creator profile does not exist or has been removed.</p>
+      </div>
+    );
+  }
+
+  const isCG = displayUser?.residency === "Chhattisgarh";
+  const kycStatus = displayUser?.kycDetails?.status || (isOwnProfile ? kycData.status : "NOT_SUBMITTED");
 
   const handleResidencyUpdate = async (e) => {
     e.preventDefault();
@@ -291,59 +322,77 @@ export const ProfilePage = () => {
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           {/* Avatar */}
           <div className="relative group cursor-pointer">
-            <label className="cursor-pointer block relative">
-              <input type="file" accept="image/*" onChange={handleAvatarFileSelect} className="hidden" />
+            <label className={`block relative ${isOwnProfile ? "cursor-pointer" : "cursor-default"}`}>
+              {isOwnProfile && <input type="file" accept="image/*" onChange={handleAvatarFileSelect} className="hidden" />}
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 ig-ring shadow-xl overflow-hidden">
-                {user.avatarUrl ? (
+                {displayUser.avatarUrl ? (
                   <img
-                    src={getMediaUrl(user.avatarUrl)}
-                    alt={user.name}
+                    src={getMediaUrl(displayUser.avatarUrl)}
+                    alt={displayUser.name}
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full rounded-full bg-[var(--bg-main)] flex items-center justify-center font-black text-3xl sm:text-4xl text-[var(--text-primary)]">
-                    {user.name ? user.name[0].toUpperCase() : "U"}
+                  <div className="w-full h-full rounded-full bg-[var(--bg-main)] flex items-center justify-center font-bold text-2xl sm:text-3xl text-[var(--text-primary)]">
+                    {displayUser.name ? displayUser.name[0].toUpperCase() : "U"}
                   </div>
                 )}
               </div>
-              <div className="absolute -bottom-1 -right-1 bg-sky-500 text-white p-2 rounded-full border-2 border-[var(--bg-main)] shadow-md group-hover:scale-110 transition-transform">
-                <Sparkles className="w-4 h-4" />
-              </div>
+              {isOwnProfile && (
+                <div className="absolute -bottom-1 -right-1 bg-sky-500 text-white p-2 rounded-full border-2 border-[var(--bg-main)] shadow-md group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+              )}
             </label>
           </div>
 
           {/* User Details & Bio */}
           <div className="flex-1 text-center sm:text-left space-y-3">
             <div className="flex flex-col sm:flex-row items-center gap-3">
-              <h1 className="text-2xl font-black text-[var(--text-primary)]">{user.name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">{(displayUser.name || "").replace(/\s*\([^)]*\)/g, "").trim()}</h1>
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                @{displayUser.username || displayUser.email?.split("@")[0] || displayUser.name?.toLowerCase().replace(/\s+/g, "_")}
+              </span>
               {kycStatus === "PASSED" && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   <CheckCircle2 className="w-3 h-3" /> KYC Verified
                 </span>
               )}
+              {isCG && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 dark:bg-[#272727] dark:text-slate-300 dark:border-[#3f3f3f]">
+                  <MapPin className="w-3 h-3 text-slate-500 dark:text-slate-400" /> Chhattisgarh Resident
+                </span>
+              )}
             </div>
 
-            <p className="text-xs text-[var(--text-secondary)] flex items-center justify-center sm:justify-start gap-1.5">
+            <p className="text-xs text-[var(--text-secondary)] flex items-center justify-center sm:justify-start gap-1.5 font-medium">
               <Mail className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-              <span>{user.email}</span>
+              <span>{displayUser.email}</span>
             </p>
 
             {/* Instagram Profile Stats Bar */}
-            <div className="flex items-center justify-center sm:justify-start gap-6 pt-2 border-t border-[var(--border-main)]">
-              <div className="text-center sm:text-left">
-                <span className="block font-black text-[var(--text-primary)] text-base">{stats.totalPosts}</span>
+            <div className="flex items-center justify-center sm:justify-start gap-5 sm:gap-7 pt-3 border-t border-[var(--border-main)] overflow-x-auto no-scrollbar">
+              <div className="text-center sm:text-left shrink-0">
+                <span className="block font-bold text-[var(--text-primary)] text-base tracking-tight">{stats.totalPosts || 0}</span>
                 <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Posts</span>
               </div>
-              <div className="text-center sm:text-left">
-                <span className="block font-black text-rose-500 text-base">{stats.totalLikes}</span>
+              <div className="text-center sm:text-left shrink-0">
+                <span className="block font-bold text-[var(--text-primary)] text-base tracking-tight">{stats.followers ?? displayUser?.followers ?? 0}</span>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Followers</span>
+              </div>
+              <div className="text-center sm:text-left shrink-0">
+                <span className="block font-bold text-[var(--text-primary)] text-base tracking-tight">{stats.following ?? displayUser?.following ?? 0}</span>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Following</span>
+              </div>
+              <div className="text-center sm:text-left shrink-0">
+                <span className="block font-bold text-rose-500 text-base tracking-tight">{stats.totalLikes || 0}</span>
                 <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Likes</span>
               </div>
-              <div className="text-center sm:text-left">
-                <span className="block font-black text-sky-500 text-base">{stats.totalComments}</span>
+              <div className="text-center sm:text-left shrink-0">
+                <span className="block font-bold text-sky-500 text-base tracking-tight">{stats.totalComments || 0}</span>
                 <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Comments</span>
               </div>
-              <div className="text-center sm:text-left">
-                <span className="block font-black text-emerald-500 text-base">{stats.totalViews}</span>
+              <div className="text-center sm:text-left shrink-0">
+                <span className="block font-bold text-emerald-500 text-base tracking-tight">{stats.totalViews || 0}</span>
                 <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Views</span>
               </div>
             </div>
@@ -377,29 +426,33 @@ export const ProfilePage = () => {
           <span>REELS STREAM</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab("kyc")}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-xs border-b-2 transition-all ${
-            activeTab === "kyc"
-              ? "border-emerald-500 text-emerald-400 bg-emerald-500/5"
-              : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          }`}
-        >
-          <FileCheck className="w-4 h-4 text-emerald-400" />
-          <span>KYC VERIFICATION</span>
-        </button>
+        {isOwnProfile && (
+          <button
+            onClick={() => setActiveTab("kyc")}
+            className={`flex items-center gap-2 px-5 py-3 font-bold text-xs border-b-2 transition-all ${
+              activeTab === "kyc"
+                ? "border-emerald-500 text-emerald-400 bg-emerald-500/5"
+                : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            <FileCheck className="w-4 h-4 text-emerald-400" />
+            <span>KYC VERIFICATION</span>
+          </button>
+        )}
 
-        <button
-          onClick={() => setActiveTab("settings")}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-xs border-b-2 transition-all ${
-            activeTab === "settings"
-              ? "border-sky-500 text-sky-500 bg-sky-500/5"
-              : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          }`}
-        >
-          <Settings className="w-4 h-4" />
-          <span>RESIDENCY SETTINGS</span>
-        </button>
+        {isOwnProfile && (
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`flex items-center gap-2 px-5 py-3 font-bold text-xs border-b-2 transition-all ${
+              activeTab === "settings"
+                ? "border-sky-500 text-sky-500 bg-sky-500/5"
+                : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            <span>RESIDENCY SETTINGS</span>
+          </button>
+        )}
       </div>
 
       {/* TAB 1: INSTAGRAM 3-COLUMN THUMBNAIL GRID */}
@@ -421,6 +474,7 @@ export const ProfilePage = () => {
             <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {myPosts.map((post) => {
                 const mediaSource = getMediaUrl(post.mediaUrl);
+                const coverSource = post.thumbnailUrl ? getMediaUrl(post.thumbnailUrl) : null;
 
                 return (
                   <div
@@ -429,7 +483,11 @@ export const ProfilePage = () => {
                     className="relative aspect-square bg-[var(--bg-main)] rounded-xl overflow-hidden cursor-pointer group border border-[var(--border-main)] hover:border-sky-500/50 transition-all shadow-sm"
                   >
                     {post.mediaType === "video" ? (
-                      <video src={mediaSource} className="w-full h-full object-cover" muted />
+                      coverSource ? (
+                        <img src={coverSource} alt={post.caption} className="w-full h-full object-cover" />
+                      ) : (
+                        <video src={mediaSource} className="w-full h-full object-cover" muted />
+                      )
                     ) : (
                       <img src={mediaSource} alt={post.caption} className="w-full h-full object-cover" />
                     )}

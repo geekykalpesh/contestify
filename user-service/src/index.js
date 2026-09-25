@@ -9,6 +9,7 @@ const { initRedis } = require("./config/redis");
 const { globalErrorHandler } = require("./middleware/errorHandler");
 const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 const internalRoutes = require("./routes/internalRoutes");
 const { initSocket } = require("./socket");
 
@@ -49,6 +50,7 @@ app.get("/health", (req, res) => {
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/internal", internalRoutes);
 
 // Global Error Handler

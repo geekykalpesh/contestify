@@ -53,6 +53,46 @@ const processMediaUpload = async (file) => {
   };
 };
 
+const processThumbnailUpload = async (thumbnailFile, base64Thumbnail) => {
+  if (thumbnailFile) {
+    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+      try {
+        const result = await cloudinary.uploader.upload(thumbnailFile.path, {
+          resource_type: "image",
+          folder: "creator-contest-thumbnails",
+          quality: "auto",
+          fetch_format: "auto"
+        });
+        fs.unlink(thumbnailFile.path, () => {});
+        return result.secure_url;
+      } catch (err) {
+        console.warn("[Media Service] Cloudinary thumbnail upload failed:", err.message);
+      }
+    }
+    const filename = path.basename(thumbnailFile.path);
+    return `/uploads/${filename}`;
+  }
+
+  if (base64Thumbnail && typeof base64Thumbnail === "string" && base64Thumbnail.startsWith("data:image/")) {
+    try {
+      const matches = base64Thumbnail.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+      if (matches) {
+        const ext = matches[1] === "png" ? "png" : "jpg";
+        const base64Data = matches[2];
+        const filename = `thumb_${Date.now()}_${Math.floor(Math.random() * 100000)}.${ext}`;
+        const targetPath = path.join(__dirname, "../../uploads", filename);
+
+        await fs.promises.writeFile(targetPath, Buffer.from(base64Data, "base64"));
+        return `/uploads/${filename}`;
+      }
+    } catch (err) {
+      console.warn("[Media Service] Failed to process base64 thumbnail:", err.message);
+    }
+  }
+
+  return null;
+};
+
 const streamLocalVideo = (req, res, filename) => {
   const filePath = path.join(__dirname, "../../uploads", filename);
   if (!fs.existsSync(filePath)) {
@@ -90,5 +130,6 @@ const streamLocalVideo = (req, res, filename) => {
 
 module.exports = {
   processMediaUpload,
+  processThumbnailUpload,
   streamLocalVideo
 };

@@ -1,16 +1,16 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchFeed,
   setSelectedCategory,
-  resetSeenReelsThunk,
   flushViewBuffer,
   updatePostRealtime
 } from "../store/feedSlice";
 import { PostCard } from "../components/PostCard";
+import { CommentsPanel } from "../components/CommentsPanel";
 import { CreatePostModal } from "../components/CreatePostModal";
 import { socket } from "../services/socket";
-import { PlusCircle, Filter, CheckCircle2, RefreshCcw, Loader2 } from "lucide-react";
+import { PlusCircle, Filter, CheckCircle2, Loader2, ChevronUp, ChevronDown } from "lucide-react";
 
 const CATEGORIES = [
   "ALL",
@@ -32,7 +32,28 @@ export const FeedPage = () => {
   const { posts, selectedCategory, meta, pagination, loading, loadingMore } = useSelector((state) => state.feed);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activePost, setActivePost] = useState(null);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(true); // Open by default like YouTube Shorts!
+
   const observerRef = useRef(null);
+
+  // Set initial activePost when posts load
+  useEffect(() => {
+    if (posts.length > 0 && !activePost) {
+      setActivePost(posts[0]);
+    }
+  }, [posts, activePost]);
+
+  // Handle active post detection instantly on scroll
+  const handleActivePost = useCallback((post) => {
+    if (post && post._id !== activePost?._id) {
+      setActivePost(post);
+    }
+  }, [activePost?._id]);
+
+  const handleToggleComments = useCallback((postId) => {
+    setIsCommentsOpen((prev) => !prev);
+  }, []);
 
   // Fetch feed on category changes
   useEffect(() => {
@@ -111,14 +132,14 @@ export const FeedPage = () => {
   }, [dispatch]);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
-      {/* Top Banner & Actions Bar */}
-      <div className="flex items-center justify-between gap-4 mb-6">
+    <div className="max-w-7xl mx-auto px-2 sm:px-6 py-2 sm:py-6 relative">
+      {/* Top Banner & Actions Bar (Clean YouTube Shorts Style) */}
+      <div className="flex items-center justify-between gap-4 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-xl font-black text-[var(--text-primary)]">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             Reels Feed
           </h1>
-          <p className="text-xs text-[var(--text-secondary)] mt-1">
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5 sm:mt-1 font-medium">
             Watch content from top creators in real-time.
           </p>
         </div>
@@ -126,7 +147,7 @@ export const FeedPage = () => {
         {user && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 ig-btn-primary text-xs rounded-xl font-bold shadow-md transition-all whitespace-nowrap shrink-0 cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-black dark:hover:bg-slate-200 text-xs rounded-full font-bold shadow-md transition-all whitespace-nowrap shrink-0 cursor-pointer"
           >
             <PlusCircle className="w-4 h-4 shrink-0" />
             <span>Create</span>
@@ -134,17 +155,17 @@ export const FeedPage = () => {
         )}
       </div>
 
-      {/* Category Pills Slider */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar">
+      {/* Category Pills Slider (Supports Light & Dark Theme Modes) */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-2 sm:mb-6 no-scrollbar">
         <Filter className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
             onClick={() => dispatch(setSelectedCategory(cat))}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer ${
               selectedCategory === cat
-                ? "bg-[var(--text-primary)] text-[var(--bg-main)] shadow-sm"
-                : "ig-card text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                ? "bg-slate-900 text-white dark:bg-white dark:text-black font-bold shadow-sm"
+                : "bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200 dark:bg-[#272727] dark:text-white dark:hover:bg-[#3f3f3f] dark:border-white/5"
             }`}
           >
             {cat}
@@ -152,56 +173,72 @@ export const FeedPage = () => {
         ))}
       </div>
 
-      {/* Feed List */}
-      {loading && posts.length === 0 ? (
-        <div className="space-y-6">
-          {[1, 2].map((i) => (
-            <div key={i} className="ig-card rounded-2xl h-80 animate-pulse bg-slate-500/5" />
-          ))}
-        </div>
-      ) : posts.length > 0 ? (
-        <div className="space-y-6">
-          {posts.map((post) => (
-            <PostCard key={post._id} post={post} />
-          ))}
+      {/* CENTERED REELS FEED (Video section stays perfectly centered) */}
+      <div className="w-full max-w-[400px] mx-auto flex flex-col items-center">
+        {loading && posts.length === 0 ? (
+          <div className="w-full space-y-6">
+            {[1, 2].map((i) => (
+              <div key={i} className="w-full aspect-[9/16] rounded-3xl animate-pulse bg-slate-100 dark:bg-[#141414] border border-slate-200 dark:border-[#272727]" />
+            ))}
+          </div>
+        ) : posts.length > 0 ? (
+          <div className="w-full space-y-8">
+            {posts.map((post) => (
+              <PostCard
+                key={post._id}
+                post={post}
+                onActive={handleActivePost}
+                onToggleComments={handleToggleComments}
+                isCommentsOpen={isCommentsOpen}
+              />
+            ))}
 
-          {/* Infinite Scroll Trigger Sentinel */}
-          <div ref={observerRef} className="py-4 text-center">
-            {loadingMore && (
-              <div className="flex items-center justify-center gap-2 py-4 text-xs font-semibold text-[var(--text-secondary)]">
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
-                <span>Loading more reels...</span>
-              </div>
-            )}
-            {meta.isFallback && (
-              <div className="py-3 text-center">
-                <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>You've seen all new reels! Suggesting top-rated reels</span>
-                </span>
-              </div>
+            {/* Infinite Scroll Trigger Sentinel */}
+            <div ref={observerRef} className="py-4 text-center">
+              {loadingMore && (
+                <div className="flex items-center justify-center gap-2 py-4 text-xs font-semibold text-[var(--text-secondary)]">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                  <span>Loading more reels...</span>
+                </div>
+              )}
+              {meta.isFallback && (
+                <div className="py-3 text-center">
+                  <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 inline-flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>You've seen all new reels! Suggesting top-rated reels</span>
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Empty Category State */
+          <div className="w-full rounded-3xl p-10 text-center bg-white dark:bg-[#0f0f0f] border border-slate-200 dark:border-[#272727] my-8 shadow-sm text-slate-900 dark:text-white">
+            <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-[#272727] text-slate-500 dark:text-slate-400 flex items-center justify-center mx-auto mb-4">
+              <Filter className="w-7 h-7" />
+            </div>
+            <h2 className="text-lg font-bold mb-1">No Posts Found</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+              There are no reels available in this category yet.
+            </p>
+            {user && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-5 py-2.5 bg-slate-900 text-white dark:bg-white dark:text-black font-bold text-xs rounded-full shadow-md cursor-pointer hover:bg-slate-800 dark:hover:bg-slate-200"
+              >
+                Be the first to post in {selectedCategory}
+              </button>
             )}
           </div>
-        </div>
-      ) : (
-        /* Empty Category State */
-        <div className="ig-card rounded-3xl p-10 text-center max-w-lg mx-auto my-8 shadow-sm">
-          <div className="w-14 h-14 rounded-full bg-slate-500/10 text-[var(--text-muted)] border border-[var(--border-main)] flex items-center justify-center mx-auto mb-4">
-            <Filter className="w-7 h-7" />
-          </div>
-          <h2 className="text-lg font-bold text-[var(--text-primary)] mb-1">No Posts Found</h2>
-          <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-6">
-            There are no reels available in this category yet.
-          </p>
-          {user && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-5 py-2.5 ig-btn-primary text-xs font-bold rounded-xl shadow-md cursor-pointer"
-            >
-              Be the first to post in {selectedCategory}
-            </button>
-          )}
-        </div>
+        )}
+      </div>
+
+      {/* FIXED RIGHT SIDE COMMENTS PANEL (Overlayed on right edge so video position is 100% steady) */}
+      {isCommentsOpen && activePost && (
+        <CommentsPanel
+          activePost={activePost}
+          onClose={() => setIsCommentsOpen(false)}
+        />
       )}
 
       {/* Create Post Modal */}
@@ -217,6 +254,28 @@ export const FeedPage = () => {
           )
         }
       />
+
+      {/* Desktop Up / Down Reels Scroll Navigation Arrows (Positioned on the RIGHT SIDE ONLY) */}
+      <div
+        className={`hidden xl:flex flex-col items-center gap-3 fixed top-1/2 -translate-y-1/2 z-40 transition-all duration-300 ${
+          isCommentsOpen ? "right-[350px] xl:right-[410px]" : "right-6 xl:right-12"
+        }`}
+      >
+        <button
+          onClick={() => window.scrollBy({ top: -760, behavior: "smooth" })}
+          className="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-[#272727] dark:hover:bg-[#3f3f3f] text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 shadow-2xl flex items-center justify-center transition-all active:scale-90 cursor-pointer"
+          title="Previous Reel"
+        >
+          <ChevronUp className="w-5.5 h-5.5" />
+        </button>
+        <button
+          onClick={() => window.scrollBy({ top: 760, behavior: "smooth" })}
+          className="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-[#272727] dark:hover:bg-[#3f3f3f] text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 shadow-2xl flex items-center justify-center transition-all active:scale-90 cursor-pointer"
+          title="Next Reel"
+        >
+          <ChevronDown className="w-5.5 h-5.5" />
+        </button>
+      </div>
     </div>
   );
 };

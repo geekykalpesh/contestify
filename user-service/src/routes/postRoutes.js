@@ -2,14 +2,16 @@ const express = require("express");
 const router = express.Router();
 const postController = require("../controllers/postController");
 const { authenticateToken, optionalAuthenticateToken } = require("../middleware/authMiddleware");
-const { uploadSingleMedia, validateFileSize } = require("../middleware/uploadMiddleware");
+const { uploadSingleMedia, uploadPostMedia, validateFileSize } = require("../middleware/uploadMiddleware");
 
 router.get("/feed", optionalAuthenticateToken, postController.getFeed);
+router.get("/search", postController.globalSearch);
+router.get("/user/:userId", optionalAuthenticateToken, postController.getUserProfile);
 router.get("/my-posts", authenticateToken, postController.getMyPosts);
 router.post(
   "/",
   authenticateToken,
-  uploadSingleMedia,
+  uploadPostMedia,
   validateFileSize,
   postController.createPost
 );

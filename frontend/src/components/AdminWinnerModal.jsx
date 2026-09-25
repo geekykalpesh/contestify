@@ -1,15 +1,19 @@
 import React from "react";
-import { X, Heart, MessageCircle, Eye, Calendar, Award, ShieldCheck, FileText, CheckCircle, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { X, Heart, MessageCircle, Eye, Calendar, Award, ShieldCheck, FileText, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { updateKycThunk } from "../store/adminSlice";
 import { getMediaUrl } from "../config";
 
 export const AdminWinnerModal = ({ winner, onClose }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   if (!winner) return null;
 
   const post = winner.topPost;
   const kyc = winner.kycDetails || {};
+  const usernameDisplay = winner.username || winner.userEmail?.split("@")[0] || (winner.userName ? winner.userName.toLowerCase().replace(/\s+/g, "_") : "unknown");
 
   const handleKycAction = (newStatus) => {
     dispatch(updateKycThunk({ winnerId: winner.userId || winner.userEmail, status: newStatus, notes: `KYC ${newStatus} from winner inspect modal` }));
@@ -23,9 +27,22 @@ export const AdminWinnerModal = ({ winner, onClose }) => {
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-amber-500" />
             <div>
-              <h3 className="font-extrabold text-[var(--text-primary)] text-sm">
-                Winner & KYC Verification: {winner.userName}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-[var(--text-primary)] text-sm">
+                  {(winner.userName || "").replace(/\s*\([^)]*\)/g, "").trim()}
+                </h3>
+                <button
+                  onClick={() => {
+                    onClose();
+                    navigate(`/profile/${usernameDisplay || winner.userId}`);
+                  }}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-sky-400 hover:underline cursor-pointer"
+                  title="Visit Profile"
+                >
+                  <span>@{usernameDisplay}</span>
+                  <ExternalLink className="w-3 h-3" />
+                </button>
+              </div>
               <p className="text-[10px] text-[var(--text-secondary)] font-mono">
                 {winner.userEmail} • Prize: <span className="text-amber-400 font-bold">{winner.tier?.replace(/_/g, " ")}</span>
               </p>
@@ -33,7 +50,7 @@ export const AdminWinnerModal = ({ winner, onClose }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-slate-500/20 text-[var(--text-secondary)] transition-colors"
+            className="p-1.5 rounded-full hover:bg-slate-500/20 text-[var(--text-secondary)] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -80,7 +97,7 @@ export const AdminWinnerModal = ({ winner, onClose }) => {
                 {winner.kycStatus !== "PASSED" && (
                   <button
                     onClick={() => handleKycAction("PASSED")}
-                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] shadow-sm transition-colors"
+                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] shadow-sm transition-colors cursor-pointer"
                   >
                     <CheckCircle className="w-3 h-3" /> Approve KYC
                   </button>
@@ -88,7 +105,7 @@ export const AdminWinnerModal = ({ winner, onClose }) => {
                 {winner.kycStatus !== "FAILED" && (
                   <button
                     onClick={() => handleKycAction("FAILED")}
-                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] shadow-sm transition-colors"
+                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] shadow-sm transition-colors cursor-pointer"
                   >
                     <XCircle className="w-3 h-3" /> Reject & Cascade
                   </button>
@@ -170,7 +187,7 @@ export const AdminWinnerModal = ({ winner, onClose }) => {
                   </p>
 
                   <div className="flex items-center justify-between text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-main)]">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 font-mono">
                       <span className="flex items-center gap-1 font-semibold text-rose-500">
                         <Heart className="w-4 h-4 fill-rose-500" /> {post.likesCount || 0}
                       </span>
@@ -203,7 +220,7 @@ export const AdminWinnerModal = ({ winner, onClose }) => {
         <div className="p-4 border-t border-[var(--border-main)] bg-slate-500/5 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-500/20 hover:bg-slate-500/30 text-[var(--text-primary)] font-bold text-xs transition-colors"
+            className="px-4 py-2 rounded-xl bg-slate-500/20 hover:bg-slate-500/30 text-[var(--text-primary)] font-bold text-xs transition-colors cursor-pointer"
           >
             Close Details
           </button>

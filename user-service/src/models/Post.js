@@ -29,6 +29,9 @@ const postSchema = new mongoose.Schema(
       required: true,
       enum: ["image", "video"]
     },
+    thumbnailUrl: {
+      type: String
+    },
     originalFilename: {
       type: String
     },
@@ -62,5 +65,6 @@ const postSchema = new mongoose.Schema(
 
 postSchema.index({ category: 1, createdAt: -1 });
 postSchema.index({ userId: 1, createdAt: -1 });
+postSchema.index({ caption: "text", category: "text" });
 
 module.exports = mongoose.model("Post", postSchema);

@@ -77,12 +77,16 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
   const userBestPostMap = new Map();
   eligiblePosts.forEach((post) => {
     const userId = post.userId;
+    const userObj = users.find((u) => u.id === userId) || {};
+    const username = post.username || userObj.username || userObj.email?.split("@")[0] || post.userEmail?.split("@")[0] || post.userName?.toLowerCase().replace(/\s+/g, "_");
+    const enrichedPost = { ...post, username };
+
     if (!userBestPostMap.has(userId)) {
-      userBestPostMap.set(userId, post);
+      userBestPostMap.set(userId, enrichedPost);
     } else {
       const currentBest = userBestPostMap.get(userId);
-      if (comparePosts(post, currentBest) < 0) {
-        userBestPostMap.set(userId, post);
+      if (comparePosts(enrichedPost, currentBest) < 0) {
+        userBestPostMap.set(userId, enrichedPost);
       }
     }
   });
@@ -97,12 +101,16 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
 
     catPosts.forEach((post) => {
       const userId = post.userId;
+      const userObj = users.find((u) => u.id === userId) || {};
+      const username = post.username || userObj.username || userObj.email?.split("@")[0] || post.userEmail?.split("@")[0] || post.userName?.toLowerCase().replace(/\s+/g, "_");
+      const enrichedPost = { ...post, username };
+
       if (!catBestMap.has(userId)) {
-        catBestMap.set(userId, post);
+        catBestMap.set(userId, enrichedPost);
       } else {
         const currentBest = catBestMap.get(userId);
-        if (comparePosts(post, currentBest) < 0) {
-          catBestMap.set(userId, post);
+        if (comparePosts(enrichedPost, currentBest) < 0) {
+          catBestMap.set(userId, enrichedPost);
         }
       }
     });
@@ -111,7 +119,6 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
   });
 
   // Step 4: Calculate Consistency Rankings
-  // Must have 3+ posts in ALL 4 weeks; score = sum of top-3 posts per week (12 posts total)
   const userWeekMap = groupPostsByWeek(eligiblePosts);
   const consistencyRankings = [];
 
@@ -141,10 +148,12 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
       }
 
       const sampleUser = users.find((u) => u.id === userId) || {};
+      const username = sampleUser.username || sampleUser.email?.split("@")[0] || (sampleUser.name ? sampleUser.name.toLowerCase().replace(/\s+/g, "_") : "unknown");
 
       consistencyRankings.push({
         userId,
         userName: sampleUser.name || "Unknown",
+        username,
         userEmail: sampleUser.email || "unknown@contest.com",
         score: Number(totalConsistencyScore.toFixed(2)),
         commentCount: totalComments,
@@ -164,6 +173,9 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
   // Tier 1: Grand Prize (1)
   if (globalRankings.length > 0) {
     const gpPost = globalRankings[0];
+    const userObj = users.find((u) => u.id === gpPost.userId) || {};
+    const username = gpPost.username || userObj.username || gpPost.userEmail?.split("@")[0] || gpPost.userName?.toLowerCase().replace(/\s+/g, "_");
+
     winners.push({
       tier: "GRAND_PRIZE",
       tierCategory: null,
@@ -171,6 +183,7 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
       userId: gpPost.userId,
       userEmail: gpPost.userEmail,
       userName: gpPost.userName,
+      username,
       postId: gpPost.id,
       postCaption: gpPost.caption,
       postCategory: gpPost.category,
@@ -190,6 +203,7 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
       userId: c1.userId,
       userEmail: c1.userEmail,
       userName: c1.userName,
+      username: c1.username,
       postId: null,
       postCaption: "Top 3 posts/week across 4 weeks",
       postCategory: null,
@@ -209,6 +223,7 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
       userId: c2.userId,
       userEmail: c2.userEmail,
       userName: c2.userName,
+      username: c2.username,
       postId: null,
       postCaption: "Top 3 posts/week across 4 weeks",
       postCategory: null,
@@ -221,6 +236,9 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
   const topPerformersEligible = globalRankings.filter((p) => !awardedUserIds.has(p.userId));
   const top10Performers = topPerformersEligible.slice(0, 10);
   top10Performers.forEach((tp, idx) => {
+    const userObj = users.find((u) => u.id === tp.userId) || {};
+    const username = tp.username || userObj.username || tp.userEmail?.split("@")[0] || tp.userName?.toLowerCase().replace(/\s+/g, "_");
+
     winners.push({
       tier: `TOP_PERFORMER_${idx + 1}`,
       tierCategory: null,
@@ -228,6 +246,7 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
       userId: tp.userId,
       userEmail: tp.userEmail,
       userName: tp.userName,
+      username,
       postId: tp.id,
       postCaption: tp.caption,
       postCategory: tp.category,
@@ -237,8 +256,6 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
   });
 
   // Tier 5: Category 1st (10, 1 per category)
-  // Handle multi-category leader cascading: If a user tops multiple categories,
-  // award them to their strongest category (highest scoring post) and cascade lower category slots down.
   const cat1stAssignments = {};
 
   CATEGORIES.forEach((cat) => {
@@ -249,11 +266,9 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
   });
 
   // Resolve multi-category tops
-  const cat1stWinners = {};
   let changed = true;
   while (changed) {
     changed = false;
-    // Map userId -> array of categories they currently top
     const userTopCats = {};
     CATEGORIES.forEach((cat) => {
       const candidates = cat1stAssignments[cat];
@@ -267,11 +282,7 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
     Object.keys(userTopCats).forEach((userId) => {
       const tops = userTopCats[userId];
       if (tops.length > 1) {
-        // Sort user's top categories by post score descending
         tops.sort((a, b) => comparePosts(a.post, b.post));
-        const bestCat = tops[0].category;
-
-        // Keep strongest category for user, drop from other category candidates
         tops.slice(1).forEach((weaker) => {
           cat1stAssignments[weaker.category] = cat1stAssignments[weaker.category].slice(1);
           changed = true;
@@ -285,6 +296,9 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
     const candidates = cat1stAssignments[cat] || [];
     if (candidates.length > 0) {
       const cat1Winner = candidates[0];
+      const userObj = users.find((u) => u.id === cat1Winner.userId) || {};
+      const username = cat1Winner.username || userObj.username || cat1Winner.userEmail?.split("@")[0] || cat1Winner.userName?.toLowerCase().replace(/\s+/g, "_");
+
       winners.push({
         tier: "CATEGORY_1ST",
         tierCategory: cat,
@@ -292,6 +306,7 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
         userId: cat1Winner.userId,
         userEmail: cat1Winner.userEmail,
         userName: cat1Winner.userName,
+        username,
         postId: cat1Winner.id,
         postCaption: cat1Winner.caption,
         postCategory: cat,
@@ -306,6 +321,7 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
         userId: "UNAWARDED",
         userEmail: "unawarded@contest.com",
         userName: "Unawarded Category",
+        username: "unawarded",
         postId: null,
         postCaption: "No eligible creator available",
         postCategory: cat,
@@ -315,11 +331,13 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
   });
 
   // Tier 6: Category 2nd (10, 1 per category)
-  // Exhausted category rule: If no eligible creator remains for 2nd place, leave unawarded (no backfilling)
   CATEGORIES.forEach((cat) => {
     const catList = (categoryRankings[cat] || []).filter((p) => !awardedUserIds.has(p.userId));
     if (catList.length > 0) {
       const cat2Winner = catList[0];
+      const userObj = users.find((u) => u.id === cat2Winner.userId) || {};
+      const username = cat2Winner.username || userObj.username || cat2Winner.userEmail?.split("@")[0] || cat2Winner.userName?.toLowerCase().replace(/\s+/g, "_");
+
       winners.push({
         tier: "CATEGORY_2ND",
         tierCategory: cat,
@@ -327,6 +345,7 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
         userId: cat2Winner.userId,
         userEmail: cat2Winner.userEmail,
         userName: cat2Winner.userName,
+        username,
         postId: cat2Winner.id,
         postCaption: cat2Winner.caption,
         postCategory: cat,
@@ -334,7 +353,6 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
       });
       awardedUserIds.add(cat2Winner.userId);
     } else {
-      // Exhausted Category Rule: Leave unawarded
       winners.push({
         tier: "CATEGORY_2ND",
         tierCategory: cat,
@@ -342,6 +360,7 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
         userId: "UNAWARDED",
         userEmail: "unawarded@contest.com",
         userName: "Unawarded Category",
+        username: "unawarded",
         postId: null,
         postCaption: "No eligible 2nd place creator available",
         postCategory: cat,
@@ -379,10 +398,12 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
     }
 
     const userPostsList = posts.filter((p) => p.userId === u.id);
+    const username = u.username || u.email?.split("@")[0] || (u.name ? u.name.toLowerCase().replace(/\s+/g, "_") : "unknown");
 
     return {
       userId: u.id,
       userName: u.name,
+      username,
       userEmail: u.email,
       residency: u.residency,
       isChhattisgarh,
@@ -415,10 +436,12 @@ const calculateContestRankings = (contestData, disqualifiedUserIds = []) => {
     const maxScore = userPosts.length > 0 ? Math.max(...userPosts.map((p) => p.score)) : 0;
     const prizeWon = winners.find((w) => w.userId === u.id);
     const activityObj = weeklyActivity.find((a) => a.userId === u.id) || {};
+    const username = u.username || u.email?.split("@")[0] || (u.name ? u.name.toLowerCase().replace(/\s+/g, "_") : "unknown");
 
     return {
       userId: u.id,
       userName: u.name,
+      username,
       userEmail: u.email,
       residency: u.residency,
       isEligible: u.residency === "Chhattisgarh" && !disqSet.has(u.id),

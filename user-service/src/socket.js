@@ -43,8 +43,15 @@ const emitNewComment = (postId, comment) => {
   }
 };
 
+const emitNotification = (recipientId, notification) => {
+  if (io) {
+    io.emit("new_notification", { recipientId, notification });
+  }
+};
+
 module.exports = {
   initSocket,
   emitPostUpdated,
-  emitNewComment
+  emitNewComment,
+  emitNotification
 };

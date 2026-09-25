@@ -42,42 +42,42 @@ const CATEGORIES = [
 // 30 Distinct Accounts
 const ACCOUNTS = [
   // Admin & Standard Demo Users
-  { name: "Admin User", email: "admin@gmail.com", role: "admin", residency: "Chhattisgarh" },
-  { name: "Demo User", email: "user@gmail.com", role: "user", residency: "Chhattisgarh" },
+  { name: "Admin User", email: "admin@gmail.com", username: "admin", role: "admin", residency: "Chhattisgarh" },
+  { name: "Demo User", email: "user@gmail.com", username: "demo_user", role: "user", residency: "Chhattisgarh" },
 
   // Chhattisgarh Contest Eligible Creators (24)
-  { name: "Aarav Sharma (Grand Prize Candidate)", email: "aarav@creator.com", residency: "Chhattisgarh" },
-  { name: "Ananya Patel (Multi-Category Leader)", email: "ananya@creator.com", residency: "Chhattisgarh" },
-  { name: "Rohan Verma (Consistency Winner 1)", email: "rohan@creator.com", residency: "Chhattisgarh" },
-  { name: "Priya Singh (Consistency Winner 2)", email: "priya@creator.com", residency: "Chhattisgarh" },
-  { name: "Vikram Malhotra (Consistency Near-Miss)", email: "vikram@creator.com", residency: "Chhattisgarh" },
-  { name: "Neha Gupta (Tie Winner - Comments)", email: "neha@creator.com", residency: "Chhattisgarh" },
-  { name: "Karan Johar (Tie RunnerUp - Fewer Comments)", email: "karan@creator.com", residency: "Chhattisgarh" },
-  { name: "Sneha Reddy (Gaming Creator)", email: "sneha@creator.com", residency: "Chhattisgarh" },
-  { name: "Amitabh Kumar (Education Sole Creator)", email: "amitabh@creator.com", residency: "Chhattisgarh" },
-  { name: "Deepika Padukone", email: "deepika@creator.com", residency: "Chhattisgarh" },
-  { name: "Ranbir Kapoor", email: "ranbir@creator.com", residency: "Chhattisgarh" },
-  { name: "Alia Bhatt", email: "alia@creator.com", residency: "Chhattisgarh" },
-  { name: "Varun Dhawan", email: "varun@creator.com", residency: "Chhattisgarh" },
-  { name: "Kriti Sanon", email: "kriti@creator.com", residency: "Chhattisgarh" },
-  { name: "Siddharth Malhotra", email: "siddharth@creator.com", residency: "Chhattisgarh" },
-  { name: "Kiara Advani", email: "kiara@creator.com", residency: "Chhattisgarh" },
-  { name: "Ayushmann Khurrana", email: "ayushmann@creator.com", residency: "Chhattisgarh" },
-  { name: "Bhumi Pednekar", email: "bhumi@creator.com", residency: "Chhattisgarh" },
-  { name: "Rajkummar Rao", email: "rajkummar@creator.com", residency: "Chhattisgarh" },
-  { name: "Shraddha Kapoor", email: "shraddha@creator.com", residency: "Chhattisgarh" },
-  { name: "Vicky Kaushal", email: "vicky@creator.com", residency: "Chhattisgarh" },
-  { name: "Katrina Kaif", email: "katrina@creator.com", residency: "Chhattisgarh" },
-  { name: "Kartik Aaryan", email: "kartik@creator.com", residency: "Chhattisgarh" },
-  { name: "Rashmika Mandanna", email: "rashmika@creator.com", residency: "Chhattisgarh" },
-  { name: "Tiger Shroff", email: "tiger@creator.com", residency: "Chhattisgarh" },
+  { name: "Aarav Sharma", email: "aarav@creator.com", username: "aarav", residency: "Chhattisgarh" },
+  { name: "Ananya Patel", email: "ananya@creator.com", username: "ananya", residency: "Chhattisgarh" },
+  { name: "Rohan Verma", email: "rohan@creator.com", username: "rohan", residency: "Chhattisgarh" },
+  { name: "Priya Singh", email: "priya@creator.com", username: "priya", residency: "Chhattisgarh" },
+  { name: "Vikram Malhotra", email: "vikram@creator.com", username: "vikram", residency: "Chhattisgarh" },
+  { name: "Neha Gupta", email: "neha@creator.com", username: "neha", residency: "Chhattisgarh" },
+  { name: "Karan Johar", email: "karan@creator.com", username: "karan", residency: "Chhattisgarh" },
+  { name: "Sneha Reddy", email: "sneha@creator.com", username: "sneha", residency: "Chhattisgarh" },
+  { name: "Amitabh Kumar", email: "amitabh@creator.com", username: "amitabh", residency: "Chhattisgarh" },
+  { name: "Deepika Padukone", email: "deepika@creator.com", username: "deepika", residency: "Chhattisgarh" },
+  { name: "Ranbir Kapoor", email: "ranbir@creator.com", username: "ranbir", residency: "Chhattisgarh" },
+  { name: "Alia Bhatt", email: "alia@creator.com", username: "alia", residency: "Chhattisgarh" },
+  { name: "Varun Dhawan", email: "varun@creator.com", username: "varun", residency: "Chhattisgarh" },
+  { name: "Kriti Sanon", email: "kriti@creator.com", username: "kriti", residency: "Chhattisgarh" },
+  { name: "Siddharth Malhotra", email: "siddharth@creator.com", username: "siddharth", residency: "Chhattisgarh" },
+  { name: "Kiara Advani", email: "kiara@creator.com", username: "kiara", residency: "Chhattisgarh" },
+  { name: "Ayushmann Khurrana", email: "ayushmann@creator.com", username: "ayushmann", residency: "Chhattisgarh" },
+  { name: "Bhumi Pednekar", email: "bhumi@creator.com", username: "bhumi", residency: "Chhattisgarh" },
+  { name: "Rajkummar Rao", email: "rajkummar@creator.com", username: "rajkummar", residency: "Chhattisgarh" },
+  { name: "Shraddha Kapoor", email: "shraddha@creator.com", username: "shraddha", residency: "Chhattisgarh" },
+  { name: "Vicky Kaushal", email: "vicky@creator.com", username: "vicky", residency: "Chhattisgarh" },
+  { name: "Katrina Kaif", email: "katrina@creator.com", username: "katrina", residency: "Chhattisgarh" },
+  { name: "Kartik Aaryan", email: "kartik@creator.com", username: "kartik", residency: "Chhattisgarh" },
+  { name: "Rashmika Mandanna", email: "rashmika@creator.com", username: "rashmika", residency: "Chhattisgarh" },
+  { name: "Tiger Shroff", email: "tiger@creator.com", username: "tiger", residency: "Chhattisgarh" },
 
   // Non-Chhattisgarh Ineligible Creators (5)
-  { name: "Delhi Top Performer (Ineligible)", email: "delhi_pro@creator.com", residency: "Delhi" },
-  { name: "Mumbai Fitness Star (Ineligible)", email: "mumbai_pro@creator.com", residency: "Maharashtra" },
-  { name: "Bangalore Techie (Ineligible)", email: "bangalore_tech@creator.com", residency: "Karnataka" },
-  { name: "Kolkata Artist (Ineligible)", email: "kolkata_art@creator.com", residency: "Other State" },
-  { name: "Punjab Music Producer (Ineligible)", email: "punjab_fit@creator.com", residency: "Other State" }
+  { name: "Delhi Creator", email: "delhi_pro@creator.com", username: "delhi_pro", residency: "Delhi" },
+  { name: "Mumbai Fitness Star", email: "mumbai_pro@creator.com", username: "mumbai_pro", residency: "Maharashtra" },
+  { name: "Bangalore Techie", email: "bangalore_tech@creator.com", username: "bangalore_tech", residency: "Karnataka" },
+  { name: "Kolkata Artist", email: "kolkata_art@creator.com", username: "kolkata_art", residency: "Other State" },
+  { name: "Punjab Music Producer", email: "punjab_fit@creator.com", username: "punjab_fit", residency: "Other State" }
 ];
 
 const seedDatabase = async () => {
@@ -118,50 +118,17 @@ const seedDatabase = async () => {
       const sourceFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".mp4"));
       console.log(`📁 Found ${sourceFiles.length} real video reels in ${path.basename(sourceDir)}.`);
 
-      const isCloudinaryConfigured = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY);
+      sourceFiles.forEach((file, index) => {
+        const cleanName = `reel_${String(index + 1).padStart(3, "0")}.mp4`;
+        const srcPath = path.join(sourceDir, file);
+        const destPath = path.join(targetDir, cleanName);
 
-      if (isCloudinaryConfigured) {
-        console.log("☁️ Uploading video reels to Cloudinary CDN in parallel batches...");
-        const BATCH_SIZE = 6;
-        for (let i = 0; i < sourceFiles.length; i += BATCH_SIZE) {
-          const chunk = sourceFiles.slice(i, i + BATCH_SIZE);
-          const chunkResults = await Promise.all(
-            chunk.map(async (file, chunkIdx) => {
-              const globalIdx = i + chunkIdx;
-              const srcPath = path.join(sourceDir, file);
-              const publicId = `creator-contest-reels/reel_${String(globalIdx + 1).padStart(3, "0")}`;
-
-              try {
-                const uploadResult = await cloudinary.uploader.upload(srcPath, {
-                  resource_type: "video",
-                  public_id: publicId,
-                  overwrite: false
-                });
-                return uploadResult.secure_url;
-              } catch (err) {
-                return cloudinary.url(publicId, { resource_type: "video", secure: true });
-              }
-            })
-          );
-          reelFiles.push(...chunkResults);
-          console.log(`  ☁️ Processed ${reelFiles.length}/${sourceFiles.length} reels on Cloudinary...`);
+        if (!fs.existsSync(destPath) || fs.statSync(destPath).size !== fs.statSync(srcPath).size) {
+          fs.copyFileSync(srcPath, destPath);
         }
-        console.log(`✅ Synced ${reelFiles.length} reels on Cloudinary CDN!`);
-      } else {
-        sourceFiles.forEach((file, index) => {
-          const cleanName = `reel_${String(index + 1).padStart(3, "0")}.mp4`;
-          const srcPath = path.join(sourceDir, file);
-          const destPath = path.join(targetDir, cleanName);
-
-          if (!fs.existsSync(destPath) || fs.statSync(destPath).size !== fs.statSync(srcPath).size) {
-            fs.copyFileSync(srcPath, destPath);
-          }
-          reelFiles.push(`/uploads/${cleanName}`);
-        });
-        if (reelFiles.length > 0) {
-          console.log(`✅ Synced ${reelFiles.length} video reel files to user-service/uploads.`);
-        }
-      }
+        reelFiles.push(`/uploads/${cleanName}`);
+      });
+      console.log(`✅ Synced ${reelFiles.length} video reels to local uploads folder.`);
     }
 
     if (reelFiles.length === 0 && fs.existsSync(targetDir)) {
@@ -195,6 +162,7 @@ const seedDatabase = async () => {
       ACCOUNTS.map((acc, index) => ({
         name: acc.name,
         email: acc.email,
+        username: acc.username || acc.email.split("@")[0],
         passwordHash:
           acc.email === "admin@gmail.com"
             ? adminPasswordHash
@@ -472,6 +440,52 @@ const seedDatabase = async () => {
     // 5. Bulk Insert Posts
     const createdPosts = await Post.insertMany(postsToInsert);
     console.log(`✅ Seeded ${createdPosts.length} Video Posts with real .mp4 video reel media.`);
+
+    // 6. Bulk Insert Realistic Comments for Every Video Reel
+    const SAMPLE_COMMENTS = [
+      "This is absolute fire! 🔥🔥",
+      "Amazing editing and content bro! 👏",
+      "Best reel in this category hands down 🙌",
+      "Super smooth moves, love this audio 🎵",
+      "Which camera or phone did you use to film this?",
+      "This deserves 1M views minimum! 🚀",
+      "So inspiring! Keep creating more contents like this.",
+      "Hahaha this is so funny 😭😂",
+      "Chhattisgarh creators represent! ❤️",
+      "Incredible quality! Loved the breakdown.",
+      "Mind = Blown 💥💥",
+      "Saved this to rewatch later! ✨",
+      "Can you make a part 2 of this reel please?",
+      "Too good!🔥 Following your profile!"
+    ];
+
+    const commentsToInsert = [];
+    const allUsers = userDocs;
+
+    for (const p of createdPosts) {
+      // Pick 3 to 6 random commenters per post (unique per post)
+      const shuffledUsers = [...allUsers]
+        .filter(u => u._id.toString() !== p.userId.toString())
+        .sort(() => 0.5 - Math.random());
+      
+      const count = Math.min(shuffledUsers.length, Math.floor(Math.random() * 5) + 3);
+      for (let i = 0; i < count; i++) {
+        commentsToInsert.push({
+          postId: p._id,
+          userId: shuffledUsers[i]._id,
+          text: SAMPLE_COMMENTS[(i + new Date(p.createdAt).getTime()) % SAMPLE_COMMENTS.length],
+          createdAt: new Date(new Date(p.createdAt).getTime() + (i + 1) * 3600000)
+        });
+      }
+
+      // Update post commentCount
+      await Post.updateOne({ _id: p._id }, { commentCount: count });
+    }
+
+    if (commentsToInsert.length > 0) {
+      await Comment.insertMany(commentsToInsert);
+      console.log(`✅ Seeded ${commentsToInsert.length} Realistic Comments across ${createdPosts.length} reels.`);
+    }
 
     console.log("==================================================");
     console.log("🎉 Seeding Completed Successfully!");

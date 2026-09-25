@@ -9,7 +9,7 @@ const fetchContestDataFromUserService = async () => {
       headers: {
         "x-internal-secret": INTERNAL_SECRET
       },
-      timeout: 5000
+      timeout: 30000
     });
 
     if (response.data && response.data.success) {
@@ -22,6 +22,67 @@ const fetchContestDataFromUserService = async () => {
   }
 };
 
+const fetchPaginatedUsersFromUserService = async (queryParams = {}) => {
+  try {
+    const response = await axios.get(`${USER_SERVICE_URL}/api/internal/users/paginated`, {
+      params: queryParams,
+      headers: {
+        "x-internal-secret": INTERNAL_SECRET
+      },
+      timeout: 10000
+    });
+
+    if (response.data && response.data.success) {
+      return response.data.data;
+    }
+    throw new Error("Failed to fetch paginated users");
+  } catch (error) {
+    console.error(`[Admin Service] Error fetching paginated users: ${error.message}`);
+    throw error;
+  }
+};
+
+const fetchUserStatsFromUserService = async () => {
+  try {
+    const response = await axios.get(`${USER_SERVICE_URL}/api/internal/users/stats`, {
+      headers: {
+        "x-internal-secret": INTERNAL_SECRET
+      },
+      timeout: 10000
+    });
+
+    if (response.data && response.data.success) {
+      return response.data.data;
+    }
+    throw new Error("Failed to fetch user stats");
+  } catch (error) {
+    console.error(`[Admin Service] Error fetching user stats: ${error.message}`);
+    throw error;
+  }
+};
+
+const bulkUpdateUsersKycInUserService = async (userIds, status, reason) => {
+  try {
+    const response = await axios.put(
+      `${USER_SERVICE_URL}/api/internal/users/bulk-kyc`,
+      { userIds, status, reason },
+      {
+        headers: {
+          "x-internal-secret": INTERNAL_SECRET
+        },
+        timeout: 15000
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`[Admin Service] Error bulk updating KYC in User Service: ${error.message}`);
+    throw error;
+  }
+};
+
 module.exports = {
-  fetchContestDataFromUserService
+  fetchContestDataFromUserService,
+  fetchPaginatedUsersFromUserService,
+  fetchUserStatsFromUserService,
+  bulkUpdateUsersKycInUserService
 };

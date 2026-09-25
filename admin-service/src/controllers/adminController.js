@@ -1,5 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
-const { fetchContestDataFromUserService } = require("../services/userServiceClient");
+const {
+  fetchContestDataFromUserService,
+  fetchPaginatedUsersFromUserService,
+  fetchUserStatsFromUserService,
+  bulkUpdateUsersKycInUserService
+} = require("../services/userServiceClient");
 const { calculateContestRankings } = require("../services/rankingEngine");
 
 // Instantiates Prisma client gracefully
@@ -154,6 +159,95 @@ const getWinners = async (req, res, next) => {
         weeklyActivity: calculated.weeklyActivity,
         allParticipants: enrichedParticipants,
         kycAuditLogs
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Server-side paginated & indexed participants directory for millions of users
+ */
+const getParticipantsPaginated = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20, search, residency, kycStatus, role, sortBy, sortOrder } = req.query;
+
+    const data = await fetchPaginatedUsersFromUserService({
+      page,
+      limit,
+      search,
+      residency,
+      kycStatus,
+      role,
+      sortBy,
+      sortOrder
+    });
+
+    let storedWinnersMap = new Map();
+    if (prisma) {
+      try {
+        const dbWinners = await prisma.winner.findMany({});
+        dbWinners.forEach((w) => {
+          if (w.userId) storedWinnersMap.set(w.userId, w);
+          if (w.userEmail) storedWinnersMap.set(w.userEmail, w);
+        });
+      } catch (e) {}
+    }
+
+    const enrichedUsers = data.users.map((u) => {
+      const stored = storedWinnersMap.get(u.id) || storedWinnersMap.get(u.email);
+      const isCG = u.residency === "Chhattisgarh";
+      const status = stored ? stored.kycStatus : (u.kycDetails?.status || "NOT_SUBMITTED");
+
+      return {
+        ...u,
+        userId: u.id,
+        userName: u.name,
+        userEmail: u.email,
+        isEligible: isCG && status !== "FAILED",
+        isDisqualified: status === "FAILED",
+        kycStatus: status,
+        prizeTier: stored ? stored.tier : null
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        users: enrichedUsers,
+        pagination: data.pagination
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Aggregated analytics stats for millions of users
+ */
+const getAdminStats = async (req, res, next) => {
+  try {
+    const stats = await fetchUserStatsFromUserService();
+
+    let prizesAllocated = 0;
+    let disqualifiedCount = stats.kycFailed || 0;
+
+    if (prisma) {
+      try {
+        prizesAllocated = await prisma.winner.count({
+          where: { userId: { not: "UNAWARDED" } }
+        });
+      } catch (e) {}
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        ...stats,
+        prizesAllocated,
+        disqualifiedCount
       }
     });
   } catch (error) {
@@ -353,8 +447,110 @@ const updateKycStatus = async (req, res, next) => {
   }
 };
 
+/**
+ * Bulk KYC Update across multiple user IDs
+ */
+const bulkUpdateKycStatus = async (req, res, next) => {
+  try {
+    const { userIds = [], status, notes } = req.body;
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ success: false, message: "No userIds provided" });
+    }
+    if (!["PENDING", "PASSED", "FAILED"].includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status. Must be PENDING, PASSED, or FAILED" });
+    }
+
+    // 1. Sync bulk to MongoDB
+    await bulkUpdateUsersKycInUserService(userIds, status, notes || `Bulk KYC update to ${status}`);
+
+    // 2. Persist in Postgres Prisma
+    if (prisma) {
+      try {
+        for (const uid of userIds) {
+          const existing = await prisma.winner.findFirst({
+            where: { OR: [{ id: uid }, { userId: uid }, { userEmail: uid }] }
+          });
+          if (existing) {
+            await prisma.winner.update({
+              where: { id: existing.id },
+              data: {
+                kycStatus: status,
+                disqualifiedReason: status === "FAILED" ? (notes || "Bulk KYC rejected") : null
+              }
+            });
+            await prisma.kycAuditLog.create({
+              data: {
+                winnerId: existing.id,
+                userId: existing.userId,
+                userEmail: existing.userEmail,
+                previousStatus: existing.kycStatus,
+                newStatus: status,
+                notes: notes || `Bulk KYC action: ${status}`
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.warn("[Admin Service] Bulk Prisma update notice:", e.message);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Bulk KYC action completed for ${userIds.length} users.`
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * CSV Export endpoint for downloading filtered participants
+ */
+const exportParticipantsCsv = async (req, res, next) => {
+  try {
+    const contestData = await fetchContestDataFromUserService();
+    const users = contestData.users || [];
+    const posts = contestData.posts || [];
+
+    const headers = ["User ID", "Name", "Email", "Residency", "KYC Status", "Total Posts", "Total Likes", "Total Comments", "Total Views", "Max Score"];
+    const rows = users.map((u) => {
+      const userPosts = posts.filter((p) => p.userId === u.id);
+      const totalLikes = userPosts.reduce((sum, p) => sum + (p.likeCount || 0), 0);
+      const totalComments = userPosts.reduce((sum, p) => sum + (p.commentCount || 0), 0);
+      const totalViews = userPosts.reduce((sum, p) => sum + (p.viewCount || 0), 0);
+      const maxScore = userPosts.length > 0 ? Math.max(...userPosts.map((p) => p.score)) : 0;
+
+      return [
+        `"${u.id}"`,
+        `"${(u.name || "").replace(/"/g, '""')}"`,
+        `"${u.email}"`,
+        `"${u.residency || "Other"}"`,
+        `"${u.kycDetails?.status || "NOT_SUBMITTED"}"`,
+        userPosts.length,
+        totalLikes,
+        totalComments,
+        totalViews,
+        maxScore.toFixed(2)
+      ].join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename=contestify_participants_${Date.now()}.csv`);
+    return res.status(200).send(csvContent);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getRankings,
   getWinners,
-  updateKycStatus
+  getParticipantsPaginated,
+  getAdminStats,
+  updateKycStatus,
+  bulkUpdateKycStatus,
+  exportParticipantsCsv
 };
