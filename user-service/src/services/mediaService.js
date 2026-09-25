@@ -17,18 +17,30 @@ const processMediaUpload = async (file) => {
   // If Cloudinary configured, upload to Cloudinary CDN
   if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
     try {
-      const result = await cloudinary.uploader.upload(file.path, {
-        resource_type: mediaType,
-        folder: "creator-contest-reels",
-        quality: "auto",
-        fetch_format: "auto"
-      });
+      const uploadOptions = {
+        resource_type: isVideo ? "video" : "image",
+        folder: "creator-contest-reels"
+      };
+
+      // Apply quality & format auto optimization for images only (avoid corrupting raw video headers)
+      if (!isVideo) {
+        uploadOptions.quality = "auto";
+        uploadOptions.fetch_format = "auto";
+      }
+
+      const result = await cloudinary.uploader.upload(file.path, uploadOptions);
 
       // Remove local temp file
       fs.unlink(file.path, () => {});
 
+      let secureUrl = result.secure_url || result.url;
+      // Ensure Cloudinary video URLs contain explicit .mp4 extension for universal HTML5 video element support
+      if (isVideo && !secureUrl.match(/\.(mp4|mov|webm|mkv|avi|m3u8)$/i)) {
+        secureUrl = `${secureUrl}.mp4`;
+      }
+
       return {
-        mediaUrl: result.secure_url,
+        mediaUrl: secureUrl,
         mediaType,
         publicId: result.public_id,
         originalFilename: file.originalname,
