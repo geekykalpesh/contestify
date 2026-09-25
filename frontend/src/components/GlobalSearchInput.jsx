@@ -79,7 +79,7 @@ export const GlobalSearchInput = () => {
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          placeholder="Search creators, reels, #categories..."
+          placeholder="Search creators..."
           className="w-full pl-9 pr-8 py-1.5 bg-slate-500/10 border border-[var(--border-main)] rounded-full text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-sky-500 focus:bg-[var(--bg-main)] transition-all"
         />
         {loading ? (

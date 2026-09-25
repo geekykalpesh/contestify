@@ -316,15 +316,15 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-2.5 sm:px-4 py-4 sm:py-8">
       {/* Instagram Header Profile Box */}
-      <div className="ig-card p-6 sm:p-8 rounded-3xl shadow-lg mb-8">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+      <div className="ig-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-lg mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
           {/* Avatar */}
-          <div className="relative group cursor-pointer">
+          <div className="relative group cursor-pointer shrink-0">
             <label className={`block relative ${isOwnProfile ? "cursor-pointer" : "cursor-default"}`}>
               {isOwnProfile && <input type="file" accept="image/*" onChange={handleAvatarFileSelect} className="hidden" />}
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 ig-ring shadow-xl overflow-hidden">
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full p-1 ig-ring shadow-xl overflow-hidden">
                 {displayUser.avatarUrl ? (
                   <img
                     src={getMediaUrl(displayUser.avatarUrl)}
@@ -332,23 +332,23 @@ export const ProfilePage = () => {
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full rounded-full bg-[var(--bg-main)] flex items-center justify-center font-bold text-2xl sm:text-3xl text-[var(--text-primary)]">
+                  <div className="w-full h-full rounded-full bg-[var(--bg-main)] flex items-center justify-center font-bold text-xl sm:text-3xl text-[var(--text-primary)]">
                     {displayUser.name ? displayUser.name[0].toUpperCase() : "U"}
                   </div>
                 )}
               </div>
               {isOwnProfile && (
-                <div className="absolute -bottom-1 -right-1 bg-sky-500 text-white p-2 rounded-full border-2 border-[var(--bg-main)] shadow-md group-hover:scale-110 transition-transform">
-                  <Sparkles className="w-4 h-4" />
+                <div className="absolute -bottom-1 -right-1 bg-sky-500 text-white p-1.5 sm:p-2 rounded-full border-2 border-[var(--bg-main)] shadow-md group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               )}
             </label>
           </div>
 
           {/* User Details & Bio */}
-          <div className="flex-1 text-center sm:text-left space-y-3">
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">{(displayUser.name || "").replace(/\s*\([^)]*\)/g, "").trim()}</h1>
+          <div className="flex-1 w-full text-center sm:text-left space-y-2.5">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">{(displayUser.name || "").replace(/\s*\([^)]*\)/g, "").trim()}</h1>
               <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
                 @{displayUser.username || displayUser.email?.split("@")[0] || displayUser.name?.toLowerCase().replace(/\s+/g, "_")}
               </span>
@@ -364,36 +364,36 @@ export const ProfilePage = () => {
               )}
             </div>
 
-            <p className="text-xs text-[var(--text-secondary)] flex items-center justify-center sm:justify-start gap-1.5 font-medium">
-              <Mail className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-              <span>{displayUser.email}</span>
+            <p className="text-xs text-[var(--text-secondary)] flex items-center justify-center sm:justify-start gap-1.5 font-medium truncate">
+              <Mail className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
+              <span className="truncate">{displayUser.email}</span>
             </p>
 
             {/* Instagram Profile Stats Bar */}
-            <div className="flex items-center justify-center sm:justify-start gap-5 sm:gap-7 pt-3 border-t border-[var(--border-main)] overflow-x-auto no-scrollbar">
-              <div className="text-center sm:text-left shrink-0">
-                <span className="block font-bold text-[var(--text-primary)] text-base tracking-tight">{stats.totalPosts || 0}</span>
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Posts</span>
+            <div className="grid grid-cols-3 sm:flex sm:items-center sm:justify-start gap-3 sm:gap-7 pt-3 mt-3 border-t border-[var(--border-main)]">
+              <div className="text-center sm:text-left">
+                <span className="block font-bold text-[var(--text-primary)] text-sm sm:text-base tracking-tight">{stats.totalPosts || 0}</span>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Posts</span>
               </div>
-              <div className="text-center sm:text-left shrink-0">
-                <span className="block font-bold text-[var(--text-primary)] text-base tracking-tight">{stats.followers ?? displayUser?.followers ?? 0}</span>
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Followers</span>
+              <div className="text-center sm:text-left">
+                <span className="block font-bold text-[var(--text-primary)] text-sm sm:text-base tracking-tight">{stats.followers ?? displayUser?.followers ?? 0}</span>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Followers</span>
               </div>
-              <div className="text-center sm:text-left shrink-0">
-                <span className="block font-bold text-[var(--text-primary)] text-base tracking-tight">{stats.following ?? displayUser?.following ?? 0}</span>
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Following</span>
+              <div className="text-center sm:text-left">
+                <span className="block font-bold text-[var(--text-primary)] text-sm sm:text-base tracking-tight">{stats.following ?? displayUser?.following ?? 0}</span>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Following</span>
               </div>
-              <div className="text-center sm:text-left shrink-0">
-                <span className="block font-bold text-rose-500 text-base tracking-tight">{stats.totalLikes || 0}</span>
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Likes</span>
+              <div className="text-center sm:text-left">
+                <span className="block font-bold text-rose-500 text-sm sm:text-base tracking-tight">{stats.totalLikes || 0}</span>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Likes</span>
               </div>
-              <div className="text-center sm:text-left shrink-0">
-                <span className="block font-bold text-sky-500 text-base tracking-tight">{stats.totalComments || 0}</span>
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Comments</span>
+              <div className="text-center sm:text-left">
+                <span className="block font-bold text-sky-500 text-sm sm:text-base tracking-tight">{stats.totalComments || 0}</span>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Comments</span>
               </div>
-              <div className="text-center sm:text-left shrink-0">
-                <span className="block font-bold text-emerald-500 text-base tracking-tight">{stats.totalViews || 0}</span>
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Views</span>
+              <div className="text-center sm:text-left">
+                <span className="block font-bold text-emerald-500 text-sm sm:text-base tracking-tight">{stats.totalViews || 0}</span>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Views</span>
               </div>
             </div>
           </div>
@@ -401,41 +401,41 @@ export const ProfilePage = () => {
       </div>
 
       {/* Instagram Navigation Tabs Bar */}
-      <div className="flex items-center justify-center border-b border-[var(--border-main)] mb-6 overflow-x-auto">
+      <div className="flex items-center justify-start sm:justify-center border-b border-[var(--border-main)] mb-6 overflow-x-auto no-scrollbar flex-nowrap gap-1 sm:gap-2 px-1">
         <button
           onClick={() => setActiveTab("grid")}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-xs border-b-2 transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 sm:px-5 py-2.5 sm:py-3 font-bold text-[11px] sm:text-xs border-b-2 transition-all whitespace-nowrap shrink-0 ${
             activeTab === "grid"
               ? "border-sky-500 text-sky-500 bg-sky-500/5"
               : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           }`}
         >
-          <Grid className="w-4 h-4" />
-          <span>GRID GALLERY ({myPosts.length})</span>
+          <Grid className="w-4 h-4 shrink-0" />
+          <span>GRID ({myPosts.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab("feed")}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-xs border-b-2 transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 sm:px-5 py-2.5 sm:py-3 font-bold text-[11px] sm:text-xs border-b-2 transition-all whitespace-nowrap shrink-0 ${
             activeTab === "feed"
               ? "border-sky-500 text-sky-500 bg-sky-500/5"
               : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           }`}
         >
-          <List className="w-4 h-4" />
+          <List className="w-4 h-4 shrink-0" />
           <span>REELS STREAM</span>
         </button>
 
         {isOwnProfile && (
           <button
             onClick={() => setActiveTab("kyc")}
-            className={`flex items-center gap-2 px-5 py-3 font-bold text-xs border-b-2 transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 sm:px-5 py-2.5 sm:py-3 font-bold text-[11px] sm:text-xs border-b-2 transition-all whitespace-nowrap shrink-0 ${
               activeTab === "kyc"
                 ? "border-emerald-500 text-emerald-400 bg-emerald-500/5"
                 : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
-            <FileCheck className="w-4 h-4 text-emerald-400" />
+            <FileCheck className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>KYC VERIFICATION</span>
           </button>
         )}
@@ -443,14 +443,14 @@ export const ProfilePage = () => {
         {isOwnProfile && (
           <button
             onClick={() => setActiveTab("settings")}
-            className={`flex items-center gap-2 px-5 py-3 font-bold text-xs border-b-2 transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 sm:px-5 py-2.5 sm:py-3 font-bold text-[11px] sm:text-xs border-b-2 transition-all whitespace-nowrap shrink-0 ${
               activeTab === "settings"
                 ? "border-sky-500 text-sky-500 bg-sky-500/5"
                 : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
-            <Settings className="w-4 h-4" />
-            <span>RESIDENCY SETTINGS</span>
+            <Settings className="w-4 h-4 shrink-0" />
+            <span>RESIDENCY</span>
           </button>
         )}
       </div>
