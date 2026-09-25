@@ -125,6 +125,14 @@ export const NotificationDropdown = () => {
 
   return (
     <div ref={dropdownRef} className="relative inline-block">
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 sm:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Navbar Bell Button */}
       <button
         onClick={() => {
@@ -142,11 +150,11 @@ export const NotificationDropdown = () => {
         )}
       </button>
 
-      {/* Popover Dropdown Menu */}
+      {/* Popover Dropdown / Mobile Modal Menu */}
       {isOpen && (
         <div
-          className={`absolute right-0 mt-2 w-80 sm:w-96 max-h-[80vh] flex flex-col rounded-2xl border shadow-2xl z-50 animate-slideUp overflow-hidden transition-colors ${
-            isDark ? "bg-[#0f0f0f] border-[#272727] text-white" : "bg-white border-slate-200 text-slate-900 shadow-slate-300/50"
+          className={`fixed sm:absolute inset-x-3 sm:inset-auto sm:right-0 top-16 sm:top-auto sm:mt-2 w-auto sm:w-96 max-h-[82vh] sm:max-h-[80vh] flex flex-col rounded-2xl border shadow-2xl z-50 animate-slideUp overflow-hidden transition-colors ${
+            isDark ? "bg-[#121212] border-[#2b2b2b] text-slate-100" : "bg-white border-slate-200 text-slate-900 shadow-2xl"
           }`}
         >
           {/* Header */}

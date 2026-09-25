@@ -227,10 +227,10 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
         )}
 
         {/* Bottom Creator Info & Caption Overlay */}
-        <div className="absolute bottom-0 inset-x-0 z-20 p-4 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-auto flex flex-col justify-end text-white">
-          <div className="flex items-center justify-between gap-3 mb-2">
-            <Link to={usernameSlug ? `/profile/${usernameSlug}` : "#"} className="flex items-center gap-2.5 min-w-0 group/author">
-              <div className="w-9 h-9 rounded-full ig-ring p-0.5 overflow-hidden shrink-0 shadow-md">
+        <div className="absolute bottom-0 left-0 right-0 z-20 p-4 pr-14 md:pr-4 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-auto flex flex-col justify-end text-white">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <Link to={usernameSlug ? `/profile/${usernameSlug}` : "#"} className="flex items-center gap-2 min-w-0 group/author">
+              <div className="w-8 h-8 rounded-full ig-ring p-0.5 overflow-hidden shrink-0 shadow-md">
                 {avatarUrlToUse ? (
                   <img src={getMediaUrl(avatarUrlToUse)} alt={post.userId?.name || "Creator"} className="w-full h-full rounded-full object-cover" />
                 ) : (
@@ -243,7 +243,6 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
                 <h3 className="font-bold text-xs sm:text-sm text-white group-hover/author:text-sky-400 transition-colors truncate drop-shadow-md">
                   @{usernameSlug}
                 </h3>
-                <p className="text-[10px] text-slate-300 truncate">{post.userId?.name}</p>
               </div>
             </Link>
 
@@ -252,9 +251,9 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
               <button
                 type="button"
                 onClick={() => setIsFollowing(!isFollowing)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
+                className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
                   isFollowing
-                    ? "bg-[#272727] text-white hover:bg-[#3f3f3f] border border-[#3f3f3f]"
+                    ? "bg-[#272727]/80 text-white hover:bg-[#3f3f3f] border border-white/20"
                     : "bg-white text-black hover:bg-slate-200"
                 }`}
               >
@@ -274,16 +273,16 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
         </div>
 
         {/* MOBILE FLOATING ACTION BAR (Small screens < md) */}
-        <div className="md:hidden absolute bottom-20 right-3 z-30 flex flex-col items-center gap-3 text-white">
+        <div className="md:hidden absolute bottom-4 right-2 z-30 flex flex-col items-center gap-2.5 text-white">
           {/* Like */}
           <button
             onClick={handleLike}
-            className="flex flex-col items-center gap-1 group cursor-pointer"
+            className="flex flex-col items-center gap-0.5 group cursor-pointer"
           >
-            <div className={`w-10 h-10 rounded-full bg-[#272727]/90 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-lg transition-transform active:scale-90 ${
+            <div className={`w-9 h-9 rounded-full bg-[#181818]/90 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-lg transition-transform active:scale-90 ${
               post.hasLiked ? "text-rose-500 fill-rose-500" : "text-white hover:bg-[#3f3f3f]"
             }`}>
-              <Heart className={`w-5 h-5 ${post.hasLiked ? "fill-rose-500 text-rose-500" : ""}`} />
+              <Heart className={`w-4.5 h-4.5 ${post.hasLiked ? "fill-rose-500 text-rose-500" : ""}`} />
             </div>
             <span className="text-[10px] font-bold text-white drop-shadow-md">{formatCount(post.likeCount)}</span>
           </button>
@@ -291,12 +290,12 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
           {/* Comment */}
           <button
             onClick={() => onToggleComments && onToggleComments(post._id)}
-            className="flex flex-col items-center gap-1 group cursor-pointer"
+            className="flex flex-col items-center gap-0.5 group cursor-pointer"
           >
-            <div className={`w-10 h-10 rounded-full bg-[#272727]/90 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-lg text-white transition-transform active:scale-90 hover:bg-[#3f3f3f] ${
+            <div className={`w-9 h-9 rounded-full bg-[#181818]/90 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-lg text-white transition-transform active:scale-90 hover:bg-[#3f3f3f] ${
               isCommentsOpen ? "text-sky-400 border-sky-500/40" : ""
             }`}>
-              <MessageSquare className="w-5 h-5" />
+              <MessageSquare className="w-4.5 h-4.5" />
             </div>
             <span className="text-[10px] font-bold text-white drop-shadow-md">{formatCount(post.commentCount)}</span>
           </button>
@@ -304,18 +303,18 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
           {/* Share */}
           <button
             onClick={handleShare}
-            className="flex flex-col items-center gap-1 group cursor-pointer"
+            className="flex flex-col items-center gap-0.5 group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-full bg-[#272727]/90 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-lg text-white transition-transform active:scale-90 hover:bg-[#3f3f3f]">
-              <Share2 className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-full bg-[#181818]/90 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-lg text-white transition-transform active:scale-90 hover:bg-[#3f3f3f]">
+              <Share2 className="w-4.5 h-4.5" />
             </div>
             <span className="text-[10px] font-bold text-white drop-shadow-md">Share</span>
           </button>
 
           {/* Views */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-10 h-10 rounded-full bg-[#272727]/90 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-lg text-white">
-              <Eye className="w-4.5 h-4.5 text-emerald-400" />
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="w-9 h-9 rounded-full bg-[#181818]/90 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-lg text-white">
+              <Eye className="w-4 h-4 text-emerald-400" />
             </div>
             <span className="text-[10px] font-bold text-white drop-shadow-md">{formatCount(post.viewCount)}</span>
           </div>
