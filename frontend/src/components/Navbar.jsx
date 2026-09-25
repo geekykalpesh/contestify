@@ -98,10 +98,10 @@ export const Navbar = () => {
 
           {/* User Profile Avatar & Settings Drawer Trigger */}
           {user ? (
-            <div className="relative" ref={menuRef}>
+            <div className="relative flex items-center gap-1 sm:gap-2" ref={menuRef}>
               <button
                 onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-                className="flex items-center gap-2 p-0.5 rounded-full hover:opacity-85 transition-opacity cursor-pointer"
+                className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-500/10 transition-all cursor-pointer"
                 title="User Profile & Settings Menu"
               >
                 <div className="w-8 h-8 rounded-full ig-ring p-0.5 overflow-hidden shrink-0">
@@ -126,7 +126,7 @@ export const Navbar = () => {
               <button
                 onClick={() => dispatch(logout())}
                 title="Logout"
-                className="hidden sm:flex p-2 text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer ml-1"
+                className="hidden sm:flex p-2 text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>
