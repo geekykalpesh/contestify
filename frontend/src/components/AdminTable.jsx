@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { updateKycThunk } from "../store/adminSlice";
 import { AdminWinnerModal } from "./AdminWinnerModal";
+import { TableRowsShimmer } from "./AdminSkeletonLoaders";
 import { Trophy, CheckCircle, XCircle, AlertCircle, RefreshCw, Zap, Eye, Filter, ExternalLink, User } from "lucide-react";
 
 export const AdminTable = ({ winners = [], summary, onRefresh }) => {
@@ -131,7 +132,10 @@ export const AdminTable = ({ winners = [], summary, onRefresh }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-main)] text-xs">
-              {filteredWinners.map((w, idx) => {
+              {loading ? (
+                <TableRowsShimmer rows={6} columns={8} />
+              ) : (
+                filteredWinners.map((w, idx) => {
                 const isUnawarded = w.userId === "UNAWARDED";
                 const isFailed = w.kycStatus === "FAILED";
                 const isPassed = w.kycStatus === "PASSED";
@@ -247,7 +251,7 @@ export const AdminTable = ({ winners = [], summary, onRefresh }) => {
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         </div>

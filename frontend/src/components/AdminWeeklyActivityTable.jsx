@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Calendar, CheckCircle2, XCircle, Search, Eye, Sparkles, ExternalLink } from "lucide-react";
 import { AdminCreatorDetailsModal } from "./AdminCreatorDetailsModal";
+import { TableRowsShimmer } from "./AdminSkeletonLoaders";
 
 export const AdminWeeklyActivityTable = ({ weeklyActivity = [] }) => {
   const navigate = useNavigate();
+  const { loading } = useSelector((state) => state.admin);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCreator, setSelectedCreator] = useState(null);
 
@@ -60,7 +63,9 @@ export const AdminWeeklyActivityTable = ({ weeklyActivity = [] }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-main)] text-xs">
-              {filtered.length > 0 ? (
+              {loading ? (
+                <TableRowsShimmer rows={6} columns={9} />
+              ) : filtered.length > 0 ? (
                 filtered.map((user) => {
                   const isConsistent = user.isConsistencyEligible;
                   const w1 = user.week1Count || 0;

@@ -33,6 +33,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { AdminCreatorDetailsModal } from "./AdminCreatorDetailsModal";
+import { TableRowsShimmer } from "./AdminSkeletonLoaders";
 
 export const AdminParticipantsTable = () => {
   const dispatch = useDispatch();
@@ -253,7 +254,9 @@ export const AdminParticipantsTable = () => {
             </thead>
 
             <tbody className="divide-y divide-[var(--border-main)] text-xs">
-              {paginatedUsers.length > 0 ? (
+              {participantsLoading ? (
+                <TableRowsShimmer rows={8} columns={9} />
+              ) : paginatedUsers.length > 0 ? (
                 paginatedUsers.map((p) => {
                   const uid = p.id || p.userId;
                   const isSelected = selectedUserIds.includes(uid);

@@ -9,6 +9,7 @@ import { AdminTable } from "../components/AdminTable";
 import { AdminWeeklyActivityTable } from "../components/AdminWeeklyActivityTable";
 import { AdminParticipantsTable } from "../components/AdminParticipantsTable";
 import { AdminAuditLogsTable } from "../components/AdminAuditLogsTable";
+import { KpiCardsShimmer } from "../components/AdminSkeletonLoaders";
 import {
   Trophy,
   RefreshCw,
@@ -125,89 +126,93 @@ export const AdminDashboard = () => {
       )}
 
       {/* Interactive System Analytics KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Card 1: Total Users */}
-        <div
-          onClick={() => handleStatCardClick("residency", "ALL")}
-          className="ig-card p-4 rounded-2xl border border-sky-500/30 bg-gradient-to-br from-sky-500/10 to-transparent hover:border-sky-500/60 transition-all cursor-pointer group"
-        >
-          <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
-            <span>Total Registered</span>
-            <Users className="w-4 h-4 text-sky-400 group-hover:scale-110 transition-transform" />
+      {loading ? (
+        <KpiCardsShimmer count={5} />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Card 1: Total Users */}
+          <div
+            onClick={() => handleStatCardClick("residency", "ALL")}
+            className="ig-card p-4 rounded-2xl border border-sky-500/30 bg-gradient-to-br from-sky-500/10 to-transparent hover:border-sky-500/60 transition-all cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
+              <span>Total Registered</span>
+              <Users className="w-4 h-4 text-sky-400 group-hover:scale-110 transition-transform" />
+            </div>
+            <div className="text-2xl font-black text-sky-400 mt-2 font-mono">
+              {totalUsersDisplay}
+            </div>
+            <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
+              <span>Indexed in Mongo & Postgres</span>
+            </div>
           </div>
-          <div className="text-2xl font-black text-sky-400 mt-2 font-mono">
-            {totalUsersDisplay}
-          </div>
-          <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
-            <span>Indexed in Mongo & Postgres</span>
-          </div>
-        </div>
 
-        {/* Card 2: CG Eligible */}
-        <div
-          onClick={() => handleStatCardClick("residency", "Chhattisgarh")}
-          className="ig-card p-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent hover:border-emerald-500/60 transition-all cursor-pointer group"
-        >
-          <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
-            <span>CG Eligible Residents</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+          {/* Card 2: CG Eligible */}
+          <div
+            onClick={() => handleStatCardClick("residency", "Chhattisgarh")}
+            className="ig-card p-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent hover:border-emerald-500/60 transition-all cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
+              <span>CG Eligible Residents</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+            </div>
+            <div className="text-2xl font-black text-emerald-400 mt-2 font-mono">
+              {cgEligibleDisplay}
+            </div>
+            <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
+              <span>Verified Residency Rule</span>
+            </div>
           </div>
-          <div className="text-2xl font-black text-emerald-400 mt-2 font-mono">
-            {cgEligibleDisplay}
-          </div>
-          <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
-            <span>Verified Residency Rule</span>
-          </div>
-        </div>
 
-        {/* Card 3: Pending KYC Queue */}
-        <div
-          onClick={() => handleStatCardClick("kycStatus", "PENDING")}
-          className="ig-card p-4 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent hover:border-amber-500/60 transition-all cursor-pointer group relative overflow-hidden"
-        >
-          <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
-            <span>Pending KYC Queue</span>
-            <FileCheck className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+          {/* Card 3: Pending KYC Queue */}
+          <div
+            onClick={() => handleStatCardClick("kycStatus", "PENDING")}
+            className="ig-card p-4 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent hover:border-amber-500/60 transition-all cursor-pointer group relative overflow-hidden"
+          >
+            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
+              <span>Pending KYC Queue</span>
+              <FileCheck className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+            </div>
+            <div className="text-2xl font-black text-amber-400 mt-2 font-mono">
+              {pendingKycDisplay}
+            </div>
+            <div className="text-[10px] text-amber-400/80 mt-1 flex items-center gap-1 font-semibold">
+              <span>Click to Review Queue →</span>
+            </div>
           </div>
-          <div className="text-2xl font-black text-amber-400 mt-2 font-mono">
-            {pendingKycDisplay}
-          </div>
-          <div className="text-[10px] text-amber-400/80 mt-1 flex items-center gap-1 font-semibold">
-            <span>Click to Review Queue →</span>
-          </div>
-        </div>
 
-        {/* Card 4: 33 Prizes Allocated */}
-        <div
-          onClick={() => setActiveTab("WINNERS")}
-          className="ig-card p-4 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-transparent hover:border-purple-500/60 transition-all cursor-pointer group"
-        >
-          <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
-            <span>33 Prizes Allocated</span>
-            <Award className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+          {/* Card 4: 33 Prizes Allocated */}
+          <div
+            onClick={() => setActiveTab("WINNERS")}
+            className="ig-card p-4 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-transparent hover:border-purple-500/60 transition-all cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
+              <span>33 Prizes Allocated</span>
+              <Award className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+            </div>
+            <div className="text-2xl font-black text-purple-400 mt-2 font-mono">
+              {prizesAwardedDisplay} / 33
+            </div>
+            <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
+              <span>Priority Cascade Hierarchy</span>
+            </div>
           </div>
-          <div className="text-2xl font-black text-purple-400 mt-2 font-mono">
-            {prizesAwardedDisplay} / 33
-          </div>
-          <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
-            <span>Priority Cascade Hierarchy</span>
-          </div>
-        </div>
 
-        {/* Card 5: Total Posts Evaluated */}
-        <div className="ig-card p-4 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 to-transparent hover:border-indigo-500/60 transition-all">
-          <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
-            <span>Total Media Posts</span>
-            <Activity className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div className="text-2xl font-black text-indigo-400 mt-2 font-mono">
-            {totalPostsDisplay}
-          </div>
-          <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
-            <span>Likes + Comments + Views</span>
+          {/* Card 5: Total Posts Evaluated */}
+          <div className="ig-card p-4 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 to-transparent hover:border-indigo-500/60 transition-all">
+            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
+              <span>Total Media Posts</span>
+              <Activity className="w-4 h-4 text-indigo-400" />
+            </div>
+            <div className="text-2xl font-black text-indigo-400 mt-2 font-mono">
+              {totalPostsDisplay}
+            </div>
+            <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
+              <span>Likes + Comments + Views</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Navigation Tabs Bar */}
       <div className="flex items-center gap-2 border-b border-[var(--border-main)] pb-2 overflow-x-auto">

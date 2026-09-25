@@ -1,7 +1,11 @@
 import React from "react";
+import { useSelector } from "react-redux";
 import { Shield, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { TableRowsShimmer } from "./AdminSkeletonLoaders";
 
 export const AdminAuditLogsTable = ({ auditLogs = [] }) => {
+  const { loading } = useSelector((state) => state.admin);
+
   return (
     <div className="ig-card rounded-2xl overflow-hidden shadow-lg border border-[var(--border-main)]">
       {/* Header */}
@@ -30,7 +34,9 @@ export const AdminAuditLogsTable = ({ auditLogs = [] }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border-main)] text-xs font-mono">
-            {auditLogs.length > 0 ? (
+            {loading ? (
+              <TableRowsShimmer rows={5} columns={5} />
+            ) : auditLogs.length > 0 ? (
               auditLogs.map((log) => {
                 const isPass = log.newStatus === "PASSED";
                 const isFail = log.newStatus === "FAILED";
