@@ -24,7 +24,10 @@ const getContestData = async (req, res, next) => {
 
     const formattedPosts = posts.map((p) => {
       const user = p.userId || {};
-      const score = Number((p.likeCount * 1.0 + p.commentCount * 3.0 + p.viewCount * 0.2).toFixed(2));
+      const likes    = Math.max(0, parseInt(p.likeCount, 10)    || 0);
+      const comments = Math.max(0, parseInt(p.commentCount, 10) || 0);
+      const views    = Math.max(0, parseInt(p.viewCount, 10)    || 0);
+      const score    = Number((likes * 1.0 + comments * 3.0 + views * 0.2).toFixed(2));
       return {
         id: p._id.toString(),
         userId: user._id ? user._id.toString() : (p.userId ? p.userId.toString() : ""),
@@ -36,9 +39,9 @@ const getContestData = async (req, res, next) => {
         category: p.category,
         mediaUrl: p.mediaUrl,
         mediaType: p.mediaType,
-        likeCount: p.likeCount,
-        commentCount: p.commentCount,
-        viewCount: p.viewCount,
+        likeCount:    likes,
+        commentCount: comments,
+        viewCount:    views,
         score,
         createdAt: p.createdAt
       };

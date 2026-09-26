@@ -517,10 +517,19 @@ const exportParticipantsCsv = async (req, res, next) => {
     const headers = ["User ID", "Name", "Email", "Residency", "KYC Status", "Total Posts", "Total Likes", "Total Comments", "Total Views", "Max Score"];
     const rows = users.map((u) => {
       const userPosts = posts.filter((p) => p.userId === u.id);
-      const totalLikes = userPosts.reduce((sum, p) => sum + (p.likeCount || 0), 0);
-      const totalComments = userPosts.reduce((sum, p) => sum + (p.commentCount || 0), 0);
-      const totalViews = userPosts.reduce((sum, p) => sum + (p.viewCount || 0), 0);
-      const maxScore = userPosts.length > 0 ? Math.max(...userPosts.map((p) => p.score)) : 0;
+
+      // Use reduce — Math.max(...largeArray) causes stack overflow for millions of posts
+      let totalLikes = 0, totalComments = 0, totalViews = 0, maxScore = 0;
+      userPosts.forEach((p) => {
+        const l = Math.max(0, parseInt(p.likeCount, 10)    || 0);
+        const c = Math.max(0, parseInt(p.commentCount, 10) || 0);
+        const v = Math.max(0, parseInt(p.viewCount, 10)    || 0);
+        totalLikes    += l;
+        totalComments += c;
+        totalViews    += v;
+        const s = Number((l * 1.0 + c * 3.0 + v * 0.2).toFixed(2));
+        if (s > maxScore) maxScore = s;
+      });
 
       return [
         `"${u.id}"`,
