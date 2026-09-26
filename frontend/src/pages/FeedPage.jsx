@@ -178,7 +178,32 @@ export const FeedPage = () => {
         {loading && posts.length === 0 ? (
           <div className="w-full space-y-6">
             {[1, 2].map((i) => (
-              <div key={i} className="w-full aspect-[9/16] rounded-3xl animate-pulse bg-slate-100 dark:bg-[#141414] border border-slate-200 dark:border-[#272727]" />
+              <div key={i} className="flex items-center justify-center gap-3 sm:gap-5 my-3 sm:my-6 relative max-w-full">
+                {/* Skeleton Reel Card */}
+                <div className="w-full sm:w-[320px] md:w-[340px] aspect-[9/16] h-[84vh] max-h-[780px] rounded-2xl sm:rounded-3xl bg-slate-100 dark:bg-[#141414] border border-slate-200 dark:border-[#272727] relative overflow-hidden shrink-0">
+                  {/* Shimmer sweep */}
+                  <div className="shimmer-effect absolute inset-0" />
+                  {/* Bottom creator info skeleton */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-[#2a2a2a] shrink-0" />
+                      <div className="h-3 w-24 rounded-full bg-slate-300 dark:bg-[#2a2a2a]" />
+                      <div className="h-5 w-14 rounded-full bg-slate-300 dark:bg-[#2a2a2a] ml-1" />
+                    </div>
+                    <div className="h-2.5 w-3/4 rounded-full bg-slate-300 dark:bg-[#2a2a2a]" />
+                    <div className="h-2.5 w-1/2 rounded-full bg-slate-300 dark:bg-[#2a2a2a]" />
+                  </div>
+                </div>
+                {/* Skeleton Action Bar */}
+                <div className="hidden md:flex flex-col items-center gap-3.5 shrink-0 self-end pb-4">
+                  {[1,2,3,4].map(j => (
+                    <div key={j} className="flex flex-col items-center gap-1">
+                      <div className="w-11 h-11 rounded-full bg-slate-200 dark:bg-[#1f1f1f] shimmer-effect" />
+                      <div className="h-2 w-6 rounded-full bg-slate-200 dark:bg-[#1f1f1f]" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         ) : posts.length > 0 ? (

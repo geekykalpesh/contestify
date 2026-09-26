@@ -16,6 +16,25 @@ const formatCount = (num) => {
   return num.toString();
 };
 
+// Floating heart that animates from tap position — TikTok/Instagram double-tap style
+const FloatingHeart = ({ x, y, id, onDone }) => {
+  useEffect(() => {
+    const t = setTimeout(onDone, 900);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div
+      className="pointer-events-none absolute z-50"
+      style={{ left: x - 36, top: y - 36 }}
+    >
+      <Heart
+        className="w-[72px] h-[72px] fill-rose-500 text-rose-500 drop-shadow-2xl"
+        style={{ animation: "floatHeart 0.9s cubic-bezier(0.22,0.61,0.36,1) forwards" }}
+      />
+    </div>
+  );
+};
+
 export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleComments, isCommentsOpen }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -26,7 +45,10 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [followAnimating, setFollowAnimating] = useState(false);
   const [likeAnimating, setLikeAnimating] = useState(false);
+  const [floatingHearts, setFloatingHearts] = useState([]); // for double-tap
+  const lastTapRef = useRef(0);
 
   const videoRef = useRef(null);
   const cardRef = useRef(null);
@@ -102,6 +124,32 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
     }
   };
 
+  // Double-tap to like (TikTok / Instagram style)
+  const handleVideoTap = (e) => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      // Double tap detected!
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const heartId = now;
+      setFloatingHearts(prev => [...prev, { id: heartId, x, y }]);
+      // Trigger like if not already liked
+      if (!post.hasLiked) {
+        setLikeAnimating(true);
+        setTimeout(() => setLikeAnimating(false), 400);
+        dispatch(optimisticLike(post._id));
+        dispatch(likePostThunk(post._id));
+      }
+    } else {
+      togglePlay();
+    }
+    lastTapRef.current = now;
+  };
+
+  const removeFloatingHeart = (id) =>
+    setFloatingHearts(prev => prev.filter(h => h.id !== id));
+
   const toggleMute = (e) => {
     e.stopPropagation();
     const nextMutedState = !globalAudioMuted;
@@ -146,8 +194,18 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
   const mediaSource = getMediaUrl(post.mediaUrl);
   const posterSource = post.thumbnailUrl ? getMediaUrl(post.thumbnailUrl) : null;
 
+  const handleFollow = () => {
+    setFollowAnimating(true);
+    setTimeout(() => setFollowAnimating(false), 350);
+    setIsFollowing(f => !f);
+  };
+
   return (
-    <div ref={cardRef} className="flex items-center justify-center gap-3 sm:gap-5 my-3 sm:my-6 relative max-w-full">
+    <div
+      ref={cardRef}
+      className="flex items-center justify-center gap-3 sm:gap-5 my-3 sm:my-6 relative max-w-full"
+      style={{ animation: "fadeInUp 0.45s cubic-bezier(0.22,0.61,0.36,1) both" }}
+    >
       {/* 1. CENTRAL REEL CARD CONTAINER (Reduced width & increased height) */}
       <div className="w-full sm:w-[320px] md:w-[340px] aspect-[9/16] h-[84vh] max-h-[780px] rounded-2xl sm:rounded-3xl bg-black relative overflow-hidden shadow-2xl border border-[#272727] shrink-0 group">
         {/* TOP HOVER CONTROLS OVERLAY */}
@@ -198,7 +256,7 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
 
         {/* Video / Image Display */}
         {post.mediaType === "video" ? (
-          <div className="relative w-full h-full cursor-pointer" onClick={togglePlay}>
+          <div className="relative w-full h-full cursor-pointer" onClick={handleVideoTap}>
             <video
               ref={videoRef}
               src={mediaSource}
@@ -216,6 +274,10 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
                 </div>
               </div>
             )}
+            {/* Floating hearts (double-tap) */}
+            {floatingHearts.map(h => (
+              <FloatingHeart key={h.id} x={h.x} y={h.y} id={h.id} onDone={() => removeFloatingHeart(h.id)} />
+            ))}
           </div>
         ) : (
           <img src={mediaSource} alt={post.caption} loading="lazy" className="w-full h-full object-cover" />
@@ -245,12 +307,13 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
             {!isOwnPost && (
               <button
                 type="button"
-                onClick={() => setIsFollowing(!isFollowing)}
-                className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
+                onClick={handleFollow}
+                className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shadow-md cursor-pointer shrink-0 ${
                   isFollowing
                     ? "bg-[#272727]/80 text-white hover:bg-[#3f3f3f] border border-white/20"
                     : "bg-white text-black hover:bg-slate-200"
                 }`}
+                style={{ animation: followAnimating ? "heartBounce 0.35s cubic-bezier(0.34,1.56,0.64,1)" : "none" }}
               >
                 {isFollowing ? "Following" : "Follow"}
               </button>

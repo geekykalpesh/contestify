@@ -168,9 +168,31 @@ export const ProfilePage = () => {
 
   if (loadingPosts) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-24 text-center flex flex-col items-center justify-center space-y-4">
-        <div className="w-12 h-12 rounded-full border-4 border-sky-500 border-t-transparent animate-spin" />
-        <p className="text-xs font-semibold text-[var(--text-secondary)]">Loading Creator Profile...</p>
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+        {/* Profile header skeleton */}
+        <div className="flex items-center gap-6 p-6 rounded-3xl bg-white dark:bg-[#0f0f0f] border border-slate-200 dark:border-[#272727]">
+          <div className="w-24 h-24 rounded-full bg-slate-200 dark:bg-[#1f1f1f] shrink-0 shimmer-effect" />
+          <div className="flex-1 space-y-3">
+            <div className="h-5 w-40 rounded-full bg-slate-200 dark:bg-[#1f1f1f] shimmer-effect" />
+            <div className="h-3 w-28 rounded-full bg-slate-200 dark:bg-[#1f1f1f] shimmer-effect" />
+            <div className="h-3 w-48 rounded-full bg-slate-200 dark:bg-[#1f1f1f] shimmer-effect" />
+          </div>
+        </div>
+        {/* Stats skeleton */}
+        <div className="grid grid-cols-4 gap-3">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="rounded-2xl bg-white dark:bg-[#0f0f0f] border border-slate-200 dark:border-[#272727] p-4 space-y-2">
+              <div className="h-5 w-12 rounded-full bg-slate-200 dark:bg-[#1f1f1f] shimmer-effect mx-auto" />
+              <div className="h-3 w-16 rounded-full bg-slate-200 dark:bg-[#1f1f1f] shimmer-effect mx-auto" />
+            </div>
+          ))}
+        </div>
+        {/* Posts grid skeleton */}
+        <div className="grid grid-cols-3 gap-1.5">
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className="aspect-[9/16] rounded-xl bg-slate-200 dark:bg-[#1f1f1f] shimmer-effect" />
+          ))}
+        </div>
       </div>
     );
   }
