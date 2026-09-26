@@ -27,7 +27,8 @@ import {
   XCircle,
   Clock,
   Camera,
-  Trash2
+  Trash2,
+  User
 } from "lucide-react";
 
 export const ProfilePage = () => {
