@@ -44,8 +44,8 @@ export const AuthPage = () => {
   const dispatch = useDispatch();
   const fileInputRef = useRef(null);
 
-  // Default mode is 'signup' as requested by screenshot
-  const isSignupMode = searchParams.get("mode") !== "login";
+  // Default mode is 'login' (changed from signup)
+  const isSignupMode = searchParams.get("mode") === "signup";
   const { user, loading, error, signupSuccess, signupEmail } = useSelector((state) => state.auth);
 
   const [name, setName] = useState("");
@@ -208,24 +208,26 @@ export const AuthPage = () => {
           </button>
         </div>
 
-        {/* Contestify Branded Header */}
-        <div className="mb-6 space-y-1">
-          <div className="flex items-center gap-2 text-[var(--text-primary)] font-bold text-lg mb-1">
-            <div className="w-7 h-7 rounded-lg ig-ring p-0.5 flex items-center justify-center shadow-sm">
-              <div className="w-full h-full bg-[var(--bg-main)] rounded-[6px] flex items-center justify-center">
-                <Camera className="w-4 h-4 text-[var(--text-primary)]" />
+        {/* Contestify Branded Header (Instagram Style) */}
+        <div className="mb-8 flex flex-col items-center text-center space-y-3">
+          <div className="flex flex-col items-center gap-2 text-[var(--text-primary)] font-bold text-lg mb-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 p-0.5 flex items-center justify-center shadow-lg transform -rotate-6">
+              <div className="w-full h-full bg-white dark:bg-black rounded-[10px] flex items-center justify-center">
+                <Camera className="w-5 h-5 text-pink-500" />
               </div>
             </div>
-            <span className="font-ig-logo text-2xl tracking-wide">Contestify</span>
+            <span className="font-ig-logo text-4xl tracking-wide mt-2" style={{ fontFamily: "Billabong, 'Grand Hotel', cursive" }}>Contestify</span>
           </div>
-          <h1 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
-            {isSignupMode ? "Get started on Contestify" : "Welcome back to Contestify"}
-          </h1>
-          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-            {isSignupMode
-              ? "Sign up to see photos and videos from your favorite creators."
-              : "Log in with your mobile number, username or email."}
-          </p>
+          
+          {isSignupMode ? (
+            <p className="text-[13px] font-semibold text-[var(--text-secondary)] leading-relaxed px-2">
+              Sign up to see photos and videos from your friends.
+            </p>
+          ) : (
+            <p className="text-[13px] font-semibold text-[var(--text-secondary)] leading-relaxed px-2">
+              Log in to see photos and videos from your favorite creators.
+            </p>
+          )}
         </div>
 
         {signupSuccess && (
@@ -555,23 +557,40 @@ export const AuthPage = () => {
           )}
 
           {/* Primary Action Button (Exact Instagram Blue Pill Button) */}
-          <div className="pt-2 space-y-3">
+          <div className="pt-4 space-y-4">
             <button
               type="submit"
               disabled={loading || (isSignupMode && (usernameAvailable === false || emailAvailable === false))}
-              className="w-full py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white font-bold text-sm rounded-full shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+              className={`w-full py-3.5 flex items-center justify-center gap-2 text-white font-bold text-[13px] rounded-xl shadow-md transition-all ${
+                loading 
+                  ? "bg-sky-400 cursor-not-allowed" 
+                  : "bg-sky-500 hover:bg-sky-600 active:scale-[0.98] cursor-pointer"
+              }`}
             >
-              <span>{loading ? "Processing..." : isSignupMode ? "Submit" : "Log in"}</span>
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              <span>{isSignupMode ? (loading ? "Signing up..." : "Sign up") : (loading ? "Logging in..." : "Log in")}</span>
             </button>
+            
+            {!isSignupMode && (
+              <div className="flex items-center gap-4 my-6">
+                <div className="flex-1 h-px bg-[var(--border-main)]"></div>
+                <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wide">OR</span>
+                <div className="flex-1 h-px bg-[var(--border-main)]"></div>
+              </div>
+            )}
 
-            {/* Secondary Action Button (I already have an account / Create new account) */}
-            <button
-              type="button"
-              onClick={() => setSearchParams({ mode: isSignupMode ? "login" : "signup" })}
-              className="w-full py-3.5 bg-slate-500/10 hover:bg-slate-500/20 text-[var(--text-primary)] font-bold text-sm rounded-full border border-[var(--border-main)] transition-all active:scale-[0.99] cursor-pointer"
-            >
-              {isSignupMode ? "I already have an account" : "Create new account"}
-            </button>
+            <div className="text-center mt-6 p-4 border border-[var(--border-main)] rounded-2xl bg-[var(--bg-main)]">
+              <p className="text-[13px] text-[var(--text-primary)]">
+                {isSignupMode ? "Have an account? " : "Don't have an account? "}
+                <button
+                  type="button"
+                  onClick={() => setSearchParams({ mode: isSignupMode ? "login" : "signup" })}
+                  className="font-bold text-sky-500 hover:text-sky-600 hover:underline transition-all cursor-pointer"
+                >
+                  {isSignupMode ? "Log in" : "Sign up"}
+                </button>
+              </p>
+            </div>
           </div>
         </form>
       </div>

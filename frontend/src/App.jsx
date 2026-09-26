@@ -39,7 +39,7 @@ const GlobalSocketListener = ({ children }) => {
 const ProtectedRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
   if (!user) {
-    return <Navigate to="/auth?mode=signup" replace />;
+    return <Navigate to="/auth?mode=login" replace />;
   }
   return children;
 };
@@ -113,7 +113,7 @@ export function App() {
                     </AdminRoute>
                   }
                 />
-                <Route path="*" element={<Navigate to="/auth?mode=signup" replace />} />
+                <Route path="*" element={<Navigate to="/auth?mode=login" replace />} />
               </Routes>
             </main>
           </div>
