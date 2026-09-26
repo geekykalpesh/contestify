@@ -139,7 +139,7 @@ export const Navbar = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                   />
                   <div
-                    className={`absolute right-0 mt-2 w-72 sm:w-80 rounded-2xl border shadow-2xl z-50 animate-slideUp overflow-hidden p-2 space-y-1 transition-colors ${
+                    className={`absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-2xl border shadow-2xl z-50 animate-slideUp overflow-hidden p-2 space-y-1 transition-colors ${
                       isDark ? "bg-[#141414] border-[#2b2b2b] text-slate-100" : "bg-white border-slate-200 text-slate-900 shadow-xl"
                     }`}
                   >
