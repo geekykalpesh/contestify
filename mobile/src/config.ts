@@ -1,32 +1,9 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-// Dynamically handle server URL depending on platform, environment variables & network IP
-const getLocalHostUrl = (port: number) => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-  const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest2?.extra?.expoGo?.debuggerHost;
-  if (hostUri) {
-    const hostIp = hostUri.split(':')[0];
-    if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
-      return `http://${hostIp}:${port}`;
-    }
-  }
-
-  if (Platform.OS === 'android') {
-    // 10.176.100.150 is the local Wi-Fi IP address for physical Android device testing
-    return `http://10.176.100.150:${port}`;
-  }
-  if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
-    const hostname = window.location.hostname || 'localhost';
-    return `http://${hostname}:${port}`;
-  }
-  return `http://localhost:${port}`;
-};
-
-export const USER_SERVICE_URL = getLocalHostUrl(5001);
-export const ADMIN_SERVICE_URL = getLocalHostUrl(5002);
+// Environment Variables loaded dynamically from .env (ignored by Git)
+export const USER_SERVICE_URL = process.env.EXPO_PUBLIC_API_URL || '';
+export const ADMIN_SERVICE_URL = process.env.EXPO_PUBLIC_ADMIN_API_URL || '';
 
 export const getMediaUrl = (url?: string | null): string => {
   if (!url) return '';

@@ -1,5 +1,5 @@
-export const USER_SERVICE_URL = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5001";
-export const ADMIN_SERVICE_URL = import.meta.env.VITE_ADMIN_SERVICE_URL || "http://localhost:5002";
+export const USER_SERVICE_URL = import.meta.env.VITE_USER_SERVICE_URL || "https://contestify-nfd7.onrender.com";
+export const ADMIN_SERVICE_URL = import.meta.env.VITE_ADMIN_SERVICE_URL || "https://contestify-admin-service.onrender.com";
 
 export const getMediaUrl = (url) => {
   if (!url) return "";
