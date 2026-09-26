@@ -43,4 +43,5 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: npx eas-cli build --platform android --profile production --non-interactive
         env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_SKIP_AUTO_FINGERPRINT: '1'
