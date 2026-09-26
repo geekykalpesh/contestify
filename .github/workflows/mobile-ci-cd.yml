@@ -1,0 +1,46 @@
+name: Contestify Mobile CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  typecheck_and_build:
+    name: Typecheck & EAS Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./mobile
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: './mobile/package-lock.json'
+
+      - name: 📦 Install Mobile Dependencies
+        run: npm ci --include=dev
+
+      - name: 🔍 TypeScript Typecheck
+        run: npx tsc --noEmit
+
+      - name: 🚀 Setup Expo EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📱 EAS Cloud Build & Auto-Submit to Play Store
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: npx eas-cli build --platform android --profile production --non-interactive
+        env:
+          EAS_SKIP_AUTO_FINGERPRINT: '1'

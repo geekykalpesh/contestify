@@ -61,20 +61,37 @@ const registerUser = async ({ name, email, username, password, residency, dob, a
 };
 
 const loginUser = async ({ email, identifier, password }) => {
-  const input = (identifier || email || "").toLowerCase().trim();
+  const input = (identifier || email || "").trim();
   if (!input) {
     throw new AppError("Username or email address is required", 400);
   }
 
-  const user = await User.findOne({
-    $or: [{ email: input }, { username: input }]
+  const cleanInput = input.toLowerCase();
+
+  let user = await User.findOne({
+    $or: [{ email: cleanInput }, { username: cleanInput }]
   });
+
+  if (!user) {
+    const escapedInput = cleanInput.replace(/[/\\^$*+?.()|[\]{}]/g, "\\$&");
+    user = await User.findOne({
+      $or: [
+        { email: { $regex: new RegExp(`^${escapedInput}$`, "i") } },
+        { username: { $regex: new RegExp(`^${escapedInput}$`, "i") } }
+      ]
+    });
+  }
 
   if (!user) {
     throw new AppError("Invalid username, email, or password", 401);
   }
 
-  const isMatch = await bcrypt.compare(password, user.passwordHash);
+  const rawPassword = password || "";
+  const cleanPassword = rawPassword.trim();
+  const isMatch =
+    (await bcrypt.compare(cleanPassword, user.passwordHash)) ||
+    (await bcrypt.compare(rawPassword, user.passwordHash));
+
   if (!isMatch) {
     throw new AppError("Invalid username, email, or password", 401);
   }
