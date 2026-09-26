@@ -139,7 +139,7 @@ async function runFullTestSuite() {
       {},
       { headers: { Authorization: `Bearer ${user2Token}` } }
     );
-    if (!res.data.success || res.data.data.likesCount < 1) throw new Error('Like post failed to increment count');
+    if (!res.data.success || (res.data.data.likeCount ?? res.data.data.likesCount) < 1) throw new Error('Like post failed to increment count');
   });
 
   // 9. Comment on Post (User 2 comments on User 1's post)

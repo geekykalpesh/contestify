@@ -154,11 +154,6 @@ const likePost = async ({ userId, postId }) => {
     throw new AppError("Post not found", 404);
   }
 
-  // RULE: Cannot like own post
-  if (post.userId.toString() === userId.toString()) {
-    throw new AppError("You cannot like your own post", 400);
-  }
-
   // Check if user already liked this post
   const existingLike = await Like.findOne({ userId, postId });
   let hasLiked = false;
@@ -222,25 +217,12 @@ const commentPost = async ({ userId, postId, text }) => {
     throw new AppError("Post not found", 404);
   }
 
-  // RULE: Cannot comment on own post
-  if (post.userId.toString() === userId.toString()) {
-    throw new AppError("You cannot comment on your own post", 400);
-  }
-
-  // RULE: Single comment per user per post (unique index check)
-  let comment;
-  try {
-    comment = await Comment.create({
-      userId,
-      postId,
-      text: text.trim()
-    });
-  } catch (err) {
-    if (err.code === 11000) {
-      throw new AppError("You have already commented on this post", 409);
-    }
-    throw err;
-  }
+  // Create new comment record
+  const comment = await Comment.create({
+    userId,
+    postId,
+    text: text.trim()
+  });
 
   const populatedComment = await Comment.findById(comment._id).populate("userId", "name email username avatarUrl");
 

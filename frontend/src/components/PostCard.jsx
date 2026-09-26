@@ -115,12 +115,6 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
       toast.warning("Please login to like posts!", "Authentication Required");
       return;
     }
-    const postOwnerId = post.userId?._id || post.userId?.id || post.userId;
-    const currentUserId = user._id || user.id;
-    if (postOwnerId && currentUserId && postOwnerId.toString() === currentUserId.toString()) {
-      toast.error("You cannot like your own post!", "Action Restricted");
-      return;
-    }
 
     try {
       dispatch(optimisticLike(post._id));

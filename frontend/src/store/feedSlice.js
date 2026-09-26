@@ -197,6 +197,15 @@ const feedSlice = createSlice({
           if (score !== undefined) post.score = score;
         }
       })
+      // Comment Post Response Sync
+      .addCase(commentPostThunk.fulfilled, (state, action) => {
+        const { postId, commentCount, score } = action.payload || {};
+        const post = state.posts.find((p) => p._id === postId);
+        if (post) {
+          if (commentCount !== undefined) post.commentCount = commentCount;
+          if (score !== undefined) post.score = score;
+        }
+      })
       // Delete Comment Response Sync
       .addCase(deleteCommentThunk.fulfilled, (state, action) => {
         const { postId, commentCount, score } = action.payload || {};

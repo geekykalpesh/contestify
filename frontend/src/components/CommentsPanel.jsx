@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { commentPostThunk, deleteCommentThunk } from "../store/feedSlice";
 import { userApi } from "../services/api";
+import { socket } from "../services/socket";
 import { useToast } from "../context/ToastContext";
 import { MessageSquare, X, Send, Trash2, SlidersHorizontal, ThumbsUp, ThumbsDown, MoreVertical, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -75,8 +76,23 @@ export const CommentsPanel = ({ activePost, onClose }) => {
         if (isMounted) setLoading(false);
       });
 
+    // 3. Real-time WebSockets Listener for incoming comments
+    const handleNewComment = ({ postId: evtPostId, comment }) => {
+      if (evtPostId === postId && comment) {
+        setCommentsList((prev) => {
+          if (prev.some((c) => c._id === comment._id)) return prev;
+          const updated = [comment, ...prev];
+          commentsCacheRef.current[postId] = updated;
+          return updated;
+        });
+      }
+    };
+
+    socket.on("new_comment", handleNewComment);
+
     return () => {
       isMounted = false;
+      socket.off("new_comment", handleNewComment);
     };
   }, [activePost?._id]);
 
@@ -138,12 +154,6 @@ export const CommentsPanel = ({ activePost, onClose }) => {
     if (!commentText.trim()) return;
     if (!user) {
       toast.warning("Please login to comment!", "Authentication Required");
-      return;
-    }
-    const postOwnerId = activePost.userId?._id || activePost.userId?.id || activePost.userId;
-    const currentUserId = user._id || user.id;
-    if (postOwnerId && currentUserId && postOwnerId.toString() === currentUserId.toString()) {
-      toast.error("You cannot comment on your own post!", "Action Restricted");
       return;
     }
 
