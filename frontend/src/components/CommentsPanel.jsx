@@ -17,6 +17,49 @@ const AVATAR_COLORS = [
   "bg-orange-600"
 ];
 
+// Shimmer skeleton for loading state
+const CommentShimmer = ({ isDark, count = 5 }) => (
+  <div className="space-y-4 p-1">
+    {Array.from({ length: count }).map((_, i) => (
+      <div key={i} className="flex items-start gap-2.5 animate-pulse">
+        {/* Avatar circle */}
+        <div className={`w-7 h-7 rounded-full shrink-0 ${
+          isDark ? "bg-slate-800" : "bg-slate-200"
+        }`} />
+        {/* Lines */}
+        <div className="flex-1 space-y-2 pt-0.5">
+          {/* Username + date row */}
+          <div className="flex items-center gap-2">
+            <div className={`h-2.5 rounded-full ${
+              isDark ? "bg-slate-700" : "bg-slate-200"
+            }`} style={{ width: `${45 + (i * 13) % 30}%` }} />
+            <div className={`h-2 rounded-full w-8 ${
+              isDark ? "bg-slate-800" : "bg-slate-100"
+            }`} />
+          </div>
+          {/* Comment text — variable widths for realism */}
+          <div className={`h-2.5 rounded-full ${
+            isDark ? "bg-slate-800" : "bg-slate-100"
+          }`} style={{ width: `${60 + (i * 17) % 35}%` }} />
+          {/* Action bar */}
+          <div className="flex items-center gap-4 pt-0.5">
+            <div className={`h-2 rounded-full w-8 ${
+              isDark ? "bg-slate-800" : "bg-slate-100"
+            }`} />
+            <div className={`h-2 rounded-full w-6 ${
+              isDark ? "bg-slate-800" : "bg-slate-100"
+            }`} />
+            <div className={`h-2 rounded-full w-8 ${
+              isDark ? "bg-slate-800" : "bg-slate-100"
+            }`} />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+
 export const CommentsPanel = ({ activePost, onClose }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -305,9 +348,7 @@ export const CommentsPanel = ({ activePost, onClose }) => {
         {/* Scrollable Comments List */}
         <div className="flex-1 overflow-y-auto p-3.5 space-y-4 no-scrollbar">
           {loading && commentsList.length === 0 ? (
-            <div className={`text-center text-xs py-12 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              Loading comments...
-            </div>
+            <CommentShimmer isDark={isDark} count={5} />
           ) : sortedComments.length === 0 ? (
             <div className={`text-center text-xs py-16 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               No comments yet. Be the first to start a conversation!
@@ -538,9 +579,7 @@ export const CommentsPanel = ({ activePost, onClose }) => {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3.5 no-scrollbar">
           {loading && commentsList.length === 0 ? (
-            <div className={`text-center text-xs py-8 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              Loading comments...
-            </div>
+            <CommentShimmer isDark={isDark} count={4} />
           ) : sortedComments.length === 0 ? (
             <div className={`text-center text-xs py-10 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               No comments yet. Be the first to start a conversation!
