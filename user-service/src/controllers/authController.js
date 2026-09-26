@@ -195,7 +195,12 @@ async function forgotPassword(req, res, next) {
     });
 
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
-    await sendPasswordResetEmail(user.email, resetUrl);
+    try {
+      await sendPasswordResetEmail(user.email, resetUrl);
+    } catch (emailErr) {
+      console.error("Nodemailer Error:", emailErr);
+      return next(new Error("Email configuration error. Please ensure environment variables are set correctly on the server."));
+    }
 
     return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
   } catch (err) {
@@ -226,7 +231,7 @@ async function resetPassword(req, res, next) {
 
     // Hash new password and save
     const hashed = await bcrypt.hash(password, 12);
-    await User.findByIdAndUpdate(tokenDoc.userId, { password: hashed });
+    await User.findByIdAndUpdate(tokenDoc.userId, { passwordHash: hashed });
 
     // Delete the used token (one-time use)
     await PasswordResetToken.deleteOne({ _id: tokenDoc._id });
