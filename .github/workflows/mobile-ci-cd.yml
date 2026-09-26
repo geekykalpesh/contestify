@@ -39,7 +39,7 @@ jobs:
 
       - name: 📱 EAS Cloud Build & Auto-Submit to Play Store
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: npx eas-cli build --platform android --profile production --non-interactive
+        run: npx eas-cli build --platform android --profile production --auto-submit --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN || secrets.EXPO_ACCESS_TOKEN || 'LagbJBJHnVOLhxgwu1itrgZpoOo8NQpmdHXc3l0z' }}
           EAS_SKIP_AUTO_FINGERPRINT: '1'
