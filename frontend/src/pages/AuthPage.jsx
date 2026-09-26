@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { signupUser, loginUser, clearAuthError } from "../store/authSlice";
 import { userApi } from "../services/api";
@@ -540,6 +540,15 @@ export const AuthPage = () => {
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
+                </div>
+                
+                <div className="text-right mt-2">
+                  <Link 
+                    to="/forgot-password" 
+                    className="text-[11px] font-bold text-sky-500 hover:text-sky-600 transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
               </div>
             </div>

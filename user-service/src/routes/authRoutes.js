@@ -14,5 +14,7 @@ router.put("/profile", authenticateToken, authController.updateProfile);
 router.put("/avatar", authenticateToken, uploadSingleAvatar, authController.updateAvatar);
 router.delete("/avatar", authenticateToken, authController.deleteAvatar);
 router.put("/kyc", authenticateToken, uploadKycDoc, authController.updateKyc);
+router.post("/forgot-password", authController.forgotPassword);
+router.post("/reset-password", authController.resetPassword);
 
 module.exports = router;

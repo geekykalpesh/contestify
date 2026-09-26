@@ -8,6 +8,8 @@ import { FeedPage } from "./pages/FeedPage";
 import { AuthPage } from "./pages/AuthPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 
 import { useSelector, useDispatch } from "react-redux";
 import { socket } from "./services/socket";
@@ -77,6 +79,8 @@ export function App() {
             <main className="flex-1">
               <Routes>
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route
                   path="/"
                   element={

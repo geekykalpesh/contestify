@@ -1,4 +1,9 @@
 const authService = require("../services/authService");
+const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
+const User = require("../models/User");
+const PasswordResetToken = require("../models/PasswordResetToken");
+const { sendPasswordResetEmail } = require("../services/emailService");
 
 const signup = async (req, res, next) => {
   try {
@@ -159,5 +164,75 @@ module.exports = {
   updateAvatar,
   deleteAvatar,
   updateKyc,
-  updateProfile
+  updateProfile,
+  forgotPassword,
+  resetPassword
 };
+
+// ─── Forgot Password ────────────────────────────────────────────────────────
+async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: "Email is required" });
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    // Always respond with success to prevent email enumeration attacks
+    if (!user) {
+      return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
+    }
+
+    // Delete any existing tokens for this user
+    await PasswordResetToken.deleteMany({ userId: user._id });
+
+    // Generate a secure 32-byte random token
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await PasswordResetToken.create({
+      userId: user._id,
+      token: rawToken,
+      expiresAt
+    });
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
+    await sendPasswordResetEmail(user.email, resetUrl);
+
+    return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─── Reset Password ────────────────────────────────────────────────────────
+async function resetPassword(req, res, next) {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ success: false, message: "Token and new password are required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+    }
+
+    // Find valid, non-expired token
+    const tokenDoc = await PasswordResetToken.findOne({
+      token,
+      expiresAt: { $gt: new Date() }
+    });
+
+    if (!tokenDoc) {
+      return res.status(400).json({ success: false, message: "Reset link is invalid or has expired. Please request a new one." });
+    }
+
+    // Hash new password and save
+    const hashed = await bcrypt.hash(password, 12);
+    await User.findByIdAndUpdate(tokenDoc.userId, { password: hashed });
+
+    // Delete the used token (one-time use)
+    await PasswordResetToken.deleteOne({ _id: tokenDoc._id });
+
+    return res.status(200).json({ success: true, message: "Password reset successfully! You can now log in with your new password." });
+  } catch (err) {
+    next(err);
+  }
+}
