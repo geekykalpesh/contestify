@@ -268,9 +268,9 @@ export const CommentsPanel = ({ activePost, onClose }) => {
               const currentUserId = user?._id || user?.id;
               const isMyComment = authorId && currentUserId && authorId.toString() === currentUserId.toString();
               const usernameTag = c.userId?.username || (c.userId?.email ? c.userId.email.split("@")[0] : "user");
-              const avatarBg = AVATAR_COLORS[idx % AVATAR_COLORS.length];
-              const likesCount = Math.floor((idx * 7 + 3) % 25);
-              const repliesCount = idx % 2 === 0 ? (idx % 3) + 2 : 0;
+              const likesCount = c.likesCount || c.likeCount || 0;
+              const repliesList = Array.isArray(c.replies) ? c.replies : [];
+              const repliesCount = repliesList.length;
               const currentLikes = commentLikesMap[c._id] !== undefined ? commentLikesMap[c._id] : likesCount;
 
               return (
@@ -371,20 +371,27 @@ export const CommentsPanel = ({ activePost, onClose }) => {
                           }`}
                         >
                           {expandedReplies[c._id] ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                          <span>{repliesCount} replies</span>
+                          <span>{repliesCount} {repliesCount === 1 ? "reply" : "replies"}</span>
                         </button>
 
                         {expandedReplies[c._id] && (
                           <div className={`pl-3 border-l-2 mt-2 space-y-2 text-[11px] ${
                             isDark ? "border-slate-800 text-slate-300" : "border-slate-200 text-slate-700"
                           }`}>
-                            <div className="flex items-center gap-2">
-                              <div className={`w-4 h-4 rounded-full flex items-center justify-center font-bold text-[8px] ${
-                                isDark ? "bg-slate-700 text-white" : "bg-slate-200 text-slate-800"
-                              }`}>R</div>
-                              <span className={`font-semibold ${isDark ? "text-slate-300" : "text-slate-900"}`}>@creator_pro</span>
-                              <span className={isDark ? "text-slate-200" : "text-slate-700"}>Thanks for watching! 🙏</span>
-                            </div>
+                            {repliesList.map((reply, rIdx) => {
+                              const rUsername = reply.userId?.username || (reply.userId?.email ? reply.userId.email.split("@")[0] : "user");
+                              return (
+                                <div key={reply._id || rIdx} className="flex items-center gap-2">
+                                  <div className={`w-4 h-4 rounded-full flex items-center justify-center font-bold text-[8px] ${
+                                    isDark ? "bg-slate-700 text-white" : "bg-slate-200 text-slate-800"
+                                  }`}>
+                                    {rUsername[0].toUpperCase()}
+                                  </div>
+                                  <span className={`font-semibold ${isDark ? "text-slate-300" : "text-slate-900"}`}>@{rUsername}</span>
+                                  <span className={isDark ? "text-slate-200" : "text-slate-700"}>{reply.text}</span>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
