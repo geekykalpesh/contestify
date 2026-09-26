@@ -86,6 +86,20 @@ export const deleteAvatarThunk = createAsyncThunk(
   }
 );
 
+export const updateProfileThunk = createAsyncThunk(
+  "auth/updateProfile",
+  async ({ displayName, bio }, { rejectWithValue }) => {
+    try {
+      const response = await userApi.put("/auth/profile", { displayName, bio });
+      const updatedUser = response.data.data;
+      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      return updatedUser;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to update profile");
+    }
+  }
+);
+
 export const updateKycThunkUser = createAsyncThunk(
   "auth/updateKyc",
   async (formData, { rejectWithValue }) => {
@@ -178,6 +192,10 @@ const authSlice = createSlice({
       .addCase(deleteAvatarThunk.fulfilled, (state, action) => {
         state.user = action.payload;
       })
+      // Profile (bio + displayName)
+      .addCase(updateProfileThunk.fulfilled, (state, action) => {
+        state.user = action.payload;
+      })
       // KYC
       .addCase(updateKycThunkUser.fulfilled, (state, action) => {
         state.user = action.payload;
@@ -186,4 +204,5 @@ const authSlice = createSlice({
 });
 
 export const { logout, clearAuthError, clearSignupSuccess, updateUserRealtime } = authSlice.actions;
+export { updateProfileThunk };
 export default authSlice.reducer;

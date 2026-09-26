@@ -3,11 +3,12 @@ const Like = require("../models/Like");
 const Comment = require("../models/Comment");
 const View = require("../models/View");
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 const { CATEGORIES } = require("../config/constants");
 const { AppError } = require("../middleware/errorHandler");
 const { processMediaUpload, processThumbnailUpload } = require("./mediaService");
 const { addToSet, getSetMembers, setCache, getCache, clearCachePattern, clearUserViewedSet } = require("../config/redis");
-const { emitPostUpdated, emitNewComment, emitCommentDeleted } = require("../socket");
+const { emitPostUpdated, emitNewComment, emitCommentDeleted, emitNotification } = require("../socket");
 
 const createPost = async ({ userId, caption, category, file, thumbnailFile, thumbnailData }) => {
   if (!caption || typeof caption !== "string") {
@@ -199,6 +200,21 @@ const likePost = async ({ userId, postId }) => {
     score: newScore
   });
 
+  // Create real-time like notification (only on new like, not unlike)
+  if (hasLiked && post.userId.toString() !== userId.toString()) {
+    try {
+      const liker = await User.findById(userId).select("name username").lean();
+      const notification = await Notification.create({
+        recipientId: post.userId,
+        senderId: userId,
+        type: "LIKE",
+        postId: post._id,
+        message: `liked your reel`
+      });
+      emitNotification(post.userId, notification);
+    } catch (e) { /* Non-critical: swallow notification errors */ }
+  }
+
   return {
     postId: updatedPost._id,
     likeCount: updatedPost.likeCount,
@@ -264,6 +280,20 @@ const commentPost = async ({ userId, postId, text }) => {
   });
 
   emitNewComment(postId, populatedComment);
+
+  // Create real-time comment notification (skip self-comments)
+  if (post.userId.toString() !== userId.toString()) {
+    try {
+      const notification = await Notification.create({
+        recipientId: post.userId,
+        senderId: userId,
+        type: "COMMENT",
+        postId: post._id,
+        message: `commented: "${text.trim().slice(0, 60)}${text.length > 60 ? '…' : ''}"`
+      });
+      emitNotification(post.userId, notification);
+    } catch (e) { /* Non-critical: swallow notification errors */ }
+  }
 
   return {
     comment: populatedComment,

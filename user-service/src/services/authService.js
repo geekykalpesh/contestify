@@ -267,6 +267,32 @@ const updateKycDetails = async (userId, { aadharNumber, aadharMobile, dob, aadha
   return result;
 };
 
+const updateProfile = async (userId, { displayName, bio }) => {
+  const updatePayload = {};
+  if (typeof displayName === "string") {
+    updatePayload.displayName = displayName.trim().slice(0, 50);
+  }
+  if (typeof bio === "string") {
+    updatePayload.bio = bio.trim().slice(0, 150);
+  }
+
+  if (Object.keys(updatePayload).length === 0) {
+    throw new AppError("No valid fields provided to update", 400);
+  }
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { ...updatePayload },
+    { new: true, runValidators: true }
+  ).select("-passwordHash");
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -274,5 +300,6 @@ module.exports = {
   updateResidency,
   updateAvatar,
   deleteAvatar,
-  updateKycDetails
+  updateKycDetails,
+  updateProfile
 };

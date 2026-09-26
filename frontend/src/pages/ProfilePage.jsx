@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
-import { updateResidencyStatus, updateAvatarThunk, deleteAvatarThunk, updateKycThunkUser } from "../store/authSlice";
+import { updateResidencyStatus, updateAvatarThunk, deleteAvatarThunk, updateKycThunkUser, updateProfileThunk } from "../store/authSlice";
 import { userApi } from "../services/api";
 import { socket } from "../services/socket";
 import { useToast } from "../context/ToastContext";
@@ -66,6 +66,11 @@ export const ProfilePage = () => {
   const [isKycDragging, setIsKycDragging] = useState(false);
   const [kycErrors, setKycErrors] = useState({});
   const kycFileInputRef = useRef(null);
+
+  // Profile edit state (bio + displayName)
+  const [editDisplayName, setEditDisplayName] = useState(currentUser?.displayName || "");
+  const [editBio, setEditBio] = useState(currentUser?.bio || "");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Prevent browser default behavior of opening dropped files in a new tab
   useEffect(() => {
@@ -411,7 +416,9 @@ export const ProfilePage = () => {
           {/* User Details & Bio */}
           <div className="flex-1 w-full text-center sm:text-left space-y-2.5">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">{(displayUser.name || "").replace(/\s*\([^)]*\)/g, "").trim()}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+                {displayUser.displayName || (displayUser.name || "").replace(/\s*\([^)]*\)/g, "").trim()}
+              </h1>
               <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
                 @{displayUser.username || displayUser.email?.split("@")[0] || displayUser.name?.toLowerCase().replace(/\s+/g, "_")}
               </span>
@@ -431,6 +438,13 @@ export const ProfilePage = () => {
               <Mail className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
               <span className="truncate">{displayUser.email}</span>
             </p>
+
+            {/* Bio Display */}
+            {displayUser.bio && (
+              <p className="text-xs text-[var(--text-primary)] leading-relaxed text-center sm:text-left max-w-xs sm:max-w-sm">
+                {displayUser.bio}
+              </p>
+            )}
 
             {/* Instagram Profile Stats Bar */}
             <div className="grid grid-cols-3 sm:flex sm:items-center sm:justify-start gap-3 sm:gap-7 pt-3 mt-3 border-t border-[var(--border-main)]">
@@ -513,7 +527,7 @@ export const ProfilePage = () => {
             }`}
           >
             <Settings className="w-4 h-4 shrink-0" />
-            <span>RESIDENCY</span>
+            <span>EDIT PROFILE</span>
           </button>
         )}
       </div>
@@ -783,63 +797,156 @@ export const ProfilePage = () => {
         </div>
       )}
 
-      {/* TAB 4: RESIDENCY SETTINGS */}
+      {/* TAB 4: EDIT PROFILE SETTINGS */}
       {activeTab === "settings" && (
-        <div className="ig-card p-8 rounded-3xl max-w-xl mx-auto space-y-6">
-          <div
-            className={`p-4 rounded-2xl border ${
-              isCG
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
-                : "bg-amber-500/10 border-amber-500/30 text-amber-500"
-            }`}
-          >
-            <div className="flex items-start gap-3">
+        <div className="space-y-5 max-w-xl mx-auto">
+
+          {/* === SECTION 1: Profile Info (displayName + bio) === */}
+          <div className="ig-card p-6 sm:p-8 rounded-3xl border border-[var(--border-main)] space-y-5">
+            <div className="flex items-center gap-3 pb-3 border-b border-[var(--border-main)]">
+              <div className="w-8 h-8 rounded-xl bg-sky-500/15 flex items-center justify-center">
+                <User className="w-4 h-4 text-sky-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-[var(--text-primary)]">Public Profile Info</h3>
+                <p className="text-[10px] text-[var(--text-muted)]">Visible to everyone on your creator profile</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Display Name */}
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">
+                  Display Name <span className="text-[10px] font-normal text-[var(--text-muted)]">(optional — shown instead of your real name)</span>
+                </label>
+                <input
+                  type="text"
+                  maxLength={50}
+                  placeholder={currentUser?.name || "Enter a display name..."}
+                  value={editDisplayName}
+                  onChange={(e) => setEditDisplayName(e.target.value)}
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 text-xs text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition-colors placeholder-[var(--text-muted)]"
+                />
+                <p className="text-[10px] text-[var(--text-muted)] mt-1 text-right">{editDisplayName.length}/50</p>
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">
+                  Bio <span className="text-[10px] font-normal text-[var(--text-muted)]">(share your story — max 150 chars)</span>
+                </label>
+                <textarea
+                  maxLength={150}
+                  rows={3}
+                  placeholder="Creator | Chhattisgarh 🇮🇳 | Content is my passion..."
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 text-xs text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition-colors resize-none placeholder-[var(--text-muted)] leading-relaxed"
+                />
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-[10px] text-[var(--text-muted)]">
+                    {editBio.length > 0 ? `${150 - editBio.length} characters remaining` : "Tell your audience about yourself"}
+                  </p>
+                  <p className={`text-[10px] font-bold ${
+                    editBio.length > 130 ? "text-amber-400" : "text-[var(--text-muted)]"
+                  }`}>{editBio.length}/150</p>
+                </div>
+              </div>
+
+              <button
+                onClick={async () => {
+                  try {
+                    setSavingProfile(true);
+                    await dispatch(updateProfileThunk({ displayName: editDisplayName, bio: editBio })).unwrap();
+                    toast.success("Profile updated successfully!", "Profile Saved");
+                  } catch (err) {
+                    toast.error(typeof err === "string" ? err : "Failed to update profile", "Error");
+                  } finally {
+                    setSavingProfile(false);
+                  }
+                }}
+                disabled={savingProfile}
+                className="w-full py-3 ig-btn-primary disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>{savingProfile ? "Saving..." : "Save Profile Changes"}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* === SECTION 2: Residency (Contest Eligibility) === */}
+          <div className="ig-card p-6 sm:p-8 rounded-3xl border border-[var(--border-main)] space-y-5">
+            <div className="flex items-center gap-3 pb-3 border-b border-[var(--border-main)]">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                isCG ? "bg-emerald-500/15" : "bg-amber-500/15"
+              }`}>
+                <MapPin className={`w-4 h-4 ${isCG ? "text-emerald-500" : "text-amber-500"}`} />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-[var(--text-primary)]">Contest Residency</h3>
+                <p className="text-[10px] text-[var(--text-muted)]">Determines your contest prize eligibility</p>
+              </div>
+            </div>
+
+            <div
+              className={`p-4 rounded-2xl border flex items-start gap-3 ${
+                isCG
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
+                  : "bg-amber-500/10 border-amber-500/30 text-amber-500"
+              }`}
+            >
               {isCG ? (
                 <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
               ) : (
                 <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               )}
               <div>
-                <h3 className="font-bold text-sm">
+                <h3 className="font-bold text-xs">
                   {isCG ? "Eligible for Creator Contest Prizes!" : "Ineligible for Creator Contest Prizes"}
                 </h3>
-                <p className="text-xs mt-1 leading-relaxed opacity-90">
+                <p className="text-[10px] mt-1 leading-relaxed opacity-90">
                   {isCG
                     ? "Your residency is set to Chhattisgarh. Your posts enter the 33 Prize Tiers ranking engine!"
                     : "Only Chhattisgarh residents are eligible for winner prizes."}
                 </p>
               </div>
             </div>
-          </div>
 
-          <form onSubmit={handleResidencyUpdate} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-sky-500" />
-                <span>State Residency</span>
-              </label>
-              <select
-                value={residency}
-                onChange={(e) => setResidency(e.target.value)}
-                className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 text-xs text-[var(--text-primary)] focus:outline-none focus:border-sky-500"
+            <form onSubmit={handleResidencyUpdate} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-sky-500" />
+                  <span>State of Residency</span>
+                </label>
+                <select
+                  value={residency}
+                  onChange={(e) => setResidency(e.target.value)}
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 text-xs text-[var(--text-primary)] focus:outline-none focus:border-sky-500"
+                >
+                  <option value="Chhattisgarh">Chhattisgarh ✅ (Prize Eligible)</option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="Maharashtra">Maharashtra</option>
+                  <option value="Uttar Pradesh">Uttar Pradesh</option>
+                  <option value="Madhya Pradesh">Madhya Pradesh</option>
+                  <option value="Rajasthan">Rajasthan</option>
+                  <option value="Gujarat">Gujarat</option>
+                  <option value="Bihar">Bihar</option>
+                  <option value="Karnataka">Karnataka</option>
+                  <option value="Tamil Nadu">Tamil Nadu</option>
+                  <option value="Other State">Other State</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                disabled={updatingResidency}
+                className="w-full py-3 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <option value="Chhattisgarh">Chhattisgarh</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Maharashtra">Maharashtra</option>
-                <option value="Karnataka">Karnataka</option>
-                <option value="Other State">Other State</option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              disabled={updatingResidency}
-              className="w-full py-3 ig-btn-primary disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>{updatingResidency ? "Saving..." : "Save Residency Changes"}</span>
-            </button>
-          </form>
+                <MapPin className="w-4 h-4" />
+                <span>{updatingResidency ? "Saving..." : "Save Residency"}</span>
+              </button>
+            </form>
+          </div>
         </div>
       )}
 

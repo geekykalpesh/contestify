@@ -136,6 +136,20 @@ const updateKyc = async (req, res, next) => {
   }
 };
 
+const updateProfile = async (req, res, next) => {
+  try {
+    const { displayName, bio } = req.body;
+    const updatedUser = await authService.updateProfile(req.user._id, { displayName, bio });
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedUser
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -144,5 +158,6 @@ module.exports = {
   updateResidency,
   updateAvatar,
   deleteAvatar,
-  updateKyc
+  updateKyc,
+  updateProfile
 };

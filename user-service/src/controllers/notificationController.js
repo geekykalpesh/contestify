@@ -116,8 +116,32 @@ const getUnreadCount = async (req, res, next) => {
   }
 };
 
+const deleteNotification = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { notificationId } = req.params;
+    await Notification.deleteOne({ _id: notificationId, recipientId: userId });
+    const unreadCount = await Notification.countDocuments({ recipientId: userId, read: false });
+    return res.status(200).json({ success: true, data: { unreadCount } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const clearAllNotifications = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    await Notification.deleteMany({ recipientId: userId });
+    return res.status(200).json({ success: true, data: { unreadCount: 0 } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getNotifications,
   markRead,
-  getUnreadCount
+  getUnreadCount,
+  deleteNotification,
+  clearAllNotifications
 };
