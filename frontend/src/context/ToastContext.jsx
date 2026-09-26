@@ -1,103 +1,107 @@
-import React, { createContext, useContext } from "react";
-import { Toaster, toast as sonnerToast } from "sonner";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
 
 const ToastContext = createContext(null);
 
-// ─── Premium Custom Toast Card ───────────────────────────────────────────────
-const ToastCard = ({ type, title, msg, toastId }) => {
-  const config = {
-    success: {
-      icon: <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />,
-      glow: "shadow-emerald-500/20",
-      accent: "from-emerald-500/20 via-transparent",
-      bar: "bg-gradient-to-r from-emerald-400 to-teal-400",
-    },
-    error: {
-      icon: <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />,
-      glow: "shadow-rose-500/20",
-      accent: "from-rose-500/20 via-transparent",
-      bar: "bg-gradient-to-r from-rose-400 to-pink-400",
-    },
-    warning: {
-      icon: <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />,
-      glow: "shadow-amber-500/20",
-      accent: "from-amber-500/20 via-transparent",
-      bar: "bg-gradient-to-r from-amber-400 to-orange-400",
-    },
-    info: {
-      icon: <Info className="w-5 h-5 text-sky-400 shrink-0" />,
-      glow: "shadow-sky-500/20",
-      accent: "from-sky-500/20 via-transparent",
-      bar: "bg-gradient-to-r from-sky-400 to-blue-400",
-    },
-  };
+// ─── Single Snackbar Item ─────────────────────────────────────────────────────
+const SnackbarItem = ({ item, onRemove }) => {
+  const [visible, setVisible] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
-  const c = config[type] || config.info;
+  useEffect(() => {
+    // Slide in
+    const t1 = setTimeout(() => setVisible(true), 10);
+    // Start leaving
+    const t2 = setTimeout(() => {
+      setLeaving(true);
+      setTimeout(() => onRemove(item.id), 300);
+    }, item.duration || 2500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  const config = {
+    success: { icon: <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />, dot: "bg-emerald-400" },
+    error:   { icon: <AlertCircle   className="w-4 h-4 text-rose-400 shrink-0" />,    dot: "bg-rose-400"    },
+    warning: { icon: <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />,   dot: "bg-amber-400"   },
+    info:    { icon: <Info          className="w-4 h-4 text-sky-400 shrink-0" />,      dot: "bg-sky-400"     },
+  };
+  const c = config[item.type] || config.info;
 
   return (
     <div
-      className={`relative flex items-start gap-3 w-[340px] rounded-2xl overflow-hidden
-        bg-[#111111]/95 backdrop-blur-xl border border-white/[0.08]
-        shadow-2xl ${c.glow} p-4 pr-3`}
-      style={{ boxShadow: "0 24px 48px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)" }}
+      style={{
+        transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        transform: visible && !leaving ? "translateY(0) scale(1)" : "translateY(20px) scale(0.92)",
+        opacity: visible && !leaving ? 1 : 0,
+      }}
+      className="flex items-center gap-2.5 px-4 py-2.5 rounded-full
+        bg-[#1a1a1a]/95 backdrop-blur-xl
+        border border-white/[0.09]
+        shadow-[0_8px_32px_-4px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05)]
+        max-w-[380px] w-max"
     >
-      {/* Glowing left accent gradient */}
-      <div className={`absolute inset-0 bg-gradient-to-r ${c.accent} to-transparent opacity-40 pointer-events-none`} />
+      {/* Colored dot indicator */}
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
 
-      {/* Top progress bar */}
-      <div className={`absolute top-0 left-0 right-0 h-[2px] ${c.bar} opacity-80`} />
+      {/* Message */}
+      <span className="text-[13px] font-medium text-white/90 leading-none whitespace-nowrap">
+        {item.title && <span className="font-semibold text-white">{item.title}</span>}
+        {item.title && item.msg && <span className="text-white/40 mx-1">·</span>}
+        {item.msg && <span className="text-white/65">{item.msg}</span>}
+      </span>
 
-      {/* Icon */}
-      <div className="mt-0.5 relative z-10">{c.icon}</div>
-
-      {/* Text */}
-      <div className="flex-1 min-w-0 relative z-10">
-        {title && (
-          <p className="text-[13px] font-semibold text-white leading-tight truncate">{title}</p>
-        )}
-        {msg && (
-          <p className="text-[12px] text-white/50 leading-snug mt-0.5 truncate">{msg}</p>
-        )}
-      </div>
-
-      {/* Close button */}
+      {/* Dismiss button */}
       <button
-        onClick={() => sonnerToast.dismiss(toastId)}
-        className="relative z-10 p-1 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/10 transition-all shrink-0 mt-0.5 cursor-pointer"
+        onClick={() => { setLeaving(true); setTimeout(() => onRemove(item.id), 300); }}
+        className="ml-1 p-0.5 rounded-full text-white/25 hover:text-white/60 transition-colors cursor-pointer shrink-0"
       >
-        <X className="w-3.5 h-3.5" />
+        <X className="w-3 h-3" />
       </button>
     </div>
   );
 };
 
-// ─── Toast Helpers ────────────────────────────────────────────────────────────
-const showToast = (type, msg, title) => {
-  const id = sonnerToast.custom(
-    (toastId) => <ToastCard type={type} title={title} msg={msg} toastId={toastId} />,
-    { duration: 3000, id: `${type}-${Date.now()}` }
+// ─── Snackbar Stack (bottom-center) ──────────────────────────────────────────
+const SnackbarContainer = ({ items, onRemove }) => {
+  if (items.length === 0) return null;
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-2 pointer-events-none">
+      {items.map((item) => (
+        <div key={item.id} className="pointer-events-auto">
+          <SnackbarItem item={item} onRemove={onRemove} />
+        </div>
+      ))}
+    </div>
   );
-  return id;
 };
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
+let idCounter = 0;
+
 export const ToastProvider = ({ children }) => {
+  const [items, setItems] = useState([]);
+
+  const removeItem = useCallback((id) => {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  }, []);
+
+  const addItem = useCallback((type, msg, title, duration = 2500) => {
+    const id = ++idCounter;
+    setItems((prev) => [...prev.slice(-2), { id, type, msg, title, duration }]); // max 3 at once
+    return id;
+  }, []);
+
   const toast = {
-    success: (msg, title) => showToast("success", msg, title),
-    error:   (msg, title) => showToast("error",   msg, title),
-    warning: (msg, title) => showToast("warning", msg, title),
-    info:    (msg, title) => showToast("info",    msg, title),
+    success: (msg, title, dur) => addItem("success", msg, title, dur),
+    error:   (msg, title, dur) => addItem("error",   msg, title, dur || 3500),
+    warning: (msg, title, dur) => addItem("warning", msg, title, dur),
+    info:    (msg, title, dur) => addItem("info",    msg, title, dur),
   };
 
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <Toaster
-        position="top-right"
-        toastOptions={{ style: { background: "transparent", border: "none", boxShadow: "none", padding: 0 } }}
-        gap={10}
-      />
+      <SnackbarContainer items={items} onRemove={removeItem} />
     </ToastContext.Provider>
   );
 };
@@ -105,16 +109,15 @@ export const ToastProvider = ({ children }) => {
 export const useToast = () => {
   const context = useContext(ToastContext);
   if (!context) {
+    // Fallback (console only — shouldn't happen in app)
     return {
       toast: {
-        success: (msg, title) => showToast("success", msg, title),
-        error:   (msg, title) => showToast("error",   msg, title),
-        warning: (msg, title) => showToast("warning", msg, title),
-        info:    (msg, title) => showToast("info",    msg, title),
+        success: (msg) => console.log("[Toast]", msg),
+        error:   (msg) => console.error("[Toast]", msg),
+        warning: (msg) => console.warn("[Toast]", msg),
+        info:    (msg) => console.info("[Toast]", msg),
       },
     };
   }
   return context;
 };
-
-export { sonnerToast as toast };

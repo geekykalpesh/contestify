@@ -26,6 +26,7 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [likeAnimating, setLikeAnimating] = useState(false);
 
   const videoRef = useRef(null);
   const cardRef = useRef(null);
@@ -112,21 +113,21 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
 
   const handleLike = async () => {
     if (!user) {
-      toast.warning("Please login to like posts!", "Authentication Required");
+      toast.warning("Please login to like posts!", "Login Required");
       return;
     }
 
+    // Spring bounce animation — the heart IS the feedback, no toast needed
+    setLikeAnimating(true);
+    setTimeout(() => setLikeAnimating(false), 400);
+
     try {
       dispatch(optimisticLike(post._id));
-      const res = await dispatch(likePostThunk(post._id)).unwrap();
-      if (res.hasLiked) {
-        toast.success("Post liked!", "Liked");
-      } else {
-        toast.info("Like removed!", "Unliked");
-      }
+      await dispatch(likePostThunk(post._id)).unwrap();
+      // No toast — the heart color + bounce = feedback (Instagram-style)
     } catch (err) {
       dispatch(optimisticLike(post._id)); // Revert optimistic toggle on failure
-      toast.error(err || "Failed to toggle like", "Error");
+      toast.error("Could not update like. Try again.", "Error");
     }
   };
 
@@ -276,7 +277,10 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
             <div className={`w-9 h-9 rounded-full bg-[#181818]/90 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-lg transition-transform active:scale-90 ${
               post.hasLiked ? "text-rose-500 fill-rose-500" : "text-white hover:bg-[#3f3f3f]"
             }`}>
-              <Heart className={`w-4.5 h-4.5 ${post.hasLiked ? "fill-rose-500 text-rose-500" : ""}`} />
+              <Heart
+                className={`w-4.5 h-4.5 transition-colors duration-150 ${post.hasLiked ? "fill-rose-500 text-rose-500" : ""}`}
+                style={{ animation: likeAnimating ? "heartBounce 0.4s cubic-bezier(0.34,1.56,0.64,1)" : "none" }}
+              />
             </div>
             <span className="text-[10px] font-bold text-white drop-shadow-md">{formatCount(post.likeCount)}</span>
           </button>
@@ -328,7 +332,10 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
             } ${post.hasLiked ? "!text-rose-500" : ""}`}
             title="Like Reel"
           >
-            <Heart className={`w-5.5 h-5.5 ${post.hasLiked ? "fill-rose-500 text-rose-500" : ""}`} />
+            <Heart
+              className={`w-5.5 h-5.5 transition-colors duration-150 ${post.hasLiked ? "fill-rose-500 text-rose-500" : ""}`}
+              style={{ animation: likeAnimating ? "heartBounce 0.4s cubic-bezier(0.34,1.56,0.64,1)" : "none" }}
+            />
           </button>
           <span className={`text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-700"}`}>{formatCount(post.likeCount)}</span>
         </div>
