@@ -9,7 +9,30 @@ import { AuthPage } from "./pages/AuthPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminDashboard } from "./pages/AdminDashboard";
 
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { socket } from "./services/socket";
+import { updateUserRealtime } from "./store/authSlice";
+import { updateUserAvatarRealtime } from "./store/feedSlice";
+
+const GlobalSocketListener = ({ children }) => {
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    const handleUserUpdated = (data) => {
+      if (data && data.userId !== undefined) {
+        dispatch(updateUserRealtime(data));
+        dispatch(updateUserAvatarRealtime(data));
+      }
+    };
+
+    socket.on("user_updated", handleUserUpdated);
+    return () => {
+      socket.off("user_updated", handleUserUpdated);
+    };
+  }, [dispatch]);
+
+  return children;
+};
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
@@ -47,7 +70,8 @@ export function App() {
   return (
     <Provider store={store}>
       <ToastProvider>
-        <BrowserRouter>
+        <GlobalSocketListener>
+          <BrowserRouter>
           <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] flex flex-col transition-colors duration-200">
             <Navbar />
             <main className="flex-1">
@@ -90,7 +114,8 @@ export function App() {
             </main>
           </div>
         </BrowserRouter>
-      </ToastProvider>
+      </GlobalSocketListener>
+    </ToastProvider>
     </Provider>
   );
 }

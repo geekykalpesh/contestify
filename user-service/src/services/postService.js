@@ -7,7 +7,7 @@ const { CATEGORIES } = require("../config/constants");
 const { AppError } = require("../middleware/errorHandler");
 const { processMediaUpload, processThumbnailUpload } = require("./mediaService");
 const { addToSet, getSetMembers, setCache, getCache, clearCachePattern, clearUserViewedSet } = require("../config/redis");
-const { emitPostUpdated, emitNewComment } = require("../socket");
+const { emitPostUpdated, emitNewComment, emitCommentDeleted } = require("../socket");
 
 const createPost = async ({ userId, caption, category, file, thumbnailFile, thumbnailData }) => {
   if (!caption || typeof caption !== "string") {
@@ -426,6 +426,8 @@ const deleteComment = async ({ userId, commentId }) => {
     viewCount: updatedPost.viewCount,
     score: newScore
   });
+
+  emitCommentDeleted(postId, commentId);
 
   return {
     commentId,

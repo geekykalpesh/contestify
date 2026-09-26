@@ -76,7 +76,7 @@ export const CommentsPanel = ({ activePost, onClose }) => {
         if (isMounted) setLoading(false);
       });
 
-    // 3. Real-time WebSockets Listener for incoming comments
+    // 3. Real-time WebSockets Listener for incoming & deleted comments
     const handleNewComment = ({ postId: evtPostId, comment }) => {
       if (evtPostId === postId && comment) {
         setCommentsList((prev) => {
@@ -88,11 +88,23 @@ export const CommentsPanel = ({ activePost, onClose }) => {
       }
     };
 
+    const handleCommentDeleted = ({ postId: evtPostId, commentId }) => {
+      if (evtPostId === postId && commentId) {
+        setCommentsList((prev) => {
+          const updated = prev.filter((c) => c._id !== commentId);
+          commentsCacheRef.current[postId] = updated;
+          return updated;
+        });
+      }
+    };
+
     socket.on("new_comment", handleNewComment);
+    socket.on("comment_deleted", handleCommentDeleted);
 
     return () => {
       isMounted = false;
       socket.off("new_comment", handleNewComment);
+      socket.off("comment_deleted", handleCommentDeleted);
     };
   }, [activePost?._id]);
 
@@ -157,37 +169,69 @@ export const CommentsPanel = ({ activePost, onClose }) => {
       return;
     }
 
-    const textToSend = commentText;
+    const textToSend = commentText.trim();
     setCommentText("");
+
+    // Optimistic Draft Comment (Instant 0ms display)
+    const tempId = `temp_${Date.now()}`;
+    const tempComment = {
+      _id: tempId,
+      text: textToSend,
+      createdAt: new Date().toISOString(),
+      userId: {
+        _id: user._id || user.id,
+        name: user.name,
+        username: user.username || user.email?.split("@")[0],
+        email: user.email,
+        avatarUrl: user.avatarUrl
+      }
+    };
+
+    setCommentsList((prev) => {
+      const updated = [tempComment, ...prev];
+      if (activePost._id) commentsCacheRef.current[activePost._id] = updated;
+      return updated;
+    });
 
     try {
       const result = await dispatch(commentPostThunk({ postId: activePost._id, text: textToSend })).unwrap();
       const newComment = result.comment;
+      // Replace draft comment with actual server comment
       setCommentsList((prev) => {
-        const updated = [newComment, ...prev];
-        if (activePost._id) {
-          commentsCacheRef.current[activePost._id] = updated;
-        }
+        const updated = prev.map((c) => (c._id === tempId ? newComment : c));
+        if (activePost._id) commentsCacheRef.current[activePost._id] = updated;
         return updated;
       });
       toast.success("Comment added successfully!", "Comment Posted");
     } catch (err) {
+      // Rollback draft comment on failure
+      setCommentsList((prev) => {
+        const updated = prev.filter((c) => c._id !== tempId);
+        if (activePost._id) commentsCacheRef.current[activePost._id] = updated;
+        return updated;
+      });
       toast.error(err || "Failed to post comment", "Error");
     }
   };
 
   const handleDeleteComment = async (commentId) => {
+    // Save previous list for rollback if needed
+    const previousComments = [...commentsList];
+
+    // Optimistic removal (Instant 0ms removal)
+    setCommentsList((prev) => {
+      const updated = prev.filter((c) => c._id !== commentId);
+      if (activePost._id) commentsCacheRef.current[activePost._id] = updated;
+      return updated;
+    });
+
     try {
       await dispatch(deleteCommentThunk({ postId: activePost._id, commentId })).unwrap();
-      setCommentsList((prev) => {
-        const updated = prev.filter((c) => c._id !== commentId);
-        if (activePost._id) {
-          commentsCacheRef.current[activePost._id] = updated;
-        }
-        return updated;
-      });
       toast.success("Comment deleted!", "Comment Removed");
     } catch (err) {
+      // Rollback on failure
+      setCommentsList(previousComments);
+      if (activePost._id) commentsCacheRef.current[activePost._id] = previousComments;
       toast.error(err || "Failed to delete comment", "Error");
     }
   };
@@ -268,6 +312,7 @@ export const CommentsPanel = ({ activePost, onClose }) => {
               const currentUserId = user?._id || user?.id;
               const isMyComment = authorId && currentUserId && authorId.toString() === currentUserId.toString();
               const usernameTag = c.userId?.username || (c.userId?.email ? c.userId.email.split("@")[0] : "user");
+              const avatarBg = AVATAR_COLORS[idx % AVATAR_COLORS.length];
               const likesCount = c.likesCount || c.likeCount || 0;
               const repliesList = Array.isArray(c.replies) ? c.replies : [];
               const repliesCount = repliesList.length;

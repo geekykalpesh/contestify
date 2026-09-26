@@ -134,6 +134,17 @@ const feedSlice = createSlice({
         state.posts[index].score = score;
       }
     },
+    updateUserAvatarRealtime: (state, action) => {
+      const { userId, avatarUrl } = action.payload;
+      if (!userId) return;
+      state.posts.forEach((post) => {
+        if (post.userId) {
+          if (typeof post.userId === "object" && (post.userId._id === userId || post.userId.id === userId)) {
+            post.userId.avatarUrl = avatarUrl;
+          }
+        }
+      });
+    },
     // Optimistic Like / Unlike Toggle
     optimisticLike: (state, action) => {
       const postId = action.payload;
@@ -230,6 +241,7 @@ export const {
   toggleIncludeSeen,
   bufferPostView,
   updatePostRealtime,
+  updateUserAvatarRealtime,
   optimisticLike
 } = feedSlice.actions;
 

@@ -24,8 +24,18 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Static media file serving
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// Static media file serving with aggressive Cloudflare CDN Edge Cache headers
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../uploads"), {
+    maxAge: "365d",
+    immutable: true,
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    }
+  })
+);
 
 // Root Landing Route
 app.get("/", (req, res) => {

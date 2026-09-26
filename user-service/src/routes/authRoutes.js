@@ -11,6 +11,7 @@ router.get("/check-availability", authController.checkAvailability);
 router.get("/me", authenticateToken, authController.getMe);
 router.put("/residency", authenticateToken, authController.updateResidency);
 router.put("/avatar", authenticateToken, uploadSingleAvatar, authController.updateAvatar);
+router.delete("/avatar", authenticateToken, authController.deleteAvatar);
 router.put("/kyc", authenticateToken, uploadKycDoc, authController.updateKyc);
 
 module.exports = router;

@@ -49,9 +49,25 @@ const emitNotification = (recipientId, notification) => {
   }
 };
 
+const emitUserUpdated = (data) => {
+  if (io) {
+    io.emit("user_updated", data);
+  }
+};
+
+const emitCommentDeleted = (postId, commentId) => {
+  if (io) {
+    io.emit("comment_deleted", { postId, commentId });
+    io.to(`post_${postId}`).emit("comment_deleted", { postId, commentId });
+  }
+};
+
 module.exports = {
   initSocket,
   emitPostUpdated,
   emitNewComment,
-  emitNotification
+  emitNotification,
+  emitUserUpdated,
+  emitCommentDeleted
 };
+

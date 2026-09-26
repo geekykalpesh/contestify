@@ -72,6 +72,20 @@ export const updateAvatarThunk = createAsyncThunk(
   }
 );
 
+export const deleteAvatarThunk = createAsyncThunk(
+  "auth/deleteAvatar",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await userApi.delete("/auth/avatar");
+      const updatedUser = response.data.data;
+      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      return updatedUser;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to remove profile picture");
+    }
+  }
+);
+
 export const updateKycThunkUser = createAsyncThunk(
   "auth/updateKyc",
   async (formData, { rejectWithValue }) => {
@@ -112,6 +126,12 @@ const authSlice = createSlice({
     },
     clearSignupSuccess: (state) => {
       state.signupSuccess = false;
+    },
+    updateUserRealtime: (state, action) => {
+      if (state.user && (state.user._id === action.payload.userId || state.user.id === action.payload.userId)) {
+        state.user.avatarUrl = action.payload.avatarUrl;
+        localStorage.setItem("auth_user", JSON.stringify(state.user));
+      }
     }
   },
   extraReducers: (builder) => {
@@ -155,6 +175,9 @@ const authSlice = createSlice({
       .addCase(updateAvatarThunk.fulfilled, (state, action) => {
         state.user = action.payload;
       })
+      .addCase(deleteAvatarThunk.fulfilled, (state, action) => {
+        state.user = action.payload;
+      })
       // KYC
       .addCase(updateKycThunkUser.fulfilled, (state, action) => {
         state.user = action.payload;
@@ -162,5 +185,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { logout, clearAuthError, clearSignupSuccess } = authSlice.actions;
+export const { logout, clearAuthError, clearSignupSuccess, updateUserRealtime } = authSlice.actions;
 export default authSlice.reducer;

@@ -158,6 +158,9 @@ const updateResidency = async (userId, residency) => {
   return user;
 };
 
+const { clearCachePattern } = require("../config/redis");
+const { emitUserUpdated } = require("../socket");
+
 const updateAvatar = async (userId, avatarUrl) => {
   const user = await User.findByIdAndUpdate(
     userId,
@@ -168,6 +171,34 @@ const updateAvatar = async (userId, avatarUrl) => {
   if (!user) {
     throw new AppError("User not found", 404);
   }
+
+  await clearCachePattern("feed:cache:*");
+
+  emitUserUpdated({
+    userId: user._id,
+    avatarUrl: user.avatarUrl
+  });
+
+  return user;
+};
+
+const deleteAvatar = async (userId) => {
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { avatarUrl: "" },
+    { new: true }
+  ).select("-passwordHash");
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  await clearCachePattern("feed:cache:*");
+
+  emitUserUpdated({
+    userId: user._id,
+    avatarUrl: ""
+  });
 
   return user;
 };
@@ -242,5 +273,6 @@ module.exports = {
   checkAvailability,
   updateResidency,
   updateAvatar,
+  deleteAvatar,
   updateKycDetails
 };

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
-import { updateResidencyStatus, updateAvatarThunk, updateKycThunkUser } from "../store/authSlice";
+import { updateResidencyStatus, updateAvatarThunk, deleteAvatarThunk, updateKycThunkUser } from "../store/authSlice";
 import { userApi } from "../services/api";
+import { socket } from "../services/socket";
 import { useToast } from "../context/ToastContext";
 import { PostCard } from "../components/PostCard";
 import { getMediaUrl } from "../config";
@@ -24,7 +25,9 @@ import {
   Upload,
   CheckCircle2,
   XCircle,
-  Clock
+  Clock,
+  Camera,
+  Trash2
 } from "lucide-react";
 
 export const ProfilePage = () => {
@@ -102,6 +105,37 @@ export const ProfilePage = () => {
     }
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedPost]);
+
+  // Listen for real-time user updates (e.g. profile picture changes/deletions)
+  useEffect(() => {
+    const handleUserUpdated = (data) => {
+      if (!data || !data.userId) return;
+
+      setProfileUser((prev) => {
+        if (!prev) return prev;
+        if (prev._id === data.userId || prev.id === data.userId) {
+          return { ...prev, avatarUrl: data.avatarUrl };
+        }
+        return prev;
+      });
+
+      setMyPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post.userId && (post.userId._id === data.userId || post.userId.id === data.userId || post.userId === data.userId)) {
+            if (typeof post.userId === "object") {
+              return { ...post, userId: { ...post.userId, avatarUrl: data.avatarUrl } };
+            }
+          }
+          return post;
+        })
+      );
+    };
+
+    socket.on("user_updated", handleUserUpdated);
+    return () => {
+      socket.off("user_updated", handleUserUpdated);
+    };
+  }, []);
 
   const fetchProfileData = async () => {
     try {
@@ -315,34 +349,63 @@ export const ProfilePage = () => {
     }
   };
 
+  const handleAvatarDelete = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to remove your profile picture?")) return;
+    try {
+      await dispatch(deleteAvatarThunk()).unwrap();
+      toast.success("Profile picture removed successfully!", "Photo Removed");
+    } catch (err) {
+      toast.error(typeof err === "string" ? err : "Failed to remove profile picture", "Error");
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-2.5 sm:px-4 py-4 sm:py-8">
       {/* Instagram Header Profile Box */}
       <div className="ig-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-lg mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
-          {/* Avatar */}
-          <div className="relative group cursor-pointer shrink-0">
-            <label className={`block relative ${isOwnProfile ? "cursor-pointer" : "cursor-default"}`}>
-              {isOwnProfile && <input type="file" accept="image/*" onChange={handleAvatarFileSelect} className="hidden" />}
-              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full p-1 ig-ring shadow-xl overflow-hidden">
-                {displayUser.avatarUrl ? (
-                  <img
-                    src={getMediaUrl(displayUser.avatarUrl)}
-                    alt={displayUser.name}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-full bg-[var(--bg-main)] flex items-center justify-center font-bold text-xl sm:text-3xl text-[var(--text-primary)]">
-                    {displayUser.name ? displayUser.name[0].toUpperCase() : "U"}
-                  </div>
-                )}
-              </div>
-              {isOwnProfile && (
-                <div className="absolute -bottom-1 -right-1 bg-sky-500 text-white p-1.5 sm:p-2 rounded-full border-2 border-[var(--bg-main)] shadow-md group-hover:scale-110 transition-transform">
-                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          {/* Avatar Container with Upload & Delete Actions */}
+          <div className="relative group shrink-0">
+            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full p-1 ig-ring shadow-xl overflow-hidden relative">
+              {displayUser.avatarUrl ? (
+                <img
+                  src={getMediaUrl(displayUser.avatarUrl)}
+                  alt={displayUser.name}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-[var(--bg-main)] flex items-center justify-center font-bold text-xl sm:text-3xl text-[var(--text-primary)]">
+                  {displayUser.name ? displayUser.name[0].toUpperCase() : "U"}
                 </div>
               )}
-            </label>
+            </div>
+
+            {/* Quick Action Badges for Own Profile */}
+            {isOwnProfile && (
+              <div className="absolute -bottom-1 -right-1 flex items-center gap-1.5 z-10">
+                {/* Upload / Change Photo */}
+                <label
+                  title="Upload / Change Profile Picture"
+                  className="bg-sky-500 hover:bg-sky-600 text-white p-1.5 sm:p-2 rounded-full border-2 border-[var(--bg-card)] shadow-md cursor-pointer transition-all hover:scale-110 flex items-center justify-center"
+                >
+                  <input type="file" accept="image/*" onChange={handleAvatarFileSelect} className="hidden" />
+                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </label>
+
+                {/* Delete Photo */}
+                {displayUser.avatarUrl && (
+                  <button
+                    onClick={handleAvatarDelete}
+                    title="Remove Profile Picture"
+                    className="bg-rose-500 hover:bg-rose-600 text-white p-1.5 sm:p-2 rounded-full border-2 border-[var(--bg-card)] shadow-md cursor-pointer transition-all hover:scale-110 flex items-center justify-center"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* User Details & Bio */}

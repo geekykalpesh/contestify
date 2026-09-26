@@ -98,6 +98,19 @@ const updateAvatar = async (req, res, next) => {
   }
 };
 
+const deleteAvatar = async (req, res, next) => {
+  try {
+    const updatedUser = await authService.deleteAvatar(req.user._id);
+    return res.status(200).json({
+      success: true,
+      message: "Profile picture removed successfully",
+      data: updatedUser
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const updateKyc = async (req, res, next) => {
   try {
     const { aadharNumber, aadharMobile, dob } = req.body;
@@ -130,5 +143,6 @@ module.exports = {
   getMe,
   updateResidency,
   updateAvatar,
+  deleteAvatar,
   updateKyc
 };
