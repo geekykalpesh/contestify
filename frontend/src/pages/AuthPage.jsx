@@ -194,41 +194,58 @@ export const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center p-4">
-      <div className="ig-card w-full max-w-md p-6 sm:p-8 rounded-3xl shadow-2xl relative border border-[var(--border-main)]">
-        {/* Back Navigation Bar */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            type="button"
-            onClick={() => setSearchParams({ mode: isSignupMode ? "login" : "signup" })}
-            className="p-1 -ml-1 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-500/10 transition-colors cursor-pointer"
-            title="Go back"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Contestify Branded Header (Instagram Style) */}
-        <div className="mb-8 flex flex-col items-center text-center space-y-3">
-          <div className="flex flex-col items-center gap-2 text-[var(--text-primary)] font-bold text-lg mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 p-0.5 flex items-center justify-center shadow-lg transform -rotate-6">
-              <div className="w-full h-full bg-white dark:bg-black rounded-[10px] flex items-center justify-center">
-                <Camera className="w-5 h-5 text-pink-500" />
+    <div className="min-h-[90vh] flex items-center justify-center p-4 lg:gap-8 xl:gap-16">
+      
+      {/* ─── DESKTOP LEFT COLUMN (LOGIN ONLY) ─── */}
+      {!isSignupMode && (
+        <div className="hidden lg:flex flex-col items-center max-w-lg mt-8">
+          <h1 className="text-4xl font-semibold mb-8 text-[var(--text-primary)] tracking-wide">
+            See everyday moments from your <span className="text-pink-500 font-bold">close friends</span>.
+          </h1>
+          <div className="relative w-full h-[450px]">
+            {/* We'll use our existing Contestify premium styles/images here if available, 
+                or just a sleek graphic representation. */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 rounded-3xl opacity-20 blur-[80px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-[400px] border-[8px] border-[var(--border-main)] rounded-[3rem] bg-[var(--bg-main)] shadow-2xl flex flex-col overflow-hidden z-10">
+              <div className="w-full h-full bg-slate-800/50 flex flex-col p-4 space-y-4">
+                 <div className="w-full h-48 bg-slate-700/50 rounded-2xl animate-pulse" />
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full bg-pink-500/50 animate-pulse" />
+                   <div className="flex-1 space-y-2">
+                     <div className="w-24 h-3 bg-slate-700/50 rounded animate-pulse" />
+                     <div className="w-16 h-3 bg-slate-700/50 rounded animate-pulse" />
+                   </div>
+                 </div>
+                 <div className="w-full h-32 bg-slate-700/50 rounded-2xl animate-pulse" />
               </div>
             </div>
-            <span className="font-ig-logo text-4xl tracking-wide mt-2" style={{ fontFamily: "Billabong, 'Grand Hotel', cursive" }}>Contestify</span>
+            
+            {/* Floating decorative elements */}
+            <div className="absolute top-12 left-8 w-12 h-12 bg-rose-500 rounded-full shadow-lg z-20 flex items-center justify-center transform -rotate-12">
+              <span className="text-white text-xl">❤️</span>
+            </div>
+            <div className="absolute bottom-16 right-4 w-14 h-14 bg-emerald-500 rounded-full shadow-lg z-20 flex items-center justify-center transform rotate-12 border-4 border-[var(--bg-main)]">
+              <span className="text-white text-xl">✨</span>
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* ─── RIGHT COLUMN (AUTH CARD) ─── */}
+      <div className="w-full max-w-[350px] flex flex-col gap-3">
+        {/* Main Auth Box */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-none sm:rounded-sm p-6 flex flex-col items-center">
           
-          {isSignupMode ? (
-            <p className="text-[13px] font-semibold text-[var(--text-secondary)] leading-relaxed px-2">
+          <div className="mb-8 mt-2">
+            <span className="font-ig-logo text-[40px] tracking-wide" style={{ fontFamily: "Billabong, 'Grand Hotel', cursive" }}>Contestify</span>
+          </div>
+
+          {isSignupMode && (
+            <p className="text-[15px] font-semibold text-[var(--text-secondary)] text-center leading-relaxed mb-6 px-4">
               Sign up to see photos and videos from your friends.
             </p>
-          ) : (
-            <p className="text-[13px] font-semibold text-[var(--text-secondary)] leading-relaxed px-2">
-              Log in to see photos and videos from your favorite creators.
-            </p>
           )}
-        </div>
+
 
         {signupSuccess && (
           <div className="mb-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs text-center font-semibold animate-fadeIn flex items-center justify-center gap-1.5">
@@ -238,224 +255,195 @@ export const AuthPage = () => {
         )}
 
         {error && (
-          <div className="mb-4 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs text-center font-medium">
+          <div className="w-full mb-4 text-rose-500 text-[14px] text-center font-medium">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-2 w-full">
           {isSignupMode ? (
             <>
               {/* FIELD 1: Mobile number or email */}
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">
-                  Mobile number or email
-                </label>
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Mobile number or email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full bg-[var(--bg-main)] border rounded-2xl px-4 py-3 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none transition-colors ${
-                      emailAvailable === true
-                        ? "border-emerald-500/80 bg-emerald-500/5 focus:border-emerald-500"
-                        : emailAvailable === false
-                        ? "border-rose-500/80 bg-rose-500/5 focus:border-rose-500"
-                        : "border-[var(--border-main)] focus:border-sky-500"
-                    }`}
-                  />
-                  <div className="absolute right-3 flex items-center">
+              <div className="relative mt-2">
+                <input
+                  type="text"
+                  required
+                  placeholder="Mobile number or email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value.toLowerCase().trim());
+                    setLoginIdentifier(e.target.value.toLowerCase().trim());
+                  }}
+                  className="w-full bg-[#fafafa] dark:bg-[#121212] border border-[#dbdbdb] dark:border-[#363636] rounded-[3px] px-2 py-[9px] text-[12px] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#a8a8a8] dark:focus:border-[#555]"
+                />
+                
+                {email.trim().length >= 5 && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
                     {checkingEmail ? (
-                      <Loader2 className="w-4 h-4 text-sky-500 animate-spin" />
+                      <Loader2 className="w-4 h-4 text-[#a8a8a8] animate-spin" />
                     ) : emailAvailable === true ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <CheckCircle2 className="w-4 h-4 text-[#a8a8a8]" />
                     ) : emailAvailable === false ? (
                       <XCircle className="w-4 h-4 text-rose-500" />
                     ) : null}
                   </div>
-                </div>
-
-                <p className="text-[11px] text-[var(--text-muted)] mt-1.5 leading-normal">
-                  You may receive notifications from us.{" "}
-                  <a href="#" onClick={(e) => e.preventDefault()} className="text-sky-500 hover:underline font-semibold">
-                    Learn why we ask for your contact information
-                  </a>
-                </p>
-
-                {email.includes("@") && emailAvailable === false && (
-                  <p className="text-[11px] text-rose-400 font-semibold mt-1">
-                    ✕ This email is already registered. Please log in.
-                  </p>
                 )}
               </div>
 
+              {email.includes("@") && emailAvailable === false && (
+                <p className="text-[11px] text-rose-400 font-semibold mt-1">
+                  ✕ This email is already registered. Please log in.
+                </p>
+              )}
+
               {/* FIELD 2: Password */}
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">
-                  Password
-                </label>
-                <div className="relative flex items-center">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl pl-4 pr-10 py-3 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-sky-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-1"
-                    title={showPassword ? "Hide password" : "Show password"}
+              <div className="relative flex items-center mt-1.5">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-[#fafafa] dark:bg-[#121212] border border-[#dbdbdb] dark:border-[#363636] rounded-[3px] px-2 py-[9px] text-[12px] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#a8a8a8] dark:focus:border-[#555]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2 text-xs font-semibold text-[var(--text-primary)]"
+                >
+                  {password.length > 0 && (showPassword ? "Hide" : "Show")}
+                </button>
+              </div>
+
+              {/* FIELD 5: Birthday (Dropdowns) */}
+              <div className="pt-2">
+                <div className="flex items-center gap-1 mb-2">
+                  <span className="text-[12px] font-semibold text-[var(--text-secondary)]">Birthday</span>
+                  <HelpCircle className="w-3.5 h-3.5 text-[var(--text-secondary)] cursor-pointer" />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <select
+                    value={birthMonth}
+                    onChange={(e) => setBirthMonth(e.target.value)}
+                    className="bg-[#fafafa] dark:bg-[#121212] border border-[#dbdbdb] dark:border-[#363636] rounded-[3px] px-2 py-[7px] text-[12px] text-[var(--text-primary)] focus:outline-none cursor-pointer appearance-none"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                    {MONTHS.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={birthDay}
+                    onChange={(e) => setBirthDay(e.target.value)}
+                    className="bg-[#fafafa] dark:bg-[#121212] border border-[#dbdbdb] dark:border-[#363636] rounded-[3px] px-2 py-[7px] text-[12px] text-[var(--text-primary)] focus:outline-none cursor-pointer appearance-none"
+                  >
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(e.target.value)}
+                    className="bg-[#fafafa] dark:bg-[#121212] border border-[#dbdbdb] dark:border-[#363636] rounded-[3px] px-2 py-[7px] text-[12px] text-[var(--text-primary)] focus:outline-none cursor-pointer appearance-none"
+                  >
+                    {YEARS.map((y) => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
-
-
               {/* FIELD 3: Name */}
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">
-                  Name
-                </label>
+              <div className="relative mt-2">
                 <input
                   type="text"
                   required
-                  placeholder="Full name"
+                  placeholder="Full Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-4 py-3 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-sky-500"
+                  className="w-full bg-[#fafafa] dark:bg-[#121212] border border-[#dbdbdb] dark:border-[#363636] rounded-[3px] px-2 py-[9px] text-[12px] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#a8a8a8] dark:focus:border-[#555]"
                 />
               </div>
 
-              {/* FIELD 4: Unique Username with Live Availability Verification */}
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">
-                  Username
-                </label>
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                    className={`w-full bg-[var(--bg-main)] border rounded-2xl px-4 py-3 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none transition-colors ${
-                      usernameAvailable === true
-                        ? "border-emerald-500/80 bg-emerald-500/5 focus:border-emerald-500"
-                        : usernameAvailable === false
-                        ? "border-rose-500/80 bg-rose-500/5 focus:border-rose-500"
-                        : "border-[var(--border-main)] focus:border-sky-500"
-                    }`}
-                  />
-                  <div className="absolute right-3 flex items-center">
-                    {checkingUsername ? (
-                      <Loader2 className="w-4 h-4 text-sky-500 animate-spin" />
-                    ) : usernameAvailable === true ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    ) : usernameAvailable === false ? (
-                      <XCircle className="w-4 h-4 text-rose-500" />
-                    ) : null}
-                  </div>
+              {/* FIELD 4: Username */}
+              <div className="relative flex items-center mt-1.5">
+                <input
+                  type="text"
+                  required
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                  className="w-full bg-[#fafafa] dark:bg-[#121212] border border-[#dbdbdb] dark:border-[#363636] rounded-[3px] px-2 py-[9px] pr-8 text-[12px] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#a8a8a8] dark:focus:border-[#555]"
+                />
+                <div className="absolute right-2 flex items-center">
+                  {checkingUsername ? (
+                    <Loader2 className="w-4 h-4 text-[#a8a8a8] animate-spin" />
+                  ) : usernameAvailable === true ? (
+                    <CheckCircle2 className="w-4 h-4 text-[#a8a8a8]" />
+                  ) : usernameAvailable === false ? (
+                    <XCircle className="w-4 h-4 text-rose-500" />
+                  ) : null}
                 </div>
-
-                {username.trim().length >= 3 && (
-                  <p className={`text-[11px] font-semibold mt-1.5 flex items-center gap-1 ${
-                    usernameAvailable === true ? "text-emerald-400" : usernameAvailable === false ? "text-rose-400" : "text-[var(--text-muted)]"
-                  }`}>
-                    {checkingUsername ? (
-                      "Checking username availability..."
-                    ) : usernameAvailable === true ? (
-                      "✓ Username is available!"
-                    ) : usernameAvailable === false ? (
-                      "✕ This username is already registered."
-                    ) : null}
-                  </p>
-                )}
               </div>
 
               {/* Legal Disclaimers */}
-              <div className="pt-2 text-[11px] text-[var(--text-muted)] leading-relaxed text-center border-t border-[var(--border-main)]">
-                <p>
+              <div className="pt-3 text-[12px] text-[#737373] text-center mb-2">
+                <p className="mb-3 leading-tight">
+                  People who use our service may have uploaded your contact information to Contestify.{" "}
+                  <a href="#" className="text-[#00376b] dark:text-[#e0f1ff]">Learn more</a>
+                </p>
+                <p className="leading-tight">
                   By signing up, you agree to our{" "}
-                  <a href="#" onClick={(e) => e.preventDefault()} className="text-sky-500 font-semibold hover:underline">
-                    Terms
-                  </a>,{" "}
-                  <a href="#" onClick={(e) => e.preventDefault()} className="text-sky-500 font-semibold hover:underline">
-                    Privacy Policy
-                  </a> and{" "}
-                  <a href="#" onClick={(e) => e.preventDefault()} className="text-sky-500 font-semibold hover:underline">
-                    Cookies Policy
-                  </a>.
+                  <a href="#" className="text-[#00376b] dark:text-[#e0f1ff]">Terms</a>,{" "}
+                  <a href="#" className="text-[#00376b] dark:text-[#e0f1ff]">Privacy Policy</a> and{" "}
+                  <a href="#" className="text-[#00376b] dark:text-[#e0f1ff]">Cookies Policy</a>.
                 </p>
               </div>
             </>
           ) : (
             /* LOGIN MODE - Username or Email address input */
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">
-                  Mobile number, username, or email
-                </label>
+            <div className="space-y-2 w-full mt-6">
+              <div className="relative">
                 <input
                   type="text"
                   required
-                  placeholder="Mobile number, username, or email"
+                  placeholder="Phone number, username, or email"
                   value={loginIdentifier}
                   onChange={(e) => setLoginIdentifier(e.target.value)}
-                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-4 py-3 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-sky-500"
+                  className="w-full bg-[#fafafa] dark:bg-[#121212] border border-[#dbdbdb] dark:border-[#363636] rounded-[3px] px-2 py-[9px] text-[12px] text-[var(--text-primary)] focus:outline-none focus:border-[#a8a8a8] dark:focus:border-[#555]"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">
-                  Password
-                </label>
-                <div className="relative flex items-center">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl pl-4 pr-10 py-3 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-sky-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-1"
-                    title={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                
-                <div className="text-right mt-2">
-                  <Link 
-                    to="/forgot-password" 
-                    className="text-[11px] font-bold text-sky-500 hover:text-sky-600 transition-colors"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
+              <div className="relative flex items-center">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-[#fafafa] dark:bg-[#121212] border border-[#dbdbdb] dark:border-[#363636] rounded-[3px] px-2 py-[9px] pr-12 text-[12px] text-[var(--text-primary)] focus:outline-none focus:border-[#a8a8a8] dark:focus:border-[#555]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2 text-xs font-semibold text-[var(--text-primary)] hover:opacity-70"
+                >
+                  {password.length > 0 && (showPassword ? "Hide" : "Show")}
+                </button>
               </div>
             </div>
           )}
 
           {/* Primary Action Button (Exact Instagram Blue Pill Button) */}
-          <div className="pt-4 space-y-4">
+          <div className="pt-2 space-y-4 w-full">
             <button
               type="submit"
               disabled={loading || (isSignupMode && (usernameAvailable === false || emailAvailable === false))}
-              className={`w-full py-3.5 flex items-center justify-center gap-2 text-white font-bold text-[13px] rounded-xl shadow-md transition-all ${
+              className={`w-full py-2 flex items-center justify-center gap-2 text-white font-bold text-[14px] rounded-[8px] transition-all ${
                 loading 
-                  ? "bg-sky-400 cursor-not-allowed" 
-                  : "bg-sky-500 hover:bg-sky-600 active:scale-[0.98] cursor-pointer"
+                  ? "bg-[#4cb5f9] cursor-not-allowed" 
+                  : "bg-[#0095f6] hover:bg-[#1877f2] cursor-pointer"
               }`}
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -463,28 +451,41 @@ export const AuthPage = () => {
             </button>
             
             {!isSignupMode && (
-              <div className="flex items-center gap-4 my-6">
-                <div className="flex-1 h-px bg-[var(--border-main)]"></div>
-                <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wide">OR</span>
-                <div className="flex-1 h-px bg-[var(--border-main)]"></div>
-              </div>
-            )}
+              <>
+                <div className="flex items-center gap-4 my-4">
+                  <div className="flex-1 h-px bg-[#dbdbdb] dark:bg-[#363636]"></div>
+                  <span className="text-[13px] font-bold text-[#737373] uppercase">OR</span>
+                  <div className="flex-1 h-px bg-[#dbdbdb] dark:bg-[#363636]"></div>
+                </div>
 
-            <div className="text-center mt-6 p-4 border border-[var(--border-main)] rounded-2xl bg-[var(--bg-main)]">
-              <p className="text-[13px] text-[var(--text-primary)]">
-                {isSignupMode ? "Have an account? " : "Don't have an account? "}
-                <button
-                  type="button"
-                  onClick={() => setSearchParams({ mode: isSignupMode ? "login" : "signup" })}
-                  className="font-bold text-sky-500 hover:text-sky-600 hover:underline transition-all cursor-pointer"
-                >
-                  {isSignupMode ? "Log in" : "Sign up"}
-                </button>
-              </p>
-            </div>
+                <div className="text-center mt-2">
+                  <Link 
+                    to="/forgot-password" 
+                    className="text-[12px] text-[#00376b] dark:text-[#e0f1ff]"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         </form>
       </div>
+      
+      {/* Box 2: Switch modes */}
+      <div className="w-full max-w-[350px] bg-[var(--bg-card)] border border-[var(--border-main)] rounded-none sm:rounded-sm p-5 text-center mt-3">
+        <p className="text-[14px] text-[var(--text-primary)]">
+          {isSignupMode ? "Have an account? " : "Don't have an account? "}
+          <button
+            type="button"
+            onClick={() => setSearchParams({ mode: isSignupMode ? "login" : "signup" })}
+            className="font-bold text-[#0095f6] hover:text-[#1877f2] cursor-pointer"
+          >
+            {isSignupMode ? "Log in" : "Sign up"}
+          </button>
+        </p>
+      </div>
+
     </div>
   );
 };
