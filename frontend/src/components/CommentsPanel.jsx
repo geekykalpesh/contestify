@@ -242,6 +242,12 @@ export const CommentsPanel = ({ activePost, onClose }) => {
 
   if (!activePost) return null;
 
+  const hasUserCommented = user && commentsList.some((c) => {
+    const authorId = c.userId?._id || c.userId?.id || c.userId;
+    const currentUserId = user?._id || user?.id;
+    return authorId && currentUserId && authorId.toString() === currentUserId.toString();
+  });
+
   // Process sorted list based on sortBy selection
   const sortedComments = [...commentsList].sort((a, b) => {
     if (sortBy === "newest") {
@@ -448,14 +454,20 @@ export const CommentsPanel = ({ activePost, onClose }) => {
           )}
         </div>
 
-        {/* Footer info text (Exact YouTube Shorts Wording) */}
-        <div
-          className={`px-3 py-1.5 border-t text-[10px] text-center font-medium shrink-0 ${
-            isDark ? "bg-[#0f0f0f] border-[#272727] text-slate-500" : "bg-slate-50 border-slate-200 text-slate-500"
-          }`}
-        >
-          {sortBy === "top" ? "Top is selected, so you'll see featured comments" : "Newest comments listed first"}
-        </div>
+        {/* Footer info text */}
+        {hasUserCommented ? (
+          <div className="px-3 py-2 border-t text-[11px] text-center font-semibold text-sky-400 bg-sky-500/10 border-sky-500/20 shrink-0">
+            You have already commented on this reel (1 comment per user limit).
+          </div>
+        ) : (
+          <div
+            className={`px-3 py-1.5 border-t text-[10px] text-center font-medium shrink-0 ${
+              isDark ? "bg-[#0f0f0f] border-[#272727] text-slate-500" : "bg-slate-50 border-slate-200 text-slate-500"
+            }`}
+          >
+            {sortBy === "top" ? "Top is selected, so you'll see featured comments" : "Newest comments listed first"}
+          </div>
+        )}
 
         {/* Sticky Input Bar */}
         <form
@@ -470,18 +482,21 @@ export const CommentsPanel = ({ activePost, onClose }) => {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Add a comment..."
+            placeholder={hasUserCommented ? "1 comment per user limit reached..." : "Add a comment..."}
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
+            disabled={hasUserCommented}
             className={`flex-1 bg-transparent border-b text-xs py-1 px-1 focus:outline-none transition-colors ${
-              isDark
+              hasUserCommented
+                ? "opacity-50 cursor-not-allowed border-transparent"
+                : isDark
                 ? "border-[#3f3f3f] focus:border-white text-white placeholder-slate-500"
                 : "border-slate-300 focus:border-slate-900 text-slate-900 placeholder-slate-400"
             }`}
           />
           <button
             type="submit"
-            disabled={!commentText.trim()}
+            disabled={!commentText.trim() || hasUserCommented}
             className={`p-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0 ${
               isDark
                 ? "bg-white text-black hover:bg-slate-200 disabled:opacity-30"
@@ -564,6 +579,12 @@ export const CommentsPanel = ({ activePost, onClose }) => {
           )}
         </div>
 
+        {hasUserCommented && (
+          <div className="px-3 py-2 border-t text-[11px] text-center font-semibold text-sky-400 bg-sky-500/10 border-sky-500/20 shrink-0">
+            You have already commented on this reel (1 comment limit).
+          </div>
+        )}
+
         <form
           onSubmit={handleAddComment}
           className={`p-3 border-t flex gap-2 shrink-0 ${
@@ -572,18 +593,21 @@ export const CommentsPanel = ({ activePost, onClose }) => {
         >
           <input
             type="text"
-            placeholder="Add a comment..."
+            placeholder={hasUserCommented ? "1 comment limit reached..." : "Add a comment..."}
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
+            disabled={hasUserCommented}
             className={`flex-1 rounded-full px-4 py-2 text-xs focus:outline-none ${
-              isDark
+              hasUserCommented
+                ? "opacity-50 cursor-not-allowed bg-transparent"
+                : isDark
                 ? "bg-[#272727] border border-[#3f3f3f] text-white placeholder-slate-400 focus:border-slate-300"
                 : "bg-slate-100 border border-slate-300 text-slate-900 placeholder-slate-500 focus:border-slate-500"
             }`}
           />
           <button
             type="submit"
-            disabled={!commentText.trim()}
+            disabled={!commentText.trim() || hasUserCommented}
             className={`px-4 py-2 font-bold rounded-full text-xs shrink-0 cursor-pointer ${
               isDark ? "bg-white text-black disabled:opacity-30" : "bg-slate-900 text-white disabled:opacity-30"
             }`}

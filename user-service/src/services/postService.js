@@ -217,12 +217,26 @@ const commentPost = async ({ userId, postId, text }) => {
     throw new AppError("Post not found", 404);
   }
 
+  // 1 Comment per User per Post Enforcer
+  const existingComment = await Comment.findOne({ userId, postId });
+  if (existingComment) {
+    throw new AppError("You have already commented on this post. Only 1 comment per user is allowed.", 400);
+  }
+
   // Create new comment record
-  const comment = await Comment.create({
-    userId,
-    postId,
-    text: text.trim()
-  });
+  let comment;
+  try {
+    comment = await Comment.create({
+      userId,
+      postId,
+      text: text.trim()
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      throw new AppError("You have already commented on this post. Only 1 comment per user is allowed.", 400);
+    }
+    throw err;
+  }
 
   const populatedComment = await Comment.findById(comment._id).populate("userId", "name email username avatarUrl");
 
