@@ -24,8 +24,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
-          cache-dependency-path: './mobile/package-lock.json'
 
       - name: 📦 Install Mobile Dependencies
         run: npm ci --include=dev
@@ -45,6 +43,7 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_SKIP_AUTO_FINGERPRINT: '1'
-          EXPO_PUBLIC_API_URL: 'https://contestify-nfd7.onrender.com'
-          EXPO_PUBLIC_ADMIN_API_URL: 'https://contestify-admin-service.onrender.com'
-          EXPO_PUBLIC_GOOGLE_CLIENT_ID: '1036124006573-eut3o57jvh4r747c7ifl60cncmfnhtum.apps.googleusercontent.com'
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL || 'https://contestify-nfd7.onrender.com' }}
+          EXPO_PUBLIC_ADMIN_API_URL: ${{ secrets.EXPO_PUBLIC_ADMIN_API_URL || 'https://contestify-admin-service.onrender.com' }}
+          EXPO_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '1036124006573-eut3o57jvh4r747c7ifl60cncmfnhtum.apps.googleusercontent.com' }}
+
