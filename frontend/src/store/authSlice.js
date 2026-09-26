@@ -204,5 +204,4 @@ const authSlice = createSlice({
 });
 
 export const { logout, clearAuthError, clearSignupSuccess, updateUserRealtime } = authSlice.actions;
-export { updateProfileThunk };
 export default authSlice.reducer;
