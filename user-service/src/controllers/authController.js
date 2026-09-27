@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const PasswordResetToken = require("../models/PasswordResetToken");
 const { sendPasswordResetEmail } = require("../services/emailService");
+const { AppError } = require("../middleware/errorHandler");
 
 const signup = async (req, res, next) => {
   try {
@@ -199,7 +200,7 @@ async function forgotPassword(req, res, next) {
       await sendPasswordResetEmail(user.email, resetUrl);
     } catch (emailErr) {
       console.error("Nodemailer Error:", emailErr);
-      return next(new Error("Email configuration error. Please ensure environment variables are set correctly on the server."));
+      return next(new AppError(`Email service configuration error: ${emailErr.message}. Please check EMAIL_USER and EMAIL_PASS on Render.`, 500));
     }
 
     return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
