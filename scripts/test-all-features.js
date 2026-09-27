@@ -252,6 +252,12 @@ async function runFullTestSuite() {
     }
   });
 
+  // 22. Automatic Test User Cleanup
+  await test('22. Automatic Cleanup of Audit Test Users', async () => {
+    const { execSync } = require('child_process');
+    execSync('node scripts/clean-testusers.js', { stdio: 'inherit' });
+  });
+
   console.log('\n==================================================');
   console.log(`🎉 FINAL RESULT: ${passed} PASSED, ${failed} FAILED`);
   console.log('==================================================');
