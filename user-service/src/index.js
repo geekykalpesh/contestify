@@ -12,6 +12,8 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const internalRoutes = require("./routes/internalRoutes");
 const { initSocket } = require("./socket");
 const { globalErrorHandler } = require("./middleware/errorHandler");
+const connectDB = require("./config/db");
+const { initRedis } = require("./config/redis");
 
 const app = express();
 
