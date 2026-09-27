@@ -401,5 +401,7 @@ module.exports = {
   getPaginatedUsers,
   getUserStats,
   updateUserKycStatus,
-  bulkUpdateUserKyc
+  bulkUpdateUserKyc,
+  exportUsersCsv,
+  importUsersCsv
 };
