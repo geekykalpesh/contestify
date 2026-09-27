@@ -208,8 +208,8 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
     >
       {/* 1. CENTRAL REEL CARD CONTAINER (Reduced width & increased height) */}
       <div className="w-full sm:w-[320px] md:w-[340px] aspect-[9/16] h-[84vh] max-h-[780px] rounded-2xl sm:rounded-3xl bg-black relative overflow-hidden shadow-2xl border border-[#272727] shrink-0 group">
-        {/* TOP HOVER CONTROLS OVERLAY */}
-        <div className="absolute top-0 inset-x-0 z-30 p-3 flex items-center justify-between bg-gradient-to-b from-black/85 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white pointer-events-auto">
+        {/* TOP HOVER / TOUCH CONTROLS OVERLAY */}
+        <div className="absolute top-0 inset-x-0 z-30 p-3 flex items-center justify-between bg-gradient-to-b from-black/85 via-black/40 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 text-white pointer-events-auto">
           {/* Left Controls: Play/Pause & Mute/Unmute */}
           <div className="flex items-center gap-2">
             <button
@@ -332,6 +332,31 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
 
         {/* MOBILE FLOATING ACTION BAR (Small screens < md) */}
         <div className="md:hidden absolute bottom-4 right-2 z-30 flex flex-col items-center gap-2.5 text-white">
+          {/* Audio / Mute Toggle Button (Mobile) */}
+          {post.mediaType === "video" && (
+            <button
+              type="button"
+              onClick={toggleMute}
+              className="flex flex-col items-center gap-0.5 group cursor-pointer"
+              title={globalAudioMuted ? "Unmute Audio" : "Mute Audio"}
+            >
+              <div className={`w-9 h-9 rounded-full backdrop-blur-md border flex items-center justify-center shadow-lg transition-transform active:scale-90 ${
+                globalAudioMuted
+                  ? "bg-rose-950/80 border-rose-500/50 text-rose-400"
+                  : "bg-emerald-950/80 border-emerald-500/50 text-emerald-400"
+              }`}>
+                {globalAudioMuted ? (
+                  <VolumeX className="w-4.5 h-4.5 text-rose-400" />
+                ) : (
+                  <Volume2 className="w-4.5 h-4.5 text-emerald-400" />
+                )}
+              </div>
+              <span className="text-[10px] font-bold drop-shadow-md text-white">
+                {globalAudioMuted ? "Muted" : "Sound"}
+              </span>
+            </button>
+          )}
+
           {/* Like */}
           <button
             onClick={handleLike}
