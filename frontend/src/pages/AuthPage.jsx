@@ -200,19 +200,19 @@ export const AuthPage = () => {
     <div className="min-h-[90vh] flex items-center justify-center p-4 lg:gap-8 xl:gap-16">
       
       {/* ─── DESKTOP LEFT COLUMN (LOGIN ONLY) ─── */}
-        <div className="hidden lg:flex flex-col items-center justify-center w-full max-w-[400px]">
+        <div className="hidden lg:flex flex-col items-center justify-center w-[400px] h-[550px] shrink-0">
           <img 
             src="https://cdn.21st.dev/assets/mirror/0d/0d205a1a31d40e927885b0ec5f603407caa10585b5bc6e8b08240402c7417e86.png" 
             alt="Login Banner" 
-            className="w-full max-h-[80vh] object-contain"
+            className="w-full h-full object-contain"
           />
         </div>
       {/* ─── RIGHT COLUMN (AUTH CARD) ─── */}
-      <div className="w-full max-w-[350px] flex flex-col gap-3">
+      <div className="w-full max-w-[350px] flex flex-col gap-3 transition-all duration-500 ease-in-out">
         {/* Main Auth Box */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-none sm:rounded-sm p-6 flex flex-col items-center">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-none sm:rounded-sm p-6 flex flex-col items-center min-h-[480px] transition-all duration-500 relative overflow-hidden">
           
-          <div className="mb-8 mt-2">
+          <div className="mb-6 mt-2 transition-all duration-500">
             <span className="font-ig-logo text-[40px] tracking-wide" style={{ fontFamily: "Billabong, 'Grand Hotel', cursive" }}>Contestify</span>
           </div>
 
