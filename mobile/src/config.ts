@@ -14,18 +14,21 @@ export const getMediaUrl = (url?: string | null): string => {
 
     // Cloudinary URL Auto-Repair & Format Optimization
     if (formattedUrl.includes('res.cloudinary.com')) {
-      if (
-        formattedUrl.includes('/image/upload/') &&
-        (formattedUrl.match(/\.(mp4|mov|webm|mkv|avi)$/i) || formattedUrl.includes('/creator-contest-reels/'))
-      ) {
-        formattedUrl = formattedUrl.replace('/image/upload/', '/video/upload/');
-      }
+      const isVideo =
+        formattedUrl.includes('/video/upload/') ||
+        formattedUrl.includes('/creator-contest-reels/') ||
+        Boolean(formattedUrl.match(/\.(mp4|mov|webm|mkv|avi|m3u8)($|\?)/i));
 
-      if (
-        formattedUrl.includes('/video/upload/') &&
-        !formattedUrl.match(/\.(mp4|mov|webm|mkv|avi|m3u8)$/i)
-      ) {
-        formattedUrl = `${formattedUrl}.mp4`;
+      if (isVideo) {
+        if (formattedUrl.includes('/image/upload/')) {
+          formattedUrl = formattedUrl.replace('/image/upload/', '/video/upload/');
+        }
+        if (formattedUrl.includes('/upload/f_auto,q_auto,w_600/')) {
+          formattedUrl = formattedUrl.replace('/upload/f_auto,q_auto,w_600/', '/upload/');
+        }
+        if (formattedUrl.includes('/video/upload/') && !formattedUrl.match(/\.(mp4|mov|webm|mkv|avi|m3u8)($|\?)/i)) {
+          formattedUrl = `${formattedUrl}.mp4`;
+        }
       }
     }
 
