@@ -94,6 +94,14 @@ export const ProfilePage = () => {
   }, [profileIdentifier, currentUser]);
 
   useEffect(() => {
+    const handlePostCreated = () => {
+      fetchProfileData();
+    };
+    window.addEventListener("post_created", handlePostCreated);
+    return () => window.removeEventListener("post_created", handlePostCreated);
+  }, [profileIdentifier, currentUser]);
+
+  useEffect(() => {
     if (currentUser?.kycDetails) {
       setAadharNumber(currentUser.kycDetails.aadharNumber || "");
       setAadharMobile(currentUser.kycDetails.aadharMobile || "");

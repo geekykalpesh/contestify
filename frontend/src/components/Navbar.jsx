@@ -15,11 +15,13 @@ import {
   Settings,
   X,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  PlusCircle
 } from "lucide-react";
 import { getMediaUrl } from "../config";
 import { GlobalSearchInput } from "./GlobalSearchInput";
 import { NotificationDropdown } from "./NotificationDropdown";
+import { CreatePostModal } from "./CreatePostModal";
 
 export const Navbar = () => {
   const dispatch = useDispatch();
@@ -29,6 +31,7 @@ export const Navbar = () => {
   const isDark = mode === "dark";
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const menuRef = useRef(null);
 
   const isAdmin = user && (user.role === "admin" || user.email === "admin@gmail.com" || user.email === "admin@creator.com");
@@ -70,6 +73,18 @@ export const Navbar = () => {
 
         {/* Navigation Links & Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Create Post Button (Instagram / TikTok Style) */}
+          {user && (
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-black dark:hover:bg-slate-200 text-xs rounded-full font-bold shadow-sm transition-all whitespace-nowrap shrink-0 cursor-pointer"
+              title="Create New Post"
+            >
+              <PlusCircle className="w-4 h-4 shrink-0" />
+              <span className="hidden xs:inline">Create</span>
+            </button>
+          )}
+
           {/* Admin Badge Link (Desktop only or icon on mobile) */}
           {isAdmin && (
             <Link
@@ -248,6 +263,14 @@ export const Navbar = () => {
           )}
         </div>
       </div>
+
+      {/* Global Create Post Modal */}
+      {user && (
+        <CreatePostModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+        />
+      )}
     </nav>
   );
 };

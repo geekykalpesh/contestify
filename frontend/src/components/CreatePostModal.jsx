@@ -212,6 +212,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
       setThumbnailPreviewUrl(null);
       toast.success("Your post has been published successfully!", "Post Published");
       onClose();
+      window.dispatchEvent(new Event("post_created"));
       if (onPostCreated) onPostCreated();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create post");

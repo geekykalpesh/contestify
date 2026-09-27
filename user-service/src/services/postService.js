@@ -63,55 +63,20 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
     baseQuery.category = category;
   }
 
-  let query = { ...baseQuery };
-
-  // Instagram Rule: Exclude already watched reels unless includeSeen === true
-  let viewedPostIds = [];
-  let isFallback = false;
-
-  if (userId && !includeSeen) {
-    const cachedViewed = await getSetMembers(`user:viewed:${userId}`);
-    if (cachedViewed && cachedViewed.length > 0) {
-      viewedPostIds = cachedViewed;
-    } else {
-      const views = await View.find({ userId }).select("postId").lean();
-      viewedPostIds = views.map((v) => v.postId.toString());
-    }
-
-    if (viewedPostIds.length > 0) {
-      query._id = { $nin: viewedPostIds };
-    }
-
-    // Auto-fallback check: If user watched all new reels in this category,
-    // automatically fallback to top-scored reels so infinite scroll never stops!
-    const unseenCount = await Post.countDocuments(query);
-    if (unseenCount === 0) {
-      query = { ...baseQuery }; // Remove $nin filter to loop back to top reels
-      isFallback = true;
-    }
-  }
-
   const skip = (pageNum - 1) * limitNum;
 
-  // Sort by score/likes if fallback, or recency if new feed
-  const sortCriteria = isFallback
-    ? { likeCount: -1, commentCount: -1, createdAt: -1 }
-    : { createdAt: -1 };
-
-  let posts = await Post.find(query)
-    .sort(sortCriteria)
+  // Instagram & TikTok Feed Standard:
+  // Fetch reels ordered newest-first (createdAt: -1) so newly uploaded posts appear at the top
+  // while keeping all previous posts visible in the feed stream.
+  let posts = await Post.find(baseQuery)
+    .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limitNum)
     .populate("userId", "name email username residency avatarUrl")
     .lean();
 
-  // Always shuffle page 1 posts to guarantee a fresh, dynamic reel order on every refresh
-  if (pageNum === 1 && posts.length > 1) {
-    posts = posts.sort(() => Math.random() - 0.5);
-  }
-
-  const total = await Post.countDocuments(query);
-  const totalAllPosts = await Post.countDocuments(baseQuery);
+  const total = await Post.countDocuments(baseQuery);
+  const totalAllPosts = total;
 
   // Check which of the fetched posts the current user has liked
   let likedPostIds = new Set();
@@ -138,8 +103,8 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
       totalPages: Math.ceil(total / limitNum) || 1
     },
     meta: {
-      isFallback,
-      totalViewed: viewedPostIds.length,
+      isFallback: false,
+      totalViewed: 0,
       totalAllPosts
     }
   };
@@ -356,10 +321,19 @@ const batchLogViews = async ({ userId, postIds }) => {
 };
 
 const getUserPosts = async (identifier) => {
-  let targetUser = null;
-  const cleanId = typeof identifier === "string" ? identifier.trim().replace(/^@/, "") : identifier;
-  const isObjectId = typeof cleanId === "string" && /^[0-9a-fA-F]{24}$/.test(cleanId);
+  if (!identifier) {
+    return {
+      user: null,
+      posts: [],
+      stats: { totalPosts: 0, totalLikes: 0, totalComments: 0, totalViews: 0 }
+    };
+  }
 
+  const rawString = typeof identifier === "object" ? identifier.toString() : String(identifier);
+  const cleanId = rawString.trim().replace(/^@/, "");
+  const isObjectId = /^[0-9a-fA-F]{24}$/.test(cleanId);
+
+  let targetUser = null;
   if (isObjectId) {
     targetUser = await User.findById(cleanId).select("name email username avatarUrl residency kycDetails.status role").lean();
   }
