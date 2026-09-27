@@ -54,13 +54,13 @@ const createPost = async ({ userId, caption, category, file, thumbnailFile, thum
   return populatedPost;
 };
 
-const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = false }) => {
+const getFeed = async ({ userId, category, cursor, page = 1, limit = 10, includeSeen = false }) => {
   const pageNum = parseInt(page, 10) || 1;
   const limitNum = parseInt(limit, 10) || 10;
-  const cacheKey = `feed:cache:${category || "ALL"}:${pageNum}:${limitNum}:${userId || "guest"}:${includeSeen}`;
+  const cacheKey = `feed:cache:${category || "ALL"}:${cursor || "no_cursor"}:${pageNum}:${limitNum}:${userId || "guest"}:${includeSeen}`;
 
-  // Check Redis Feed Cache (only for non-page-1 or guest to allow instant refresh responsiveness)
-  if (pageNum > 1 || !userId) {
+  // Check Redis Feed Cache (only for non-initial or guest to allow instant refresh responsiveness)
+  if (cursor || pageNum > 1 || !userId) {
     const cachedFeed = await getCache(cacheKey);
     if (cachedFeed) {
       return cachedFeed;
@@ -72,12 +72,18 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
     baseQuery.category = category;
   }
 
+  // Cursor-Based $O(1)$ Indexed Query Filtering
+  const cursorQuery = { ...baseQuery };
+  if (cursor && typeof cursor === "string" && /^[0-9a-fA-F]{24}$/.test(cursor)) {
+    cursorQuery._id = { $lt: cursor };
+  }
+
   let posts = [];
   let total = 0;
   let isFallback = false;
   let viewedPostIds = [];
 
-  // TikTok / Instagram Recommendation Algorithm:
+  // TikTok / Instagram Recommendation Algorithm with Cursor Support:
   // Prioritize UNSEEN reels so users get fresh content on every refresh!
   if (userId && !includeSeen) {
     // 1. Get list of post IDs already watched by this user
@@ -90,23 +96,36 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
     }
 
     if (viewedPostIds.length > 0) {
-      const unseenQuery = { ...baseQuery, _id: { $nin: viewedPostIds } };
+      const unseenQuery = { ...cursorQuery, _id: { $nin: viewedPostIds } };
+      if (cursor && /^[0-9a-fA-F]{24}$/.test(cursor)) {
+        unseenQuery._id = { $lt: cursor, $nin: viewedPostIds };
+      }
+
       const unseenCount = await Post.countDocuments(unseenQuery);
 
       if (unseenCount > 0) {
-        // We have unseen reels! Fetch unseen reels first (newest first)
-        const skip = (pageNum - 1) * limitNum;
-        const unseenPosts = await Post.find(unseenQuery)
-          .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(limitNum)
-          .populate("userId", "name username residency avatarUrl")
-          .lean();
+        // We have unseen reels! Fetch unseen reels using cursor/index (newest first)
+        let unseenPosts;
+        if (cursor) {
+          unseenPosts = await Post.find(unseenQuery)
+            .sort({ _id: -1 })
+            .limit(limitNum)
+            .populate("userId", "name username residency avatarUrl")
+            .lean();
+        } else {
+          const skip = (pageNum - 1) * limitNum;
+          unseenPosts = await Post.find(unseenQuery)
+            .sort({ _id: -1 })
+            .skip(skip)
+            .limit(limitNum)
+            .populate("userId", "name username residency avatarUrl")
+            .lean();
+        }
 
         posts = unseenPosts;
 
-        // If page 1 has fewer unseen posts than limitNum, fill remaining slots with rotated reels!
-        if (pageNum === 1 && posts.length < limitNum) {
+        // If page 1 / initial load has fewer unseen posts than limitNum, fill remaining slots with rotated reels!
+        if (!cursor && pageNum === 1 && posts.length < limitNum) {
           const fetchedIds = new Set(posts.map((p) => p._id.toString()));
           const fillQuery = { ...baseQuery, _id: { $nin: Array.from(fetchedIds) } };
           const needed = limitNum - posts.length;
@@ -131,22 +150,29 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
     }
   }
 
-  // Fallback / Guest / Default Fetch:
+  // Fallback / Guest / Default Fetch (Cursor-based indexed query):
   if (posts.length === 0) {
-    const skip = (pageNum - 1) * limitNum;
-
-    posts = await Post.find(baseQuery)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNum * 2)
-      .populate("userId", "name username residency avatarUrl")
-      .lean();
-
-    // Dynamically rotate fallback reels on page 1 so feed stays fresh on every refresh
-    if (pageNum === 1 && posts.length > 1) {
-      posts = posts.sort(() => Math.random() - 0.5).slice(0, limitNum);
+    if (cursor) {
+      posts = await Post.find(cursorQuery)
+        .sort({ _id: -1 })
+        .limit(limitNum)
+        .populate("userId", "name username residency avatarUrl")
+        .lean();
     } else {
-      posts = posts.slice(0, limitNum);
+      const skip = (pageNum - 1) * limitNum;
+      posts = await Post.find(baseQuery)
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limitNum * 2)
+        .populate("userId", "name username residency avatarUrl")
+        .lean();
+
+      // Dynamically rotate fallback reels on page 1 so feed stays fresh on every refresh
+      if (pageNum === 1 && posts.length > 1) {
+        posts = posts.sort(() => Math.random() - 0.5).slice(0, limitNum);
+      } else {
+        posts = posts.slice(0, limitNum);
+      }
     }
 
     total = await Post.countDocuments(baseQuery);
@@ -170,9 +196,18 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
     score: Number((p.likeCount * 1.0 + p.commentCount * 3.0 + p.viewCount * 0.2).toFixed(2))
   }));
 
+  const lastPost = postsWithUserFlags[postsWithUserFlags.length - 1];
+  const nextCursor = lastPost ? lastPost._id.toString() : null;
+  const hasMore = postsWithUserFlags.length >= limitNum;
+
   const result = {
     posts: postsWithUserFlags,
+    nextCursor,
+    hasMore,
     pagination: {
+      cursor: cursor || null,
+      nextCursor,
+      hasMore,
       page: pageNum,
       limit: limitNum,
       total,

@@ -22,6 +22,7 @@ interface FeedState {
   activePostId: string | null;
   selectedCategory: string;
   page: number;
+  nextCursor: string | null;
   hasMore: boolean;
   loading: boolean;
   refreshing: boolean;
@@ -35,6 +36,7 @@ const initialState: FeedState = {
   activePostId: null,
   selectedCategory: 'ALL',
   page: 1,
+  nextCursor: null,
   hasMore: true,
   loading: false,
   refreshing: false,
@@ -46,16 +48,18 @@ const initialState: FeedState = {
 export const fetchFeedPosts = createAsyncThunk(
   'feed/fetchFeedPosts',
   async (
-    { page, category, append }: { page: number; category: string; append: boolean },
+    { page, category, cursor, append }: { page: number; category: string; cursor?: string | null; append: boolean },
     { rejectWithValue }
   ) => {
     try {
       const categoryParam = category === 'ALL' ? undefined : category;
       const res = await userApi.get('/posts/feed', {
-        params: { category: categoryParam, page, limit: 10 },
+        params: { category: categoryParam, cursor, page, limit: 10 },
       });
       return {
         posts: res.data.data.posts || [],
+        nextCursor: res.data.data.nextCursor || res.data.data.pagination?.nextCursor || null,
+        hasMore: res.data.data.hasMore !== undefined ? res.data.data.hasMore : true,
         pagination: res.data.data.pagination || {},
         meta: res.data.data.meta || {},
         append,

@@ -4,10 +4,10 @@ import { USER_SERVICE_URL } from "../config";
 
 export const fetchFeed = createAsyncThunk(
   "feed/fetchFeed",
-  async ({ category, page = 1, includeSeen = false } = {}, { rejectWithValue }) => {
+  async ({ category, cursor, page = 1, append = false, includeSeen = false } = {}, { rejectWithValue }) => {
     try {
       const response = await userApi.get("/posts/feed", {
-        params: { category, page, limit: 10, includeSeen }
+        params: { category, cursor, page, limit: 10, includeSeen }
       });
       return response.data.data;
     } catch (err) {
@@ -97,7 +97,7 @@ const feedSlice = createSlice({
   name: "feed",
   initialState: {
     posts: [],
-    pagination: { page: 1, limit: 10, total: 0, totalPages: 1, hasMore: false },
+    pagination: { cursor: null, nextCursor: null, hasMore: false, page: 1, limit: 10, total: 0, totalPages: 1 },
     meta: { caughtUp: false, totalViewed: 0, totalAllPosts: 0 },
     selectedCategory: "ALL",
     includeSeen: false,
@@ -165,7 +165,7 @@ const feedSlice = createSlice({
     builder
       // Fetch Feed
       .addCase(fetchFeed.pending, (state, action) => {
-        if (action.meta.arg?.append || (action.meta.arg?.page && action.meta.arg.page > 1)) {
+        if (action.meta.arg?.append || action.meta.arg?.cursor || (action.meta.arg?.page && action.meta.arg.page > 1)) {
           state.loadingMore = true;
         } else {
           state.loading = true;
@@ -175,7 +175,7 @@ const feedSlice = createSlice({
       .addCase(fetchFeed.fulfilled, (state, action) => {
         state.loading = false;
         state.loadingMore = false;
-        const isAppend = action.meta.arg?.append || (action.meta.arg?.page && action.meta.arg.page > 1);
+        const isAppend = action.meta.arg?.append || action.meta.arg?.cursor || (action.meta.arg?.page && action.meta.arg.page > 1);
 
         if (isAppend) {
           const newPosts = action.payload.posts || [];
@@ -187,9 +187,13 @@ const feedSlice = createSlice({
         }
 
         const pag = action.payload.pagination || {};
+        const nextCursor = action.payload.nextCursor || pag.nextCursor || null;
+        const hasMore = action.payload.hasMore !== undefined ? action.payload.hasMore : (pag.hasMore !== undefined ? pag.hasMore : (pag.page || 1) < (pag.totalPages || 1));
+
         state.pagination = {
           ...pag,
-          hasMore: (pag.page || 1) < (pag.totalPages || 1)
+          nextCursor,
+          hasMore
         };
         state.meta = action.payload.meta || {};
       })

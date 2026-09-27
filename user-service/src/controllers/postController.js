@@ -28,12 +28,13 @@ const createPost = async (req, res, next) => {
 
 const getFeed = async (req, res, next) => {
   try {
-    const { category, page, limit, includeSeen } = req.query;
+    const { category, cursor, page, limit, includeSeen } = req.query;
     const userId = req.user ? req.user._id : null;
 
     const result = await postService.getFeed({
       userId,
       category,
+      cursor,
       page,
       limit,
       includeSeen: includeSeen === "true"
