@@ -51,6 +51,9 @@ export const AdminParticipantsTable = () => {
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const [jumpPageInput, setJumpPageInput] = useState("");
+  // New state for bulk KYC confirmation modal
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+  const [bulkActionStatus, setBulkActionStatus] = useState('');
 
   // Debounced search dispatch
   useEffect(() => {
@@ -159,6 +162,30 @@ export const AdminParticipantsTable = () => {
             >
               <RefreshCw className={`w-3.5 h-3.5 ${participantsLoading ? "animate-spin text-sky-400" : ""}`} />
             </button>
+            {/* Bulk KYC Action Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setBulkActionStatus('PASSED'); setShowBulkConfirm(true); }}
+                disabled={selectedUserIds.length === 0 || bulkLoading}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold transition-colors"
+              >
+                Approve Selected
+              </button>
+              <button
+                onClick={() => { setBulkActionStatus('FAILED'); setShowBulkConfirm(true); }}
+                disabled={selectedUserIds.length === 0 || bulkLoading}
+                className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-xs font-bold transition-colors"
+              >
+                Reject Selected
+              </button>
+              <button
+                onClick={() => { setBulkActionStatus('PENDING'); setShowBulkConfirm(true); }}
+                disabled={selectedUserIds.length === 0 || bulkLoading}
+                className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-bold transition-colors"
+              >
+                Mark Pending
+              </button>
+            </div>
           </div>
         </div>
 
@@ -652,7 +679,43 @@ export const AdminParticipantsTable = () => {
           </div>
         </div>
       )}
-
+{/* Bulk Action Confirmation Modal */}
+{showBulkConfirm && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+    <div className="bg-[var(--bg-card)] rounded-xl p-6 w-96 shadow-lg border border-[var(--border-main)]">
+      <h2 className="text-lg font-semibold mb-3 text-[var(--text-primary)]">
+        Confirm Bulk KYC Update
+      </h2>
+      <p className="text-sm text-[var(--text-secondary)] mb-4">
+        Are you sure you want to set the KYC status of {selectedUserIds.length} selected user(s) to <span className="font-bold">{bulkActionStatus}</span>?
+      </p>
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setShowBulkConfirm(false)}
+          className="px-3 py-1.5 rounded-xl bg-slate-500/20 hover:bg-slate-500/30 text-[var(--text-primary)] text-xs"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            handleBulkKycAction(bulkActionStatus);
+            setShowBulkConfirm(false);
+          }}
+          disabled={bulkLoading}
+          className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold"
+        >
+          {bulkLoading ? (
+            <span className="flex items-center gap-1">
+              <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
+            </span>
+          ) : (
+            'Confirm'
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       {/* Creator Details Drawer / Modal */}
       {selectedCreator && (
         <AdminCreatorDetailsModal

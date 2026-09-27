@@ -4,9 +4,8 @@ const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
-const connectDB = require("./config/db");
-const { initRedis } = require("./config/redis");
-const { globalErrorHandler } = require("./middleware/errorHandler");
+const helmet = require("helmet");
+
 const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
@@ -14,6 +13,7 @@ const internalRoutes = require("./routes/internalRoutes");
 const { initSocket } = require("./socket");
 
 const app = express();
+
 const server = http.createServer(app);
 
 // Initialize WebSockets

@@ -3,8 +3,8 @@ node_modules/
 **/node_modules/
 
 # Environment Variables (Allow default dev .env files for 0-config setup)
-!user-service/.env
-!admin-service/.env
+# user-service/.env is ignored
+# admin-service/.env is ignored
 !**/.env.example
 
 # Production & Build Outputs

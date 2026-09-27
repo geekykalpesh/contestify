@@ -316,6 +316,86 @@ const bulkUpdateUserKyc = async (req, res, next) => {
   }
 };
 
+/** Export Users as CSV */
+const exportUsersCsv = async (req, res, next) => {
+  try {
+    const authHeader = req.headers["x-internal-secret"];
+    if (authHeader !== INTERNAL_SECRET) {
+      return res.status(403).json({ success: false, message: "Forbidden: Invalid internal secret key" });
+    }
+    const users = await User.find({}).select("name email username residency kycDetails createdAt").lean();
+    const fields = ["name","email","username","residency","kycDetails.status","kycDetails.notes","createdAt"];
+    const csvRows = [];
+    csvRows.push(fields.join(","));
+    users.forEach(u => {
+      const row = [
+        `"${u.name || ""}"`,
+        `"${u.email || ""}"`,
+        `"${u.username || ""}"`,
+        `"${u.residency || ""}"`,
+        `"${(u.kycDetails && u.kycDetails.status) || ""}"`,
+        `"${(u.kycDetails && u.kycDetails.notes ? u.kycDetails.notes.replace(/"/g, "'") : "")}"`,
+        `"${u.createdAt ? u.createdAt.toISOString() : ""}"`
+      ];
+      csvRows.push(row.join(","));
+    });
+    const csvContent = csvRows.join("\n");
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=users_export.csv");
+    return res.status(200).send(csvContent);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/** Import Users from CSV (multipart upload) */
+const importUsersCsv = async (req, res, next) => {
+  try {
+    const authHeader = req.headers["x-internal-secret"];
+    if (authHeader !== INTERNAL_SECRET) {
+      return res.status(403).json({ success: false, message: "Forbidden: Invalid internal secret key" });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "CSV file is required" });
+    }
+    const fs = require("fs");
+    const csv = require("csv-parser");
+    const rows = [];
+    await new Promise((resolve, reject) => {
+      fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on("data", data => rows.push(data))
+        .on("end", resolve)
+        .on("error", reject);
+    });
+    const bulkOps = rows.map(row => ({
+      updateOne: {
+        filter: { email: row.email },
+        update: {
+          $set: {
+            name: row.name,
+            username: row.username,
+            residency: row.residency,
+            kycDetails: {
+              status: row.kycStatus,
+              notes: row.kycNotes
+            },
+            createdAt: row.createdAt ? new Date(row.createdAt) : undefined
+          }
+        },
+        upsert: true
+      }
+    }));
+    if (bulkOps.length) {
+      await User.bulkWrite(bulkOps);
+    }
+    fs.unlinkSync(req.file.path);
+    return res.status(200).json({ success: true, message: `${rows.length} users imported/updated` });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getContestData,
   getPaginatedUsers,

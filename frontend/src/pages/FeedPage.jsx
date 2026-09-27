@@ -12,6 +12,22 @@ import { CreatePostModal } from "../components/CreatePostModal";
 import { socket } from "../services/socket";
 import { PlusCircle, Filter, CheckCircle2, Loader2, ChevronUp, ChevronDown } from "lucide-react";
 
+// Skeleton placeholder for a post while loading
+const PostSkeleton = () => (
+  <div className="w-full max-w-[320px] aspect-[9/16] bg-slate-100 dark:bg-[#141414] rounded-2xl animate-pulse mb-6">
+    <div className="h-3/4" />
+    <div className="p-2">
+      <div className="h-4 bg-slate-300 dark:bg-[#2a2a2a] w-1/3 mb-2" />
+      <div className="h-3 bg-slate-300 dark:bg-[#2a2a2a] w-2/3" />
+    </div>
+  </div>
+);
+
+
+// Skeleton placeholder for a post while loading
+
+
+
 const CATEGORIES = [
   "ALL",
   "Tech",
@@ -67,16 +83,20 @@ export const FeedPage = () => {
 
   // Infinite Scroll IntersectionObserver
   useEffect(() => {
+    let fetchTimeout;
     const handleObserver = (entries) => {
       const target = entries[0];
       if (target.isIntersecting && pagination.hasMore && !loading && !loadingMore) {
-        dispatch(
-          fetchFeed({
-            category: selectedCategory === "ALL" ? undefined : selectedCategory,
-            page: pagination.page + 1,
-            append: true
-          })
-        );
+        clearTimeout(fetchTimeout);
+        fetchTimeout = setTimeout(() => {
+          dispatch(
+            fetchFeed({
+              category: selectedCategory === "ALL" ? undefined : selectedCategory,
+              page: pagination.page + 1,
+              append: true
+            })
+          );
+        }, 200);
       }
     };
 
@@ -94,6 +114,7 @@ export const FeedPage = () => {
       if (observerRef.current) {
         observer.unobserve(observerRef.current);
       }
+      clearTimeout(fetchTimeout);
     };
   }, [dispatch, selectedCategory, pagination, loading, loadingMore]);
 
