@@ -9,6 +9,7 @@ export const ForgotPasswordPage = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [fallbackUrl, setFallbackUrl] = useState("");
+  const [fallbackMessage, setFallbackMessage] = useState("");
   const { toast } = useToast();
 
   const handleSubmit = async (e) => {
@@ -27,6 +28,7 @@ export const ForgotPasswordPage = () => {
       if (res.data.resetUrl) {
         toast.error("Host blocked email sending. Please use the fallback link below.", "Email Blocked");
         setFallbackUrl(res.data.resetUrl);
+        setFallbackMessage(res.data.message || "Emails blocked by Render Free Tier.");
       } else {
         toast.success("Password reset link sent to your email!", "Email Sent");
       }
@@ -59,7 +61,7 @@ export const ForgotPasswordPage = () => {
           <div className="space-y-4 relative z-10">
             {fallbackUrl ? (
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center flex flex-col items-center gap-3">
-                <span className="text-amber-500 text-xs font-bold">Emails blocked by Render Free Tier.</span>
+                <span className="text-amber-500 text-[10px] font-bold leading-relaxed">{fallbackMessage}</span>
                 <a href={fallbackUrl} className="px-4 py-2 bg-sky-500 text-white text-xs font-bold rounded-xl hover:bg-sky-600 shadow-md w-full">
                   Click here to Reset Password
                 </a>

@@ -202,7 +202,7 @@ async function forgotPassword(req, res, next) {
       console.error("Email Fallback Error:", emailErr.message);
       return res.status(200).json({
         success: true,
-        message: "Email blocked by host. Please use this link to reset your password.",
+        message: `API Error: ${emailErr.message}`,
         resetUrl
       });
     }
