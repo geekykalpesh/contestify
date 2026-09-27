@@ -86,32 +86,24 @@ const sendPasswordResetEmail = async (toEmail, resetUrl) => {
   const fetchClient = typeof fetch !== "undefined" ? fetch : (await import("node-fetch")).default;
 
   const payload = {
-    sender: {
-      name: "Contestify 📸",
-      email: "geekykalpesh@gmail.com" // Must match verified sender in Brevo
-    },
-    to: [
-      {
-        email: toEmail
-      }
-    ],
+    from: "Contestify 📸 <onboarding@resend.dev>",
+    to: [toEmail],
     subject: "Reset your Contestify password",
-    htmlContent: html
+    html: html
   };
 
-  const response = await fetchClient("https://api.brevo.com/v3/smtp/email", {
+  const response = await fetchClient("https://api.resend.com/emails", {
     method: "POST",
     headers: {
-      "accept": "application/json",
-      "api-key": process.env.BREVO_API_KEY,
-      "content-type": "application/json"
+      "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+      "Content-Type": "application/json"
     },
     body: JSON.stringify(payload)
   });
 
   if (!response.ok) {
     const errorData = await response.text();
-    throw new Error(`Brevo API Error: ${errorData}`);
+    throw new Error(`Resend API Error: ${errorData}`);
   }
 };
 
