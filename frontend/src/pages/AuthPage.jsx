@@ -200,15 +200,13 @@ export const AuthPage = () => {
     <div className="min-h-[90vh] flex items-center justify-center p-4 lg:gap-8 xl:gap-16">
       
       {/* ─── DESKTOP LEFT COLUMN (LOGIN ONLY) ─── */}
-        <div className="hidden lg:flex flex-col items-center justify-center w-full max-w-[500px]">
+        <div className="hidden lg:flex flex-col items-center justify-center w-full max-w-[400px]">
           <img 
             src="https://cdn.21st.dev/assets/mirror/0d/0d205a1a31d40e927885b0ec5f603407caa10585b5bc6e8b08240402c7417e86.png" 
             alt="Login Banner" 
-            className="w-full h-auto object-contain"
+            className="w-full max-h-[80vh] object-contain"
           />
         </div>
-      )}
-
       {/* ─── RIGHT COLUMN (AUTH CARD) ─── */}
       <div className="w-full max-w-[350px] flex flex-col gap-3">
         {/* Main Auth Box */}
