@@ -199,31 +199,12 @@ async function forgotPassword(req, res, next) {
     try {
       await sendPasswordResetEmail(user.email, resetUrl);
     } catch (emailErr) {
-      console.error("Local Nodemailer Error (Expected on Render Free):", emailErr.message);
-      
-      // Fallback: Send email via Vercel Serverless Function using standard HTTP (which Render allows)
-      try {
-        const fetch = (await import("node-fetch")).default || global.fetch;
-        const vercelRes = await fetch(`${process.env.FRONTEND_URL}/api/send-email`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            to: user.email, 
-            resetUrl,
-            emailUser: process.env.EMAIL_USER,
-            emailPass: process.env.EMAIL_PASS
-          })
-        });
-        
-        if (!vercelRes.ok) throw new Error("Vercel API failed");
-      } catch (vercelErr) {
-        console.error("Vercel Email Fallback Error:", vercelErr.message);
-        return res.status(200).json({
-          success: true,
-          message: "Email blocked by host. Please use this link to reset your password.",
-          resetUrl
-        });
-      }
+      console.error("Email Fallback Error:", emailErr.message);
+      return res.status(200).json({
+        success: true,
+        message: "Email blocked by host. Please use this link to reset your password.",
+        resetUrl
+      });
     }
 
     return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
