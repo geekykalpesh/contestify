@@ -363,19 +363,7 @@ export const AuthPage = () => {
                 </div>
               </div>
 
-              {/* Legal Disclaimers */}
-              <div className="pt-3 text-[12px] text-[#737373] text-center mb-2">
-                <p className="mb-3 leading-tight">
-                  People who use our service may have uploaded your contact information to Contestify.{" "}
-                  <a href="#" className="text-[#00376b] dark:text-[#e0f1ff]">Learn more</a>
-                </p>
-                <p className="leading-tight">
-                  By signing up, you agree to our{" "}
-                  <a href="#" className="text-[#00376b] dark:text-[#e0f1ff]">Terms</a>,{" "}
-                  <a href="#" className="text-[#00376b] dark:text-[#e0f1ff]">Privacy Policy</a> and{" "}
-                  <a href="#" className="text-[#00376b] dark:text-[#e0f1ff]">Cookies Policy</a>.
-                </p>
-              </div>
+
             </>
           ) : (
             /* LOGIN MODE - Username or Email address input */
