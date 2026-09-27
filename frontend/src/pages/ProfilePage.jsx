@@ -6,7 +6,7 @@ import { userApi } from "../services/api";
 import { socket } from "../services/socket";
 import { useToast } from "../context/ToastContext";
 import { PostCard } from "../components/PostCard";
-import { getMediaUrl } from "../config";
+import { getMediaUrl, getMediaThumbnailUrl } from "../config";
 import {
   Grid,
   List,
@@ -606,7 +606,7 @@ export const ProfilePage = () => {
             <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {myPosts.map((post) => {
                 const mediaSource = getMediaUrl(post.mediaUrl);
-                const coverSource = post.thumbnailUrl ? getMediaUrl(post.thumbnailUrl) : null;
+                const coverSource = getMediaThumbnailUrl(post.mediaUrl, post.thumbnailUrl);
 
                 const isVideo =
                   post.mediaType === "video" ||
@@ -621,15 +621,7 @@ export const ProfilePage = () => {
                     onClick={() => setSelectedPost(post)}
                     className="relative aspect-square bg-[var(--bg-main)] rounded-xl overflow-hidden cursor-pointer group border border-[var(--border-main)] hover:border-sky-500/50 transition-all shadow-sm"
                   >
-                    {isVideo ? (
-                      coverSource ? (
-                        <img src={coverSource} alt={post.caption} className="w-full h-full object-cover" />
-                      ) : (
-                        <video src={mediaSource} className="w-full h-full object-cover" muted />
-                      )
-                    ) : (
-                      <img src={mediaSource} alt={post.caption} className="w-full h-full object-cover" />
-                    )}
+                    <img src={coverSource || mediaSource} alt={post.caption} loading="lazy" className="w-full h-full object-cover" />
 
                     {isVideo && (
                       <div className="absolute top-2 right-2 p-1 rounded-md bg-black/70 text-white backdrop-blur-md">

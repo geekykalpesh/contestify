@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { likePostThunk, commentPostThunk, deleteCommentThunk, optimisticLike, bufferPostView, flushViewBuffer, setGlobalMuted } from "../store/feedSlice";
 import { userApi } from "../services/api";
 import { useToast } from "../context/ToastContext";
-import { getMediaUrl } from "../config";
+import { getMediaUrl, getMediaThumbnailUrl } from "../config";
 
 import { Heart, MessageSquare, Eye, Share2, Play, Pause, Volume2, VolumeX, Music, MoreVertical } from "lucide-react";
 
@@ -188,7 +188,7 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
   const avatarUrlToUse = post.userId?.avatarUrl || (isOwnPost ? user?.avatarUrl : null);
 
   const mediaSource = getMediaUrl(post.mediaUrl);
-  const posterSource = post.thumbnailUrl ? getMediaUrl(post.thumbnailUrl) : null;
+  const posterSource = getMediaThumbnailUrl(post.mediaUrl, post.thumbnailUrl);
   const isVideoPost =
     post.mediaType === "video" ||
     post.isVideo ||
