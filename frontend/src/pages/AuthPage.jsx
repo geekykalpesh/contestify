@@ -486,6 +486,7 @@ export const AuthPage = () => {
         </p>
       </div>
 
+      </div>
     </div>
   );
 };
