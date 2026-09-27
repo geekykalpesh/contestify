@@ -71,15 +71,11 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
               onActive(post);
             }
 
-            // Buffer view for batch logging if NOT watching own post
-            const postOwnerId = post.userId?._id || post.userId?.id || post.userId;
-            const currentUserId = user?._id || user?.id;
-            if (!postOwnerId || !currentUserId || postOwnerId.toString() !== currentUserId.toString()) {
-              dispatch(bufferPostView(post._id));
-              setTimeout(() => {
-                dispatch(flushViewBuffer());
-              }, 50);
-            }
+            // Buffer view for batch logging so viewed reels advance in feed stream
+            dispatch(bufferPostView(post._id));
+            setTimeout(() => {
+              dispatch(flushViewBuffer());
+            }, 50);
 
             // Auto-play video if visible
             if (videoRef.current) {

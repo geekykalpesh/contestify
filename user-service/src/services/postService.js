@@ -96,17 +96,20 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
 
         posts = unseenPosts;
 
-        // If page 1 has fewer unseen posts than limitNum, fill remaining slots with top-scored reels!
+        // If page 1 has fewer unseen posts than limitNum, fill remaining slots with rotated reels!
         if (pageNum === 1 && posts.length < limitNum) {
           const fetchedIds = new Set(posts.map((p) => p._id.toString()));
           const fillQuery = { ...baseQuery, _id: { $nin: Array.from(fetchedIds) } };
           const needed = limitNum - posts.length;
 
-          const fillPosts = await Post.find(fillQuery)
+          let fillPosts = await Post.find(fillQuery)
             .sort({ likeCount: -1, viewCount: -1, createdAt: -1 })
-            .limit(needed)
+            .limit(needed * 2)
             .populate("userId", "name email username residency avatarUrl")
             .lean();
+
+          // Dynamically shuffle fill posts so seen reels never lock in identical static order
+          fillPosts = fillPosts.sort(() => Math.random() - 0.5).slice(0, needed);
 
           posts = [...posts, ...fillPosts];
         }
@@ -122,16 +125,20 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
   // Fallback / Guest / Default Fetch:
   if (posts.length === 0) {
     const skip = (pageNum - 1) * limitNum;
-    const sortCriteria = isFallback
-      ? { likeCount: -1, commentCount: -1, createdAt: -1 }
-      : { createdAt: -1 };
 
     posts = await Post.find(baseQuery)
-      .sort(sortCriteria)
+      .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limitNum)
+      .limit(limitNum * 2)
       .populate("userId", "name email username residency avatarUrl")
       .lean();
+
+    // Dynamically rotate fallback reels on page 1 so feed stays fresh on every refresh
+    if (pageNum === 1 && posts.length > 1) {
+      posts = posts.sort(() => Math.random() - 0.5).slice(0, limitNum);
+    } else {
+      posts = posts.slice(0, limitNum);
+    }
 
     total = await Post.countDocuments(baseQuery);
   }
@@ -349,18 +356,16 @@ const batchLogViews = async ({ userId, postIds }) => {
       const post = await Post.findById(postId).select("userId");
       if (!post) continue;
 
-      // RULE: If user is watching their OWN post, do NOT increase view count!
-      if (userId && post.userId && post.userId.toString() === userId.toString()) {
-        continue;
-      }
-
       if (userId) {
-        // ALWAYS add to Redis seen set first
+        // ALWAYS record that this user has viewed this reel so their feed advances!
         await addToSet(`user:viewed:${userId}`, postId);
         try {
           await View.create({ userId, postId });
-          await Post.findByIdAndUpdate(postId, { $inc: { viewCount: 1 } });
-          loggedCount++;
+          // Only increment public view count on DB if watching someone else's post
+          if (!post.userId || post.userId.toString() !== userId.toString()) {
+            await Post.findByIdAndUpdate(postId, { $inc: { viewCount: 1 } });
+            loggedCount++;
+          }
         } catch (e) {
           // Ignore duplicate DB record, Redis set is updated!
         }
