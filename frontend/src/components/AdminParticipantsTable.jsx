@@ -7,7 +7,9 @@ import {
   toggleUserSelection,
   selectAllCurrentPageUsers,
   clearUserSelection,
-  bulkUpdateKycThunk
+  bulkUpdateKycThunk,
+  banUserThunk,
+  unbanUserThunk
 } from "../store/adminSlice";
 import {
   Users,
@@ -30,7 +32,10 @@ import {
   Check,
   RefreshCw,
   SlidersHorizontal,
-  ExternalLink
+  ExternalLink,
+  Ban,
+  UserX,
+  UserCheck
 } from "lucide-react";
 import { AdminCreatorDetailsModal } from "./AdminCreatorDetailsModal";
 import { TableRowsShimmer } from "./AdminSkeletonLoaders";
@@ -54,6 +59,48 @@ export const AdminParticipantsTable = () => {
   // New state for bulk KYC confirmation modal
   const [showBulkConfirm, setShowBulkConfirm] = useState(false);
   const [bulkActionStatus, setBulkActionStatus] = useState('');
+
+  // Ban action state
+  const [banModalUser, setBanModalUser] = useState(null);
+  const [banReasonInput, setBanReasonInput] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const handleBannedFilter = (e) => {
+    dispatch(setFilterParams({ bannedStatus: e.target.value || "ALL", page: 1 }));
+  };
+
+  const handleOpenBanModal = (e, user) => {
+    e.stopPropagation();
+    setBanModalUser(user);
+    setBanReasonInput("");
+  };
+
+  const handleConfirmBan = async () => {
+    if (!banModalUser) return;
+    setActionLoading(true);
+    const uid = banModalUser.id || banModalUser.userId || banModalUser.email;
+    try {
+      await dispatch(banUserThunk({ userId: uid, reason: banReasonInput })).unwrap();
+      setBanModalUser(null);
+    } catch (err) {
+      console.error("Ban error:", err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUnbanUser = async (e, user) => {
+    e.stopPropagation();
+    const uid = user.id || user.userId || user.email;
+    setActionLoading(true);
+    try {
+      await dispatch(unbanUserThunk({ userId: uid })).unwrap();
+    } catch (err) {
+      console.error("Unban error:", err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   // Debounced search dispatch
   useEffect(() => {
@@ -190,7 +237,7 @@ export const AdminParticipantsTable = () => {
         </div>
 
         {/* Search & Filter Toolbar */}
-        <div className="p-4 border-b border-[var(--border-main)] bg-slate-500/5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="p-4 border-b border-[var(--border-main)] bg-slate-500/5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
           {/* Search Bar */}
           <div className="relative lg:col-span-2">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
@@ -228,6 +275,19 @@ export const AdminParticipantsTable = () => {
               <option value="PASSED">KYC Passed</option>
               <option value="FAILED">KYC Failed / Rejected</option>
               <option value="NOT_SUBMITTED">Not Submitted</option>
+            </select>
+          </div>
+
+          {/* Ban Status Filter */}
+          <div>
+            <select
+              value={filterParams.bannedStatus || "ALL"}
+              onChange={handleBannedFilter}
+              className="w-full px-3 py-2 rounded-xl bg-slate-500/10 border border-[var(--border-main)] text-xs text-[var(--text-primary)] font-medium focus:outline-none cursor-pointer"
+            >
+              <option value="ALL">All Account Statuses</option>
+              <option value="ACTIVE">Active Users Only</option>
+              <option value="BANNED">Banned Users Only</option>
             </select>
           </div>
 
@@ -292,8 +352,13 @@ export const AdminParticipantsTable = () => {
                             <span>@{p.username || p.userEmail?.split("@")[0] || (p.userName || p.name || "").toLowerCase().replace(/\s+/g, "_")}</span>
                             <ExternalLink className="w-3 h-3 opacity-60" />
                           </div>
-                          <div className="text-[11px] text-[var(--text-secondary)] font-medium truncate">
-                            {(p.userName || p.name || "").replace(/\s*\([^)]*\)/g, "").trim()}
+                          <div className="text-[11px] text-[var(--text-secondary)] font-medium truncate flex items-center gap-1.5">
+                            <span>{(p.userName || p.name || "").replace(/\s*\([^)]*\)/g, "").trim()}</span>
+                            {p.isBanned && (
+                              <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[9px] font-black tracking-wide uppercase">
+                                BANNED
+                              </span>
+                            )}
                           </div>
                         </button>
                       </div>
@@ -347,15 +412,35 @@ export const AdminParticipantsTable = () => {
                       Max: {p.maxScore || 0} pts
                     </span>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCreator(p);
-                      }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-semibold text-[10px] transition-colors cursor-pointer"
-                    >
-                      <Eye className="w-3 h-3" /> Inspect Details
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {p.isBanned ? (
+                        <button
+                          onClick={(e) => handleUnbanUser(e, p)}
+                          disabled={actionLoading}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 font-bold text-[10px] transition-colors cursor-pointer"
+                        >
+                          <UserCheck className="w-3 h-3" /> Unban
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => handleOpenBanModal(e, p)}
+                          disabled={actionLoading}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/40 font-bold text-[10px] transition-colors cursor-pointer"
+                        >
+                          <Ban className="w-3 h-3" /> Ban User
+                        </button>
+                      )}
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCreator(p);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-semibold text-[10px] transition-colors cursor-pointer"
+                      >
+                        <Eye className="w-3 h-3" /> Inspect Details
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -446,8 +531,13 @@ export const AdminParticipantsTable = () => {
                                 <span>@{p.username || p.userEmail?.split("@")[0] || (p.userName || p.name || "").toLowerCase().replace(/\s+/g, "_")}</span>
                                 <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
                               </div>
-                              <div className="text-[11px] text-[var(--text-secondary)] font-medium mt-0.5">
-                                {(p.userName || p.name || "").replace(/\s*\([^)]*\)/g, "").trim()}
+                              <div className="text-[11px] text-[var(--text-secondary)] font-medium mt-0.5 flex items-center gap-1.5">
+                                <span>{(p.userName || p.name || "").replace(/\s*\([^)]*\)/g, "").trim()}</span>
+                                {p.isBanned && (
+                                  <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[9px] font-black tracking-wide uppercase">
+                                    BANNED
+                                  </span>
+                                )}
                               </div>
                             </button>
                             <div className="text-[10px] text-[var(--text-muted)] font-mono flex items-center gap-1.5 mt-0.5">
@@ -542,12 +632,34 @@ export const AdminParticipantsTable = () => {
 
                       {/* Actions */}
                       <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => setSelectedCreator(p)}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-semibold text-[10px] transition-colors cursor-pointer"
-                        >
-                          <Eye className="w-3 h-3" /> Inspect Details
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {p.isBanned ? (
+                            <button
+                              onClick={(e) => handleUnbanUser(e, p)}
+                              disabled={actionLoading}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 font-bold text-[10px] transition-colors cursor-pointer"
+                              title="Unban Account"
+                            >
+                              <UserCheck className="w-3 h-3" /> Unban
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => handleOpenBanModal(e, p)}
+                              disabled={actionLoading}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/40 font-bold text-[10px] transition-colors cursor-pointer"
+                              title="Ban Account"
+                            >
+                              <Ban className="w-3 h-3" /> Ban
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => setSelectedCreator(p)}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-semibold text-[10px] transition-colors cursor-pointer"
+                          >
+                            <Eye className="w-3 h-3" /> Inspect Details
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -716,6 +828,68 @@ export const AdminParticipantsTable = () => {
     </div>
   </div>
 )}
+      {/* Ban User Confirmation Modal */}
+      {banModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[var(--bg-card)] rounded-2xl p-6 w-full max-w-md shadow-2xl border border-rose-500/30 space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/20 flex items-center justify-center border border-rose-500/40 shrink-0">
+                <Ban className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-[var(--text-primary)]">
+                  Ban User Account
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] font-mono">
+                  @{banModalUser.username || banModalUser.userName} • {banModalUser.email}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              Banning this user will immediately suspend their account, invalidate active logins, and <strong className="text-rose-400">hide all their media posts, reels, and comments</strong> across the entire UI.
+            </p>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-[var(--text-muted)] uppercase">
+                Ban Reason (Visible to user on login attempt)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Violation of community guidelines / Spam"
+                value={banReasonInput}
+                onChange={(e) => setBanReasonInput(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-500/10 border border-[var(--border-main)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-rose-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                onClick={() => setBanModalUser(null)}
+                className="px-4 py-2 rounded-xl bg-slate-500/20 hover:bg-slate-500/30 text-[var(--text-primary)] text-xs font-bold transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmBan}
+                disabled={actionLoading}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                {actionLoading ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Banning...
+                  </>
+                ) : (
+                  <>
+                    <Ban className="w-3.5 h-3.5" /> Confirm Ban User
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Creator Details Drawer / Modal */}
       {selectedCreator && (
         <AdminCreatorDetailsModal

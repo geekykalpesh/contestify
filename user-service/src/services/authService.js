@@ -96,6 +96,10 @@ const loginUser = async ({ email, identifier, password }) => {
     throw new AppError("Invalid username, email, or password", 401);
   }
 
+  if (user.isBanned) {
+    throw new AppError(`Your account has been banned by an administrator. ${user.banReason ? `Reason: ${user.banReason}` : ""}`, 403);
+  }
+
   const userRole = user.role === "admin" || isAdminEmail(user.email) ? "admin" : "user";
 
   // Fallback username if null

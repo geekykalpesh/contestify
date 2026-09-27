@@ -28,7 +28,8 @@ import {
   Clock,
   Camera,
   Trash2,
-  User
+  User,
+  Ban
 } from "lucide-react";
 
 export const ProfilePage = () => {
@@ -211,6 +212,27 @@ export const ProfilePage = () => {
       <div className="max-w-md mx-auto my-12 text-center ig-card p-8 rounded-3xl">
         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">User Not Found</h2>
         <p className="text-xs text-[var(--text-secondary)]">The requested creator profile does not exist or has been removed.</p>
+      </div>
+    );
+  }
+
+  if (displayUser.isBanned) {
+    return (
+      <div className="max-w-md mx-auto my-16 text-center ig-card p-8 rounded-3xl border border-rose-500/30 bg-rose-500/5 space-y-4 animate-fadeIn">
+        <div className="w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 font-bold flex items-center justify-center mx-auto border border-rose-500/40">
+          <Ban className="w-8 h-8 text-rose-400" />
+        </div>
+        <div>
+          <h2 className="text-xl font-black text-rose-400">Account Suspended</h2>
+          <p className="text-xs text-[var(--text-secondary)] mt-1.5 leading-relaxed">
+            This account (@{displayUser.username || displayUser.name}) has been banned by administrators for violating platform rules.
+          </p>
+          {displayUser.banReason && (
+            <div className="mt-3 p-3 rounded-xl bg-slate-500/10 border border-[var(--border-main)] text-[11px] font-mono text-[var(--text-muted)]">
+              Reason: "{displayUser.banReason}"
+            </div>
+          )}
+        </div>
       </div>
     );
   }

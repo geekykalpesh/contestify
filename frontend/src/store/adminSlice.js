@@ -62,6 +62,36 @@ export const bulkUpdateKycThunk = createAsyncThunk(
   }
 );
 
+export const banUserThunk = createAsyncThunk(
+  "admin/banUser",
+  async ({ userId, reason }, { rejectWithValue, dispatch, getState }) => {
+    try {
+      const response = await adminApi.post(`/admin/users/${encodeURIComponent(userId)}/ban`, { reason });
+      const state = getState();
+      dispatch(fetchPaginatedParticipants(state.admin.filterParams));
+      dispatch(fetchAdminStats());
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to ban user");
+    }
+  }
+);
+
+export const unbanUserThunk = createAsyncThunk(
+  "admin/unbanUser",
+  async ({ userId }, { rejectWithValue, dispatch, getState }) => {
+    try {
+      const response = await adminApi.post(`/admin/users/${encodeURIComponent(userId)}/unban`);
+      const state = getState();
+      dispatch(fetchPaginatedParticipants(state.admin.filterParams));
+      dispatch(fetchAdminStats());
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to unban user");
+    }
+  }
+);
+
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
@@ -85,6 +115,7 @@ const adminSlice = createSlice({
       search: "",
       residency: "ALL",
       kycStatus: "ALL",
+      bannedStatus: "ALL",
       role: "ALL",
       sortBy: "createdAt",
       sortOrder: "desc"

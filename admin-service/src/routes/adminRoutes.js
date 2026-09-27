@@ -9,6 +9,8 @@ router.get("/participants/paginated", adminController.getParticipantsPaginated);
 router.get("/stats", adminController.getAdminStats);
 router.put("/kyc/:winnerId", adminController.updateKycStatus);
 router.put("/users/bulk-kyc", adminController.bulkUpdateKycStatus);
+router.post("/users/:userId/ban", adminController.banUser);
+router.post("/users/:userId/unban", adminController.unbanUser);
 router.get("/users/export", adminController.exportParticipantsCsv);
 
 module.exports = router;

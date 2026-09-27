@@ -3,7 +3,9 @@ const {
   fetchContestDataFromUserService,
   fetchPaginatedUsersFromUserService,
   fetchUserStatsFromUserService,
-  bulkUpdateUsersKycInUserService
+  bulkUpdateUsersKycInUserService,
+  banUserInUserService,
+  unbanUserInUserService
 } = require("../services/userServiceClient");
 const { calculateContestRankings } = require("../services/rankingEngine");
 
@@ -554,6 +556,27 @@ const exportParticipantsCsv = async (req, res, next) => {
   }
 };
 
+const banUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+    const result = await banUserInUserService(userId, reason);
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const unbanUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const result = await unbanUserInUserService(userId);
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getRankings,
   getWinners,
@@ -561,5 +584,7 @@ module.exports = {
   getAdminStats,
   updateKycStatus,
   bulkUpdateKycStatus,
-  exportParticipantsCsv
+  exportParticipantsCsv,
+  banUser,
+  unbanUser
 };

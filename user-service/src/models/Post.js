@@ -58,11 +58,26 @@ const postSchema = new mongoose.Schema(
       default: 0,
       min: 0,
       index: true
+    },
+    isBanned: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
+    bannedAt: {
+      type: Date
+    },
+    banReason: {
+      type: String,
+      default: ""
     }
   },
   { timestamps: true }
 );
 
+postSchema.index({ isBanned: 1, createdAt: -1 });
+postSchema.index({ isBanned: 1, category: 1, createdAt: -1 });
+postSchema.index({ isBanned: 1, userId: 1, createdAt: -1 });
 postSchema.index({ category: 1, createdAt: -1 });
 postSchema.index({ userId: 1, createdAt: -1 });
 postSchema.index({ caption: "text", category: "text" });

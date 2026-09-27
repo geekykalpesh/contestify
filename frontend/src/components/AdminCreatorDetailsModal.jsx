@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { updateKycThunk } from "../store/adminSlice";
+import { updateKycThunk, banUserThunk, unbanUserThunk } from "../store/adminSlice";
 import {
   X,
   Heart,
@@ -19,7 +19,11 @@ import {
   ShieldAlert,
   Copy,
   Check,
-  ExternalLink
+  ExternalLink,
+  Ban,
+  UserX,
+  UserCheck,
+  RefreshCw
 } from "lucide-react";
 import { getMediaUrl } from "../config";
 
@@ -29,6 +33,9 @@ export const AdminCreatorDetailsModal = ({ creator, onClose }) => {
   const [activeTab, setActiveTab] = useState("ALL_POSTS"); // "ALL_POSTS" | "KYC_STUDIO" | "WEEKLY_BREAKDOWN"
   const [expandedWeek, setExpandedWeek] = useState(1);
   const [kycNotes, setKycNotes] = useState("");
+  const [banReasonText, setBanReasonText] = useState(creator?.banReason || "");
+  const [isBannedState, setIsBannedState] = useState(Boolean(creator?.isBanned));
+  const [actionLoading, setActionLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   if (!creator) return null;
@@ -58,6 +65,30 @@ export const AdminCreatorDetailsModal = ({ creator, onClose }) => {
         notes: kycNotes || `KYC updated to ${status} from Creator Inspector Studio`
       })
     );
+  };
+
+  const handleBanUser = async () => {
+    setActionLoading(true);
+    try {
+      await dispatch(banUserThunk({ userId: uid || uemail, reason: banReasonText })).unwrap();
+      setIsBannedState(true);
+    } catch (err) {
+      console.error("Ban user error:", err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUnbanUser = async () => {
+    setActionLoading(true);
+    try {
+      await dispatch(unbanUserThunk({ userId: uid || uemail })).unwrap();
+      setIsBannedState(false);
+    } catch (err) {
+      console.error("Unban user error:", err);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleCopy = (text) => {
@@ -98,6 +129,11 @@ export const AdminCreatorDetailsModal = ({ creator, onClose }) => {
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full bg-slate-500/10 text-[var(--text-muted)] border border-slate-500/20 text-[10px] font-semibold">
                     {creator.residency || "Non-CG"}
+                  </span>
+                )}
+                {isBannedState && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[10px] font-black tracking-wider uppercase flex items-center gap-1">
+                    <Ban className="w-3 h-3 text-rose-400" /> BANNED ACCOUNT
                   </span>
                 )}
               </div>
@@ -352,6 +388,59 @@ export const AdminCreatorDetailsModal = ({ creator, onClose }) => {
                     <XCircle className="w-4 h-4" />
                     <span>Reject & Fail KYC (Cascade Slot)</span>
                   </button>
+                </div>
+              </div>
+
+              {/* Account Ban & Moderation Control Box */}
+              <div className="p-5 rounded-2xl border border-rose-500/30 bg-rose-500/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wider">
+                    <Ban className="w-4 h-4" />
+                    <span>Account Security & Platform Ban Control</span>
+                  </div>
+                  {isBannedState ? (
+                    <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[10px] font-black uppercase font-mono">
+                      BANNED
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-black uppercase font-mono">
+                      ACTIVE
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs text-[var(--text-secondary)]">
+                  Banning a user immediately revokes active auth tokens, prevents login attempts, and hides all published media reels and comments from public UI.
+                </p>
+
+                <input
+                  type="text"
+                  placeholder="Optional ban reason (e.g. Violation of community rules, inappropriate media)..."
+                  value={banReasonText}
+                  onChange={(e) => setBanReasonText(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-500/10 border border-[var(--border-main)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-rose-500"
+                />
+
+                <div>
+                  {isBannedState ? (
+                    <button
+                      onClick={handleUnbanUser}
+                      disabled={actionLoading}
+                      className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      {actionLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
+                      <span>Unban User Account & Restore Posts</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleBanUser}
+                      disabled={actionLoading}
+                      className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-rose-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      {actionLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />}
+                      <span>Ban User Account & Hide All Media Posts</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

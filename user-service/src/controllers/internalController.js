@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Post = require("../models/Post");
 const User = require("../models/User");
+const { clearCachePattern } = require("../config/redis");
 
 const INTERNAL_SECRET = process.env.INTERNAL_SERVICE_SECRET || "internal-secret-token-creator-contest";
 
@@ -11,13 +12,13 @@ const getContestData = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Forbidden: Invalid internal secret key" });
     }
 
-    // Fetch all users with residency and kycDetails
-    const users = await User.find({}).select("name email username residency kycDetails createdAt").lean();
+    // Fetch all non-banned users with residency and kycDetails
+    const users = await User.find({ isBanned: { $ne: true } }).select("name email username residency kycDetails isBanned bannedAt banReason createdAt").lean();
     const userMap = new Map();
     users.forEach((u) => userMap.set(u._id.toString(), u));
 
-    // Fetch all posts with populated user details
-    const posts = await Post.find({})
+    // Fetch all non-banned posts with populated user details
+    const posts = await Post.find({ isBanned: { $ne: true } })
       .sort({ createdAt: 1 })
       .populate("userId", "name email username residency avatarUrl")
       .lean();
@@ -81,7 +82,7 @@ const getPaginatedUsers = async (req, res, next) => {
     const limit = Math.min(500, Math.max(1, parseInt(req.query.limit) || 20));
     const skip = (page - 1) * limit;
 
-    const { search, residency, kycStatus, role, sortBy = "createdAt", sortOrder = "desc" } = req.query;
+    const { search, residency, kycStatus, bannedStatus, role, sortBy = "createdAt", sortOrder = "desc" } = req.query;
 
     const query = {};
 
@@ -109,6 +110,15 @@ const getPaginatedUsers = async (req, res, next) => {
       query["kycDetails.status"] = kycStatus;
     }
 
+    // Ban status filter
+    if (bannedStatus && bannedStatus !== "ALL") {
+      if (bannedStatus === "BANNED") {
+        query.isBanned = true;
+      } else if (bannedStatus === "ACTIVE") {
+        query.isBanned = { $ne: true };
+      }
+    }
+
     // Role filter
     if (role && role !== "ALL") {
       query.role = role;
@@ -127,7 +137,7 @@ const getPaginatedUsers = async (req, res, next) => {
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
-        .select("name email username residency avatarUrl role kycDetails dob createdAt")
+        .select("name email username residency avatarUrl role isBanned bannedAt banReason kycDetails dob createdAt")
         .lean(),
       User.countDocuments(query)
     ]);
@@ -171,6 +181,9 @@ const getPaginatedUsers = async (req, res, next) => {
         residency: u.residency || "Other",
         avatarUrl: u.avatarUrl || "",
         role: u.role || "user",
+        isBanned: Boolean(u.isBanned),
+        bannedAt: u.bannedAt || null,
+        banReason: u.banReason || "",
         kycDetails: u.kycDetails || null,
         createdAt: u.createdAt,
         totalPosts: stats.totalPosts || 0,
@@ -396,6 +409,121 @@ const importUsersCsv = async (req, res, next) => {
   }
 };
 
+/**
+ * Ban user account and immediately hide all their posts across entire platform
+ */
+const banUser = async (req, res, next) => {
+  try {
+    const authHeader = req.headers["x-internal-secret"];
+    if (authHeader !== INTERNAL_SECRET) {
+      return res.status(403).json({ success: false, message: "Forbidden: Invalid internal secret key" });
+    }
+
+    const { userId } = req.params;
+    const { reason = "Banned by administrator" } = req.body;
+
+    const isObjId = mongoose.Types.ObjectId.isValid(userId);
+    const user = await User.findOne({
+      $or: [
+        ...(isObjId ? [{ _id: userId }] : []),
+        { email: userId.toLowerCase().trim() },
+        { username: userId.toLowerCase().trim() }
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User account not found" });
+    }
+
+    user.isBanned = true;
+    user.bannedAt = new Date();
+    user.banReason = reason;
+    await user.save();
+
+    // Hide all posts by this user
+    await Post.updateMany(
+      { userId: user._id },
+      { $set: { isBanned: true, bannedAt: new Date(), banReason: reason } }
+    );
+
+    // Invalidate feed cache
+    await clearCachePattern("feed:cache:*");
+
+    return res.status(200).json({
+      success: true,
+      message: `User @${user.username || user.name} (${user.email}) has been banned successfully.`,
+      data: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        isBanned: true,
+        bannedAt: user.bannedAt,
+        banReason: user.banReason
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Unban user account and restore their posts
+ */
+const unbanUser = async (req, res, next) => {
+  try {
+    const authHeader = req.headers["x-internal-secret"];
+    if (authHeader !== INTERNAL_SECRET) {
+      return res.status(403).json({ success: false, message: "Forbidden: Invalid internal secret key" });
+    }
+
+    const { userId } = req.params;
+
+    const isObjId = mongoose.Types.ObjectId.isValid(userId);
+    const user = await User.findOne({
+      $or: [
+        ...(isObjId ? [{ _id: userId }] : []),
+        { email: userId.toLowerCase().trim() },
+        { username: userId.toLowerCase().trim() }
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User account not found" });
+    }
+
+    user.isBanned = false;
+    user.bannedAt = null;
+    user.banReason = "";
+    await user.save();
+
+    // Restore posts created by this user
+    await Post.updateMany(
+      { userId: user._id },
+      { $set: { isBanned: false, bannedAt: null, banReason: "" } }
+    );
+
+    // Invalidate feed cache
+    await clearCachePattern("feed:cache:*");
+
+    return res.status(200).json({
+      success: true,
+      message: `User @${user.username || user.name} (${user.email}) has been unbanned successfully.`,
+      data: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        isBanned: false,
+        bannedAt: null,
+        banReason: ""
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getContestData,
   getPaginatedUsers,
@@ -403,5 +531,7 @@ module.exports = {
   updateUserKycStatus,
   bulkUpdateUserKyc,
   exportUsersCsv,
-  importUsersCsv
+  importUsersCsv,
+  banUser,
+  unbanUser
 };

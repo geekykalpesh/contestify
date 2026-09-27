@@ -80,9 +80,49 @@ const bulkUpdateUsersKycInUserService = async (userIds, status, reason) => {
   }
 };
 
+const banUserInUserService = async (userId, reason) => {
+  try {
+    const response = await axios.post(
+      `${USER_SERVICE_URL}/api/internal/users/${encodeURIComponent(userId)}/ban`,
+      { reason },
+      {
+        headers: {
+          "x-internal-secret": INTERNAL_SECRET
+        },
+        timeout: 15000
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`[Admin Service] Error banning user in User Service: ${error.message}`);
+    throw error;
+  }
+};
+
+const unbanUserInUserService = async (userId) => {
+  try {
+    const response = await axios.post(
+      `${USER_SERVICE_URL}/api/internal/users/${encodeURIComponent(userId)}/unban`,
+      {},
+      {
+        headers: {
+          "x-internal-secret": INTERNAL_SECRET
+        },
+        timeout: 15000
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`[Admin Service] Error unbanning user in User Service: ${error.message}`);
+    throw error;
+  }
+};
+
 module.exports = {
   fetchContestDataFromUserService,
   fetchPaginatedUsersFromUserService,
   fetchUserStatsFromUserService,
-  bulkUpdateUsersKycInUserService
+  bulkUpdateUsersKycInUserService,
+  banUserInUserService,
+  unbanUserInUserService
 };

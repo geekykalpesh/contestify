@@ -59,6 +59,18 @@ const userSchema = new mongoose.Schema(
       default: "user",
       index: true
     },
+    isBanned: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
+    bannedAt: {
+      type: Date
+    },
+    banReason: {
+      type: String,
+      default: ""
+    },
     kycDetails: {
       aadharNumber: { type: String, default: "" },
       aadharMobile: { type: String, default: "" },
@@ -80,6 +92,7 @@ const userSchema = new mongoose.Schema(
 // High-Scale Indexes for Millions of Users
 userSchema.index({ name: "text", email: "text", username: "text" });
 userSchema.index({ "kycDetails.status": 1, residency: 1 });
+userSchema.index({ isBanned: 1, createdAt: -1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ residency: 1, createdAt: -1 });
 

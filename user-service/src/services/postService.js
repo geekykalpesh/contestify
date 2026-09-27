@@ -23,6 +23,11 @@ const createPost = async ({ userId, caption, category, file, thumbnailFile, thum
     throw new AppError("Media file (image or video) is required", 400);
   }
 
+  const user = await User.findById(userId);
+  if (user && user.isBanned) {
+    throw new AppError("Your account has been banned by an administrator", 403);
+  }
+
   const mediaInfo = await processMediaUpload(file);
   const thumbnailUrl = await processThumbnailUpload(thumbnailFile, thumbnailData);
 
@@ -58,7 +63,7 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
     }
   }
 
-  const baseQuery = {};
+  const baseQuery = { isBanned: { $ne: true } };
   if (category && CATEGORIES.includes(category)) {
     baseQuery.category = category;
   }
@@ -399,12 +404,13 @@ const getUserPosts = async (identifier) => {
   const isObjectId = /^[0-9a-fA-F]{24}$/.test(cleanId);
 
   let targetUser = null;
+  const userSelect = "name email username avatarUrl residency kycDetails.status role isBanned bannedAt banReason";
   if (isObjectId) {
-    targetUser = await User.findById(cleanId).select("name email username avatarUrl residency kycDetails.status role").lean();
+    targetUser = await User.findById(cleanId).select(userSelect).lean();
   }
 
   if (!targetUser && cleanId) {
-    targetUser = await User.findOne({ username: cleanId.toLowerCase() }).select("name email username avatarUrl residency kycDetails.status role").lean();
+    targetUser = await User.findOne({ username: cleanId.toLowerCase() }).select(userSelect).lean();
   }
 
   if (!targetUser && cleanId) {
@@ -413,7 +419,7 @@ const getUserPosts = async (identifier) => {
         { email: new RegExp("^" + cleanId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(@|$)", "i") },
         { name: new RegExp("^" + cleanId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$", "i") }
       ]
-    }).select("name email username avatarUrl residency kycDetails.status role").lean();
+    }).select(userSelect).lean();
   }
 
   if (!targetUser) {
@@ -424,7 +430,21 @@ const getUserPosts = async (identifier) => {
     };
   }
 
-  const posts = await Post.find({ userId: targetUser._id })
+  if (targetUser.isBanned) {
+    return {
+      user: {
+        ...targetUser,
+        isBanned: true,
+        followers: 0,
+        following: 0
+      },
+      posts: [],
+      stats: { totalPosts: 0, followers: 0, following: 0, totalLikes: 0, totalComments: 0, totalViews: 0 },
+      isBanned: true
+    };
+  }
+
+  const posts = await Post.find({ userId: targetUser._id, isBanned: { $ne: true } })
     .sort({ createdAt: -1 })
     .populate("userId", "name email username residency avatarUrl")
     .lean();
@@ -534,9 +554,10 @@ const globalSearch = async (queryStr = "") => {
 
   const regex = new RegExp(trimmed, "i");
 
-  // Search users (Creators / Accounts)
+  // Search users (Creators / Accounts) - exclude banned users
   const users = await User.find(
     {
+      isBanned: { $ne: true },
       $or: [{ name: regex }, { email: regex }, { username: regex }]
     },
     "name email username avatarUrl residency role"
@@ -544,8 +565,9 @@ const globalSearch = async (queryStr = "") => {
     .limit(8)
     .lean();
 
-  // Search posts (Reels / Captions / Categories)
+  // Search posts (Reels / Captions / Categories) - exclude banned posts
   const posts = await Post.find({
+    isBanned: { $ne: true },
     $or: [{ caption: regex }, { category: regex }]
   })
     .populate("userId", "name email username avatarUrl residency")

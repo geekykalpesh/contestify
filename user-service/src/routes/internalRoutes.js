@@ -7,6 +7,8 @@ router.get("/users/paginated", internalController.getPaginatedUsers);
 router.get("/users/stats", internalController.getUserStats);
 router.put("/user-kyc-status", internalController.updateUserKycStatus);
 router.put("/users/bulk-kyc", internalController.bulkUpdateUserKyc);
+router.post("/users/:userId/ban", internalController.banUser);
+router.post("/users/:userId/unban", internalController.unbanUser);
 router.get("/users/export", internalController.exportUsersCsv);
 router.post("/users/import", internalController.importUsersCsv);
 

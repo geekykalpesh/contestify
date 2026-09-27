@@ -18,6 +18,13 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "User account no longer exists" });
     }
 
+    if (user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        message: `Your account has been banned by an administrator. ${user.banReason ? `Reason: ${user.banReason}` : ""}`
+      });
+    }
+
     req.user = user;
     next();
   } catch (error) {
