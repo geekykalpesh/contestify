@@ -182,7 +182,7 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
   };
 
   const postOwnerId = post.userId?._id || post.userId?.id || post.userId;
-  const usernameSlug = post.userId?.username || (post.userId?.email ? post.userId.email.split("@")[0] : null) || postOwnerId;
+  const usernameSlug = post.userId?.username || postOwnerId;
   const currentUserId = user?._id || user?.id;
   const isOwnPost = postOwnerId && currentUserId && postOwnerId.toString() === currentUserId.toString();
   const avatarUrlToUse = post.userId?.avatarUrl || (isOwnPost ? user?.avatarUrl : null);

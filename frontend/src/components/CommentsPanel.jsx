@@ -224,8 +224,7 @@ export const CommentsPanel = ({ activePost, onClose }) => {
       userId: {
         _id: user._id || user.id,
         name: user.name,
-        username: user.username || user.email?.split("@")[0],
-        email: user.email,
+        username: user.username || user.name?.toLowerCase().replace(/\s+/g, "") || "user",
         avatarUrl: user.avatarUrl
       }
     };
@@ -358,7 +357,7 @@ export const CommentsPanel = ({ activePost, onClose }) => {
               const authorId = c.userId?._id || c.userId?.id || c.userId;
               const currentUserId = user?._id || user?.id;
               const isMyComment = authorId && currentUserId && authorId.toString() === currentUserId.toString();
-              const usernameTag = c.userId?.username || (c.userId?.email ? c.userId.email.split("@")[0] : "user");
+              const usernameTag = c.userId?.username || "user";
               const avatarBg = AVATAR_COLORS[idx % AVATAR_COLORS.length];
               const likesCount = c.likesCount || c.likeCount || 0;
               const repliesList = Array.isArray(c.replies) ? c.replies : [];
@@ -471,7 +470,7 @@ export const CommentsPanel = ({ activePost, onClose }) => {
                             isDark ? "border-slate-800 text-slate-300" : "border-slate-200 text-slate-700"
                           }`}>
                             {repliesList.map((reply, rIdx) => {
-                              const rUsername = reply.userId?.username || (reply.userId?.email ? reply.userId.email.split("@")[0] : "user");
+                              const rUsername = reply.userId?.username || "user";
                               return (
                                 <div key={reply._id || rIdx} className="flex items-center gap-2">
                                   <div className={`w-4 h-4 rounded-full flex items-center justify-center font-bold text-[8px] ${
@@ -589,7 +588,7 @@ export const CommentsPanel = ({ activePost, onClose }) => {
               const authorId = c.userId?._id || c.userId?.id || c.userId;
               const currentUserId = user?._id || user?.id;
               const isMyComment = authorId && currentUserId && authorId.toString() === currentUserId.toString();
-              const usernameTag = c.userId?.username || (c.userId?.email ? c.userId.email.split("@")[0] : "user");
+              const usernameTag = c.userId?.username || "user";
               const avatarBg = AVATAR_COLORS[idx % AVATAR_COLORS.length];
               return (
                 <div key={c._id} className="flex items-start gap-2.5 text-xs">

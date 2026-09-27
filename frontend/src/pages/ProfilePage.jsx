@@ -473,7 +473,7 @@ export const ProfilePage = () => {
                 {displayUser.displayName || (displayUser.name || "").replace(/\s*\([^)]*\)/g, "").trim()}
               </h1>
               <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                @{displayUser.username || displayUser.email?.split("@")[0] || displayUser.name?.toLowerCase().replace(/\s+/g, "_")}
+                @{displayUser.username || displayUser.name?.toLowerCase().replace(/\s+/g, "_")}
               </span>
               {kycStatus === "PASSED" && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -487,10 +487,12 @@ export const ProfilePage = () => {
               )}
             </div>
 
-            <p className="text-xs text-[var(--text-secondary)] flex items-center justify-center sm:justify-start gap-1.5 font-medium truncate">
-              <Mail className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
-              <span className="truncate">{displayUser.email}</span>
-            </p>
+            {(isOwnProfile || currentUser?.role === "admin") && displayUser.email && (
+              <p className="text-xs text-[var(--text-secondary)] flex items-center justify-center sm:justify-start gap-1.5 font-medium truncate">
+                <Mail className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
+                <span className="truncate">{displayUser.email}</span>
+              </p>
+            )}
 
             {/* Bio Display */}
             {displayUser.bio && (

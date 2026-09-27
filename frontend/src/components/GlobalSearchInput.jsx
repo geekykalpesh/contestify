@@ -195,7 +195,7 @@ export const GlobalSearchInput = () => {
                         <div
                           key={user._id}
                           onClick={() => {
-                            const userSlug = user.username || (user.email ? user.email.split("@")[0] : null) || user._id;
+                            const userSlug = user.username || user._id;
                             navigate(`/profile/${userSlug}`);
                             setIsOpen(false);
                             setQuery("");
@@ -218,7 +218,7 @@ export const GlobalSearchInput = () => {
                             </div>
                             <div className="min-w-0">
                               <p className="font-bold text-[var(--text-primary)] text-xs truncate">{user.name}</p>
-                              <p className="text-[10px] text-[var(--text-muted)] truncate">{user.email}</p>
+                              <p className="text-[10px] text-[var(--text-muted)] truncate">@{user.username || "creator"}</p>
                             </div>
                           </div>
 

@@ -9,7 +9,7 @@ const getNotifications = async (req, res, next) => {
     let notifications = await Notification.find({ recipientId: userId })
       .sort({ createdAt: -1 })
       .limit(30)
-      .populate("senderId", "name username avatarUrl email")
+      .populate("senderId", "name username avatarUrl")
       .populate("postId", "caption thumbnailUrl mediaUrl mediaType")
       .lean();
 
@@ -61,7 +61,7 @@ const getNotifications = async (req, res, next) => {
         notifications = await Notification.find({ recipientId: userId })
           .sort({ createdAt: -1 })
           .limit(30)
-          .populate("senderId", "name username avatarUrl email")
+          .populate("senderId", "name username avatarUrl")
           .populate("postId", "caption thumbnailUrl mediaUrl mediaType")
           .lean();
       }

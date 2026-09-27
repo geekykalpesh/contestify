@@ -173,7 +173,7 @@ export const Navbar = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-extrabold text-xs truncate text-[var(--text-primary)]">{user.name}</div>
-                        <div className="text-[10px] text-[var(--text-muted)] truncate">@{user.username || user.email?.split("@")[0]}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] truncate">@{user.username || user.name?.toLowerCase().replace(/\s+/g, "") || "user"}</div>
                       </div>
                       <button
                         onClick={() => setIsMobileMenuOpen(false)}

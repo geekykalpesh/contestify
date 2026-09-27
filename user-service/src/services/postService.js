@@ -46,7 +46,7 @@ const createPost = async ({ userId, caption, category, file, thumbnailFile, thum
   // Invalidate Redis feed cache
   await clearCachePattern("feed:cache:*");
 
-  const populatedPost = await Post.findById(post._id).populate("userId", "name email username residency avatarUrl");
+  const populatedPost = await Post.findById(post._id).populate("userId", "name username residency avatarUrl");
   return populatedPost;
 };
 
@@ -96,7 +96,7 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limitNum)
-          .populate("userId", "name email username residency avatarUrl")
+          .populate("userId", "name username residency avatarUrl")
           .lean();
 
         posts = unseenPosts;
@@ -110,7 +110,7 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
           let fillPosts = await Post.find(fillQuery)
             .sort({ likeCount: -1, viewCount: -1, createdAt: -1 })
             .limit(needed * 2)
-            .populate("userId", "name email username residency avatarUrl")
+            .populate("userId", "name username residency avatarUrl")
             .lean();
 
           // Dynamically shuffle fill posts so seen reels never lock in identical static order
@@ -135,7 +135,7 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum * 2)
-      .populate("userId", "name email username residency avatarUrl")
+      .populate("userId", "name username residency avatarUrl")
       .lean();
 
     // Dynamically rotate fallback reels on page 1 so feed stays fresh on every refresh
@@ -291,7 +291,7 @@ const commentPost = async ({ userId, postId, text }) => {
     throw err;
   }
 
-  const populatedComment = await Comment.findById(comment._id).populate("userId", "name email username avatarUrl");
+  const populatedComment = await Comment.findById(comment._id).populate("userId", "name username avatarUrl");
 
   // Atomic count update
   const updatedPost = await Post.findByIdAndUpdate(
@@ -342,7 +342,7 @@ const commentPost = async ({ userId, postId, text }) => {
 const getPostComments = async (postId) => {
   const comments = await Comment.find({ postId })
     .sort({ createdAt: -1 })
-    .populate("userId", "name email username avatarUrl")
+    .populate("userId", "name username avatarUrl")
     .lean();
   return comments;
 };
@@ -404,7 +404,7 @@ const getUserPosts = async (identifier) => {
   const isObjectId = /^[0-9a-fA-F]{24}$/.test(cleanId);
 
   let targetUser = null;
-  const userSelect = "name email username avatarUrl residency kycDetails.status role isBanned bannedAt banReason";
+  const userSelect = "name username avatarUrl residency kycDetails.status role isBanned bannedAt banReason";
   if (isObjectId) {
     targetUser = await User.findById(cleanId).select(userSelect).lean();
   }
@@ -446,7 +446,7 @@ const getUserPosts = async (identifier) => {
 
   const posts = await Post.find({ userId: targetUser._id, isBanned: { $ne: true } })
     .sort({ createdAt: -1 })
-    .populate("userId", "name email username residency avatarUrl")
+    .populate("userId", "name username residency avatarUrl")
     .lean();
 
   const totalLikes = posts.reduce((sum, p) => sum + (p.likeCount || 0), 0);
@@ -560,7 +560,7 @@ const globalSearch = async (queryStr = "") => {
       isBanned: { $ne: true },
       $or: [{ name: regex }, { email: regex }, { username: regex }]
     },
-    "name email username avatarUrl residency role"
+    "name username avatarUrl residency role"
   )
     .limit(8)
     .lean();
@@ -570,7 +570,7 @@ const globalSearch = async (queryStr = "") => {
     isBanned: { $ne: true },
     $or: [{ caption: regex }, { category: regex }]
   })
-    .populate("userId", "name email username avatarUrl residency")
+    .populate("userId", "name username avatarUrl residency")
     .sort({ createdAt: -1 })
     .limit(10)
     .lean();
