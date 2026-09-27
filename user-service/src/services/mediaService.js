@@ -71,7 +71,7 @@ const processThumbnailUpload = async (thumbnailFile, base64Thumbnail) => {
       try {
         const result = await cloudinary.uploader.upload(thumbnailFile.path, {
           resource_type: "image",
-          folder: "creator-contest-thumbnails",
+          folder: "creator-contest-reels",
           quality: "auto",
           fetch_format: "auto"
         });

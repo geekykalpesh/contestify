@@ -114,21 +114,49 @@ const seedDatabase = async () => {
     }
 
     let reelFiles = [];
+    const hasCloudinary = Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY);
+
     if (fs.existsSync(sourceDir)) {
       const sourceFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".mp4"));
       console.log(`📁 Found ${sourceFiles.length} real video reels in ${path.basename(sourceDir)}.`);
 
-      sourceFiles.forEach((file, index) => {
-        const cleanName = `reel_${String(index + 1).padStart(3, "0")}.mp4`;
-        const srcPath = path.join(sourceDir, file);
-        const destPath = path.join(targetDir, cleanName);
+      if (hasCloudinary) {
+        console.log("☁️ Cloudinary enabled! Uploading video reels into Cloudinary folder 'creator-contest-reels'...");
+        for (let index = 0; index < sourceFiles.length; index++) {
+          const file = sourceFiles[index];
+          const cleanName = `reel_${String(index + 1).padStart(3, "0")}`;
+          const srcPath = path.join(sourceDir, file);
 
-        if (!fs.existsSync(destPath) || fs.statSync(destPath).size !== fs.statSync(srcPath).size) {
-          fs.copyFileSync(srcPath, destPath);
+          try {
+            const uploadRes = await cloudinary.uploader.upload(srcPath, {
+              resource_type: "video",
+              folder: "creator-contest-reels",
+              public_id: cleanName
+            });
+            let secureUrl = uploadRes.secure_url || uploadRes.url;
+            if (!secureUrl.match(/\.(mp4|mov|webm|mkv|avi|m3u8)$/i)) {
+              secureUrl = `${secureUrl}.mp4`;
+            }
+            reelFiles.push(secureUrl);
+          } catch (err) {
+            console.warn(`[Cloudinary Seed] Upload failed for ${file}, using local path fallback:`, err.message);
+            reelFiles.push(`/uploads/${cleanName}.mp4`);
+          }
         }
-        reelFiles.push(`/uploads/${cleanName}`);
-      });
-      console.log(`✅ Synced ${reelFiles.length} video reels to local uploads folder.`);
+        console.log(`✅ Uploaded ${reelFiles.length} reels to Cloudinary folder 'creator-contest-reels'.`);
+      } else {
+        sourceFiles.forEach((file, index) => {
+          const cleanName = `reel_${String(index + 1).padStart(3, "0")}.mp4`;
+          const srcPath = path.join(sourceDir, file);
+          const destPath = path.join(targetDir, cleanName);
+
+          if (!fs.existsSync(destPath) || fs.statSync(destPath).size !== fs.statSync(srcPath).size) {
+            fs.copyFileSync(srcPath, destPath);
+          }
+          reelFiles.push(`/uploads/${cleanName}`);
+        });
+        console.log(`✅ Synced ${reelFiles.length} video reels to local uploads folder.`);
+      }
     }
 
     if (reelFiles.length === 0 && fs.existsSync(targetDir)) {
