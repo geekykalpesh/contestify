@@ -86,7 +86,7 @@ const sendPasswordResetEmail = async (toEmail, resetUrl) => {
   const fetchClient = typeof fetch !== "undefined" ? fetch : (await import("node-fetch")).default;
 
   const payload = {
-    from: "Contestify 📸 <onboarding@resend.dev>",
+    from: process.env.EMAIL_FROM || "Contestify 📸 <onboarding@resend.dev>",
     to: [toEmail],
     subject: "Reset your Contestify password",
     html: html
