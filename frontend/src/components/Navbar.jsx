@@ -62,9 +62,11 @@ export const Navbar = () => {
         </Link>
 
         {/* Global Instagram-Style Search Bar */}
-        <div className="flex-1 max-w-[180px] xs:max-w-xs sm:max-w-sm">
-          <GlobalSearchInput />
-        </div>
+        {user && (
+          <div className="flex-1 max-w-[180px] xs:max-w-xs sm:max-w-sm">
+            <GlobalSearchInput />
+          </div>
+        )}
 
         {/* Navigation Links & Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">

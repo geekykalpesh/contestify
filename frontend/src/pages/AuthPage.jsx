@@ -204,13 +204,13 @@ export const AuthPage = () => {
           <img 
             src="https://cdn.21st.dev/assets/mirror/0d/0d205a1a31d40e927885b0ec5f603407caa10585b5bc6e8b08240402c7417e86.png" 
             alt="Login Banner" 
-            className="w-full h-full object-cover rounded-[2rem]"
+            className="w-full h-full object-cover"
           />
         </div>
       {/* ─── RIGHT COLUMN (AUTH CARD) ─── */}
       <div className="w-full max-w-[350px] h-[85vh] max-h-[600px] flex flex-col gap-3 transition-all duration-500 ease-in-out">
         {/* Main Auth Box */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-none sm:rounded-[2rem] p-6 flex flex-col items-center flex-1 justify-center transition-all duration-500 relative overflow-hidden">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-none p-6 flex flex-col items-center flex-1 justify-center transition-all duration-500 relative overflow-hidden">
           
           <div className="mb-4 transition-all duration-500 shrink-0">
             <span className="font-ig-logo text-[40px] tracking-wide" style={{ fontFamily: "Billabong, 'Grand Hotel', cursive" }}>Contestify</span>
@@ -437,7 +437,7 @@ export const AuthPage = () => {
       </div>
       
       {/* Box 2: Switch modes */}
-      <div className="w-full max-w-[350px] bg-[var(--bg-card)] border border-[var(--border-main)] rounded-none sm:rounded-sm p-5 text-center mt-3">
+      <div className="w-full max-w-[350px] bg-[var(--bg-card)] border border-[var(--border-main)] rounded-none p-5 text-center mt-3">
         <p className="text-[14px] text-[var(--text-primary)]">
           {isSignupMode ? "Have an account? " : "Don't have an account? "}
           <button
