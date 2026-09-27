@@ -200,7 +200,11 @@ async function forgotPassword(req, res, next) {
       await sendPasswordResetEmail(user.email, resetUrl);
     } catch (emailErr) {
       console.error("Nodemailer Error:", emailErr);
-      return next(new AppError(`Email service configuration error: ${emailErr.message}. Please check EMAIL_USER and EMAIL_PASS on Render.`, 500));
+      return res.status(200).json({
+        success: true,
+        message: "Email blocked by host. Please use this link to reset your password.",
+        resetUrl
+      });
     }
 
     return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });

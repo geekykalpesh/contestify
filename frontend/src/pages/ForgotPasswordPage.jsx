@@ -8,6 +8,7 @@ export const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [fallbackUrl, setFallbackUrl] = useState("");
   const { toast } = useToast();
 
   const handleSubmit = async (e) => {
@@ -18,10 +19,17 @@ export const ForgotPasswordPage = () => {
     }
     
     setLoading(true);
+    setFallbackUrl("");
     try {
-      await userApi.post("/auth/forgot-password", { email });
+      const res = await userApi.post("/auth/forgot-password", { email });
       setSuccess(true);
-      toast.success("Password reset link sent to your email!", "Email Sent");
+      
+      if (res.data.resetUrl) {
+        toast.error("Host blocked email sending. Please use the fallback link below.", "Email Blocked");
+        setFallbackUrl(res.data.resetUrl);
+      } else {
+        toast.success("Password reset link sent to your email!", "Email Sent");
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to send reset link", "Error");
     } finally {
@@ -49,10 +57,19 @@ export const ForgotPasswordPage = () => {
 
         {success ? (
           <div className="space-y-4 relative z-10">
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold flex items-center justify-center gap-2">
-              <Mail className="w-4 h-4" />
-              <span>Reset link sent to {email}</span>
-            </div>
+            {fallbackUrl ? (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center flex flex-col items-center gap-3">
+                <span className="text-amber-500 text-xs font-bold">Emails blocked by Render Free Tier.</span>
+                <a href={fallbackUrl} className="px-4 py-2 bg-sky-500 text-white text-xs font-bold rounded-xl hover:bg-sky-600 shadow-md w-full">
+                  Click here to Reset Password
+                </a>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold flex items-center justify-center gap-2">
+                <Mail className="w-4 h-4" />
+                <span>Reset link sent to {email}</span>
+              </div>
+            )}
             <Link to="/auth?mode=login" className="block w-full text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
               Return to login
             </Link>
