@@ -200,38 +200,12 @@ export const AuthPage = () => {
     <div className="min-h-[90vh] flex items-center justify-center p-4 lg:gap-8 xl:gap-16">
       
       {/* ─── DESKTOP LEFT COLUMN (LOGIN ONLY) ─── */}
-        <div className="hidden lg:flex flex-col items-center justify-center w-full max-w-[500px] h-[600px] relative mt-4">
-          <div className="absolute inset-0 bg-gradient-to-tr from-sky-400 via-indigo-500 to-purple-600 rounded-[3rem] opacity-20 blur-[80px]" />
-          
-          <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border-[4px] border-[var(--border-main)] z-10 group">
-            {/* The Image (vr-banner.jpg must be in the public folder) */}
-            <img 
-              src="/vr-banner.jpg" 
-              alt="Login Banner" 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            
-            {/* Overlay Gradient for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#000000cc] via-[#00000044] to-transparent" />
-            
-            {/* Text Content */}
-            <div className="absolute bottom-10 left-8 right-8 text-white">
-              <h1 className="text-3xl font-bold mb-3 leading-tight tracking-wide text-white drop-shadow-md">
-                Experience the Future of <span className="text-sky-400">Creator Contests</span>
-              </h1>
-              <p className="text-sm text-slate-200 opacity-90 drop-shadow">
-                Join thousands of creators competing in immersive challenges.
-              </p>
-            </div>
-          </div>
-          
-          {/* Floating decorative elements */}
-          <div className="absolute top-[10%] -left-6 w-14 h-14 bg-gradient-to-tr from-sky-400 to-blue-500 rounded-full shadow-lg shadow-blue-500/30 z-20 flex items-center justify-center transform -rotate-12 animate-bounce cursor-pointer" style={{ animationDuration: '4s' }}>
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
-          <div className="absolute bottom-[20%] -right-5 w-12 h-12 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-purple-500/30 z-20 flex items-center justify-center transform rotate-12 border-[3px] border-[var(--bg-main)] animate-bounce cursor-pointer" style={{ animationDuration: '3.5s' }}>
-            <Infinity className="w-5 h-5 text-white" />
-          </div>
+        <div className="hidden lg:flex flex-col items-center justify-center w-full max-w-[500px]">
+          <img 
+            src="https://cdn.21st.dev/assets/mirror/0d/0d205a1a31d40e927885b0ec5f603407caa10585b5bc6e8b08240402c7417e86.png" 
+            alt="Login Banner" 
+            className="w-full h-auto object-contain"
+          />
         </div>
       )}
 
