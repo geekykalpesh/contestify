@@ -11,6 +11,7 @@ const postRoutes = require("./routes/postRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const internalRoutes = require("./routes/internalRoutes");
 const { initSocket } = require("./socket");
+const { globalErrorHandler } = require("./middleware/errorHandler");
 
 const app = express();
 
