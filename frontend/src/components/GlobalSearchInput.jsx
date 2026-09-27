@@ -283,7 +283,7 @@ export const GlobalSearchInput = () => {
                                   {post.category}
                                 </span>
                                 <span className="flex items-center gap-0.5">
-                                  <Eye className="w-3 h-3 text-emerald-400" />
+                                  <Eye className="w-3 h-3 text-[var(--text-muted)]" />
                                   {post.viewCount || 0}
                                 </span>
                               </div>

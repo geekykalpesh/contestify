@@ -226,7 +226,7 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
               className="p-1.5 rounded-full hover:bg-white/20 transition-colors text-white cursor-pointer"
               title={globalAudioMuted ? "Unmute" : "Mute"}
             >
-              {globalAudioMuted ? <VolumeX className="w-5 h-5 text-rose-400" /> : <Volume2 className="w-5 h-5 text-emerald-400" />}
+              {globalAudioMuted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
             </button>
           </div>
 
@@ -340,15 +340,11 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
               className="flex flex-col items-center gap-0.5 group cursor-pointer"
               title={globalAudioMuted ? "Unmute Audio" : "Mute Audio"}
             >
-              <div className={`w-9 h-9 rounded-full backdrop-blur-md border flex items-center justify-center shadow-lg transition-transform active:scale-90 ${
-                globalAudioMuted
-                  ? "bg-rose-950/80 border-rose-500/50 text-rose-400"
-                  : "bg-emerald-950/80 border-emerald-500/50 text-emerald-400"
-              }`}>
+              <div className="w-9 h-9 rounded-full bg-[#181818]/90 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-lg text-white transition-transform active:scale-90 hover:bg-[#3f3f3f]">
                 {globalAudioMuted ? (
-                  <VolumeX className="w-4.5 h-4.5 text-rose-400" />
+                  <VolumeX className="w-4.5 h-4.5 text-white" />
                 ) : (
-                  <Volume2 className="w-4.5 h-4.5 text-emerald-400" />
+                  <Volume2 className="w-4.5 h-4.5 text-white" />
                 )}
               </div>
               <span className="text-[10px] font-bold drop-shadow-md text-white">
@@ -400,7 +396,7 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
           {/* Views */}
           <div className="flex flex-col items-center gap-0.5">
             <div className="w-9 h-9 rounded-full bg-[#181818]/90 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-lg text-white">
-              <Eye className="w-4 h-4 text-emerald-400" />
+              <Eye className="w-4 h-4 text-white" />
             </div>
             <span className="text-[10px] font-bold text-white drop-shadow-md">{formatCount(post.viewCount)}</span>
           </div>
@@ -464,8 +460,8 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
         <div className="flex flex-col items-center gap-1">
           <div className={`w-11 h-11 rounded-full border shadow-lg flex items-center justify-center ${
             isDark
-              ? "bg-[#272727] border-white/10 text-emerald-400"
-              : "bg-slate-100 border-slate-200 text-emerald-600"
+              ? "bg-[#272727] border-white/10 text-white"
+              : "bg-slate-100 border-slate-200 text-slate-800"
           }`}>
             <Eye className="w-5.5 h-5.5" />
           </div>
