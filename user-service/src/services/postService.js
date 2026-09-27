@@ -11,7 +11,7 @@ const { addToSet, getSetMembers, setCache, getCache, clearCachePattern, clearUse
 const { emitPostUpdated, emitNewComment, emitCommentDeleted, emitNotification } = require("../socket");
 
 const createPost = async ({ userId, caption, category, file, thumbnailFile, thumbnailData }) => {
-  if (!caption || typeof caption !== "string") {
+  if (!caption || typeof caption !== "string" || !caption.trim()) {
     throw new AppError("Post caption is required", 400);
   }
 
@@ -20,7 +20,7 @@ const createPost = async ({ userId, caption, category, file, thumbnailFile, thum
   }
 
   if (!file) {
-    throw new AppError("Media file (image or video) is required", 400);
+    throw new AppError("Media file (image or video) is required. You cannot create an empty post.", 400);
   }
 
   const user = await User.findById(userId);
@@ -29,6 +29,10 @@ const createPost = async ({ userId, caption, category, file, thumbnailFile, thum
   }
 
   const mediaInfo = await processMediaUpload(file);
+  if (!mediaInfo || !mediaInfo.mediaUrl || typeof mediaInfo.mediaUrl !== "string" || !mediaInfo.mediaUrl.trim()) {
+    throw new AppError("Failed to process media file. Media URL cannot be empty.", 400);
+  }
+
   const thumbnailUrl = await processThumbnailUpload(thumbnailFile, thumbnailData);
 
   const post = await Post.create({
