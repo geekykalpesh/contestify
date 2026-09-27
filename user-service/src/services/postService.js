@@ -63,20 +63,80 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
     baseQuery.category = category;
   }
 
-  const skip = (pageNum - 1) * limitNum;
+  let posts = [];
+  let total = 0;
+  let isFallback = false;
+  let viewedPostIds = [];
 
-  // Instagram & TikTok Feed Standard:
-  // Fetch reels ordered newest-first (createdAt: -1) so newly uploaded posts appear at the top
-  // while keeping all previous posts visible in the feed stream.
-  let posts = await Post.find(baseQuery)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limitNum)
-    .populate("userId", "name email username residency avatarUrl")
-    .lean();
+  // TikTok / Instagram Recommendation Algorithm:
+  // Prioritize UNSEEN reels so users get fresh content on every refresh!
+  if (userId && !includeSeen) {
+    // 1. Get list of post IDs already watched by this user
+    const cachedViewed = await getSetMembers(`user:viewed:${userId}`);
+    if (cachedViewed && cachedViewed.length > 0) {
+      viewedPostIds = cachedViewed;
+    } else {
+      const views = await View.find({ userId }).select("postId").lean();
+      viewedPostIds = views.map((v) => v.postId.toString());
+    }
 
-  const total = await Post.countDocuments(baseQuery);
-  const totalAllPosts = total;
+    if (viewedPostIds.length > 0) {
+      const unseenQuery = { ...baseQuery, _id: { $nin: viewedPostIds } };
+      const unseenCount = await Post.countDocuments(unseenQuery);
+
+      if (unseenCount > 0) {
+        // We have unseen reels! Fetch unseen reels first (newest first)
+        const skip = (pageNum - 1) * limitNum;
+        const unseenPosts = await Post.find(unseenQuery)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limitNum)
+          .populate("userId", "name email username residency avatarUrl")
+          .lean();
+
+        posts = unseenPosts;
+
+        // If page 1 has fewer unseen posts than limitNum, fill remaining slots with top-scored reels!
+        if (pageNum === 1 && posts.length < limitNum) {
+          const fetchedIds = new Set(posts.map((p) => p._id.toString()));
+          const fillQuery = { ...baseQuery, _id: { $nin: Array.from(fetchedIds) } };
+          const needed = limitNum - posts.length;
+
+          const fillPosts = await Post.find(fillQuery)
+            .sort({ likeCount: -1, viewCount: -1, createdAt: -1 })
+            .limit(needed)
+            .populate("userId", "name email username residency avatarUrl")
+            .lean();
+
+          posts = [...posts, ...fillPosts];
+        }
+
+        total = unseenCount;
+      } else {
+        // User has watched ALL reels in this query! Fallback to top reels so feed never stops
+        isFallback = true;
+      }
+    }
+  }
+
+  // Fallback / Guest / Default Fetch:
+  if (posts.length === 0) {
+    const skip = (pageNum - 1) * limitNum;
+    const sortCriteria = isFallback
+      ? { likeCount: -1, commentCount: -1, createdAt: -1 }
+      : { createdAt: -1 };
+
+    posts = await Post.find(baseQuery)
+      .sort(sortCriteria)
+      .skip(skip)
+      .limit(limitNum)
+      .populate("userId", "name email username residency avatarUrl")
+      .lean();
+
+    total = await Post.countDocuments(baseQuery);
+  }
+
+  const totalAllPosts = await Post.countDocuments(baseQuery);
 
   // Check which of the fetched posts the current user has liked
   let likedPostIds = new Set();
@@ -103,8 +163,8 @@ const getFeed = async ({ userId, category, page = 1, limit = 10, includeSeen = f
       totalPages: Math.ceil(total / limitNum) || 1
     },
     meta: {
-      isFallback: false,
-      totalViewed: 0,
+      isFallback,
+      totalViewed: viewedPostIds.length,
       totalAllPosts
     }
   };
