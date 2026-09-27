@@ -200,69 +200,37 @@ export const AuthPage = () => {
     <div className="min-h-[90vh] flex items-center justify-center p-4 lg:gap-8 xl:gap-16">
       
       {/* ─── DESKTOP LEFT COLUMN (LOGIN ONLY) ─── */}
-        <div className="hidden lg:flex flex-col items-center max-w-lg mt-8">
-          <h1 className="text-[32px] font-semibold mb-6 text-[var(--text-primary)] tracking-wide leading-tight text-center">
-            See everyday moments from <br/><span className="text-pink-500 font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500">your close friends</span>.
-          </h1>
-          <div className="relative w-full h-[480px]">
-            {/* Soft background glow */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 rounded-3xl opacity-[0.15] blur-[100px]" />
+        <div className="hidden lg:flex flex-col items-center justify-center w-full max-w-[500px] h-[600px] relative mt-4">
+          <div className="absolute inset-0 bg-gradient-to-tr from-sky-400 via-indigo-500 to-purple-600 rounded-[3rem] opacity-20 blur-[80px]" />
+          
+          <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border-[4px] border-[var(--border-main)] z-10 group">
+            {/* The Image (vr-banner.jpg must be in the public folder) */}
+            <img 
+              src="/vr-banner.jpg" 
+              alt="Login Banner" 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
             
-            {/* Phone Frame */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[270px] h-[540px] border-[10px] border-[#1a1a1a] dark:border-[#262626] rounded-[3.5rem] bg-[var(--bg-main)] shadow-2xl flex flex-col overflow-hidden z-10">
-              
-              {/* Fake Phone Notch */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120px] h-[24px] bg-[#1a1a1a] dark:border-[#262626] rounded-b-[1rem] z-20"></div>
-
-              {/* Fake App Header */}
-              <div className="w-full h-14 border-b border-[var(--border-main)] flex items-center px-4 pt-3">
-                 <span className="font-ig-logo text-xl tracking-wide text-[var(--text-primary)]" style={{ fontFamily: "Billabong, 'Grand Hotel', cursive" }}>Contestify</span>
-              </div>
-
-              {/* Fake App Feed */}
-              <div className="flex-1 w-full flex flex-col bg-[var(--bg-main)] overflow-hidden">
-                {/* Post Header */}
-                <div className="flex items-center gap-2 p-3">
-                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" alt="avatar" className="w-8 h-8 rounded-full object-cover border border-[var(--border-main)]" />
-                  <div className="flex flex-col">
-                    <span className="text-[12px] font-bold text-[var(--text-primary)] leading-tight">alex_wander</span>
-                    <span className="text-[10px] text-[var(--text-muted)]">Paris, France</span>
-                  </div>
-                </div>
-
-                {/* Post Image */}
-                <div className="w-full h-[260px] bg-slate-200">
-                  <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=400&auto=format&fit=crop" alt="post" className="w-full h-full object-cover" />
-                </div>
-
-                {/* Post Actions */}
-                <div className="p-3 pb-1 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
-                      <MessageCircle className="w-5 h-5 text-[var(--text-primary)]" />
-                    </div>
-                    <Bookmark className="w-5 h-5 text-[var(--text-primary)]" />
-                  </div>
-                  <span className="text-[11px] font-bold text-[var(--text-primary)]">1,204 likes</span>
-                  <div className="text-[11px] text-[var(--text-primary)] leading-tight">
-                    <span className="font-bold mr-1">alex_wander</span>
-                    Sunset by the Eiffel Tower ✨
-                  </div>
-                </div>
-              </div>
-              
-              {/* Fake Home Indicator */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-[var(--text-muted)] rounded-full opacity-50 z-20"></div>
-            </div>
+            {/* Overlay Gradient for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#000000cc] via-[#00000044] to-transparent" />
             
-            {/* Floating decorative elements */}
-            <div className="absolute top-[15%] -left-6 w-14 h-14 bg-gradient-to-tr from-pink-500 to-rose-400 rounded-full shadow-lg shadow-rose-500/30 z-20 flex items-center justify-center transform -rotate-12 animate-bounce hover:scale-110 transition-transform cursor-pointer" style={{ animationDuration: '3s' }}>
-              <Heart className="w-6 h-6 text-white fill-white" />
+            {/* Text Content */}
+            <div className="absolute bottom-10 left-8 right-8 text-white">
+              <h1 className="text-3xl font-bold mb-3 leading-tight tracking-wide text-white drop-shadow-md">
+                Experience the Future of <span className="text-sky-400">Creator Contests</span>
+              </h1>
+              <p className="text-sm text-slate-200 opacity-90 drop-shadow">
+                Join thousands of creators competing in immersive challenges.
+              </p>
             </div>
-            <div className="absolute bottom-[20%] -right-4 w-12 h-12 bg-gradient-to-tr from-emerald-400 to-teal-500 rounded-full shadow-lg shadow-teal-500/30 z-20 flex items-center justify-center transform rotate-12 border-[3px] border-[var(--bg-main)] animate-bounce hover:scale-110 transition-transform cursor-pointer" style={{ animationDuration: '4s' }}>
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
+          </div>
+          
+          {/* Floating decorative elements */}
+          <div className="absolute top-[10%] -left-6 w-14 h-14 bg-gradient-to-tr from-sky-400 to-blue-500 rounded-full shadow-lg shadow-blue-500/30 z-20 flex items-center justify-center transform -rotate-12 animate-bounce cursor-pointer" style={{ animationDuration: '4s' }}>
+            <Sparkles className="w-6 h-6 text-white" />
+          </div>
+          <div className="absolute bottom-[20%] -right-5 w-12 h-12 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-purple-500/30 z-20 flex items-center justify-center transform rotate-12 border-[3px] border-[var(--bg-main)] animate-bounce cursor-pointer" style={{ animationDuration: '3.5s' }}>
+            <Infinity className="w-5 h-5 text-white" />
           </div>
         </div>
       )}
