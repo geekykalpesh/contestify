@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { userApi } from "../services/api";
 import { useToast } from "../context/ToastContext";
+import { useUpload } from "../context/UploadContext";
 import { X, UploadCloud, Film, Image as ImageIcon, Sparkles, Sliders, Camera, Check } from "lucide-react";
 
 const CATEGORIES = [
@@ -18,6 +19,7 @@ const CATEGORIES = [
 
 export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
   const { toast } = useToast();
+  const { startUpload } = useUpload();
   const [caption, setCaption] = useState("");
   const [category, setCategory] = useState("Tech");
   const [file, setFile] = useState(null);
@@ -174,7 +176,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!caption.trim()) {
       setError("Please enter a caption");
@@ -185,40 +187,43 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
       return;
     }
 
-    try {
-      setSubmitting(true);
-      setError(null);
+    const formData = new FormData();
+    formData.append("caption", caption);
+    formData.append("category", category);
+    formData.append("media", file);
 
-      const formData = new FormData();
-      formData.append("caption", caption);
-      formData.append("category", category);
-      formData.append("media", file);
-
-      if (thumbnailFile) {
-        formData.append("thumbnail", thumbnailFile);
-      } else if (thumbnailData) {
-        formData.append("thumbnailData", thumbnailData);
-      }
-
-      await userApi.post("/posts", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-
-      setCaption("");
-      setFile(null);
-      setPreviewUrl(null);
-      setThumbnailData(null);
-      setThumbnailFile(null);
-      setThumbnailPreviewUrl(null);
-      toast.success("Your post has been published successfully!", "Post Published");
-      onClose();
-      window.dispatchEvent(new Event("post_created"));
-      if (onPostCreated) onPostCreated();
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to create post");
-    } finally {
-      setSubmitting(false);
+    if (thumbnailFile) {
+      formData.append("thumbnail", thumbnailFile);
+    } else if (thumbnailData) {
+      formData.append("thumbnailData", thumbnailData);
     }
+
+    const activePreview = thumbnailPreviewUrl || previewUrl;
+
+    // Close modal immediately like TikTok & Instagram
+    onClose();
+
+    // Launch background upload with live progress tracking bar
+    startUpload({
+      formData,
+      previewUrl: activePreview,
+      caption,
+      onSuccess: () => {
+        if (onPostCreated) onPostCreated();
+      },
+      onError: (errMsg) => {
+        toast.error(errMsg, "Upload Failed");
+      }
+    });
+
+    // Reset local modal state
+    setCaption("");
+    setFile(null);
+    setPreviewUrl(null);
+    setThumbnailData(null);
+    setThumbnailFile(null);
+    setThumbnailPreviewUrl(null);
+    setError(null);
   };
 
   return (

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { ToastProvider } from "./context/ToastContext";
+import { UploadProvider } from "./context/UploadContext";
 import { Navbar } from "./components/Navbar";
 import { FeedPage } from "./pages/FeedPage";
 import { AuthPage } from "./pages/AuthPage";
@@ -71,55 +72,57 @@ export function App() {
 
   return (
     <Provider store={store}>
-      <ToastProvider>
-        <GlobalSocketListener>
-          <BrowserRouter>
-          <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] flex flex-col transition-colors duration-200">
-            <Navbar />
-            <main className="flex-1">
-              <Routes>
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <FeedPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <ProfilePage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile/:identifier"
-                  element={
-                    <ProtectedRoute>
-                      <ProfilePage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin"
-                  element={
-                    <AdminRoute>
-                      <AdminDashboard />
-                    </AdminRoute>
-                  }
-                />
-                <Route path="*" element={<Navigate to="/auth?mode=login" replace />} />
-              </Routes>
-            </main>
-          </div>
-        </BrowserRouter>
-      </GlobalSocketListener>
-    </ToastProvider>
+      <UploadProvider>
+        <ToastProvider>
+          <GlobalSocketListener>
+            <BrowserRouter>
+              <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] flex flex-col transition-colors duration-200">
+                <Navbar />
+                <main className="flex-1">
+                  <Routes>
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route
+                      path="/"
+                      element={
+                        <ProtectedRoute>
+                          <FeedPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/profile"
+                      element={
+                        <ProtectedRoute>
+                          <ProfilePage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/profile/:identifier"
+                      element={
+                        <ProtectedRoute>
+                          <ProfilePage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin"
+                      element={
+                        <AdminRoute>
+                          <AdminDashboard />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route path="*" element={<Navigate to="/auth?mode=login" replace />} />
+                  </Routes>
+                </main>
+              </div>
+            </BrowserRouter>
+          </GlobalSocketListener>
+        </ToastProvider>
+      </UploadProvider>
     </Provider>
   );
 }
