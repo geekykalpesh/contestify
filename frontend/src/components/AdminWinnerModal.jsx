@@ -166,13 +166,13 @@ export const AdminWinnerModal = ({ winner, onClose }) => {
                   <div className="relative aspect-video max-h-72 bg-black flex items-center justify-center overflow-hidden">
                     {post.isVideo || post.mediaUrl.endsWith(".mp4") || post.mediaUrl.includes("/video/") ? (
                       <video
-                        src={post.mediaUrl}
+                        src={getMediaUrl(post.mediaUrl)}
                         controls
                         className="w-full h-full object-contain"
                       />
                     ) : (
                       <img
-                        src={post.mediaUrl}
+                        src={getMediaUrl(post.mediaUrl)}
                         alt="Winning Post Media"
                         className="w-full h-full object-contain"
                       />

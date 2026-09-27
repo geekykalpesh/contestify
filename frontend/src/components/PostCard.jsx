@@ -189,6 +189,12 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
 
   const mediaSource = getMediaUrl(post.mediaUrl);
   const posterSource = post.thumbnailUrl ? getMediaUrl(post.thumbnailUrl) : null;
+  const isVideoPost =
+    post.mediaType === "video" ||
+    post.isVideo ||
+    Boolean(post.mediaUrl && post.mediaUrl.match(/\.(mp4|mov|webm|mkv|avi|m3u8)($|\?)/i)) ||
+    Boolean(post.mediaUrl && post.mediaUrl.includes("/video/upload/")) ||
+    Boolean(post.mediaUrl && post.mediaUrl.includes("/creator-contest-reels/"));
 
   const handleFollow = () => {
     setFollowAnimating(true);
@@ -251,7 +257,7 @@ export const PostCard = ({ post, inModal = false, onClose, onActive, onToggleCom
         </div>
 
         {/* Video / Image Display */}
-        {post.mediaType === "video" ? (
+        {isVideoPost ? (
           <div className="relative w-full h-full cursor-pointer" onClick={handleVideoTap}>
             <video
               ref={videoRef}

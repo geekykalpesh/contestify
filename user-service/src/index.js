@@ -50,18 +50,23 @@ const authLimiter = rateLimit({
 app.use("/api", globalLimiter);
 app.use("/api/auth", authLimiter);
 
-// Static media file serving with aggressive Cloudflare CDN Edge Cache headers
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "../uploads"), {
-    maxAge: "365d",
-    immutable: true,
-    setHeaders: (res) => {
-      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-      res.setHeader("Access-Control-Allow-Origin", "*");
-    }
-  })
-);
+// Static media file serving from both root and service upload directories
+const rootUploads = path.join(__dirname, "../../uploads");
+const serviceUploads = path.join(__dirname, "../uploads");
+if (!fs.existsSync(rootUploads)) fs.mkdirSync(rootUploads, { recursive: true });
+if (!fs.existsSync(serviceUploads)) fs.mkdirSync(serviceUploads, { recursive: true });
+
+const staticOptions = {
+  maxAge: "365d",
+  immutable: true,
+  setHeaders: (res) => {
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+};
+
+app.use("/uploads", express.static(rootUploads, staticOptions));
+app.use("/uploads", express.static(serviceUploads, staticOptions));
 
 // Root Landing Route
 app.get("/", (req, res) => {

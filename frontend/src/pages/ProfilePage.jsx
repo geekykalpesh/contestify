@@ -608,13 +608,20 @@ export const ProfilePage = () => {
                 const mediaSource = getMediaUrl(post.mediaUrl);
                 const coverSource = post.thumbnailUrl ? getMediaUrl(post.thumbnailUrl) : null;
 
+                const isVideo =
+                  post.mediaType === "video" ||
+                  post.isVideo ||
+                  Boolean(post.mediaUrl && post.mediaUrl.match(/\.(mp4|mov|webm|mkv|avi|m3u8)($|\?)/i)) ||
+                  Boolean(post.mediaUrl && post.mediaUrl.includes("/video/upload/")) ||
+                  Boolean(post.mediaUrl && post.mediaUrl.includes("/creator-contest-reels/"));
+
                 return (
                   <div
                     key={post._id}
                     onClick={() => setSelectedPost(post)}
                     className="relative aspect-square bg-[var(--bg-main)] rounded-xl overflow-hidden cursor-pointer group border border-[var(--border-main)] hover:border-sky-500/50 transition-all shadow-sm"
                   >
-                    {post.mediaType === "video" ? (
+                    {isVideo ? (
                       coverSource ? (
                         <img src={coverSource} alt={post.caption} className="w-full h-full object-cover" />
                       ) : (
@@ -624,7 +631,7 @@ export const ProfilePage = () => {
                       <img src={mediaSource} alt={post.caption} className="w-full h-full object-cover" />
                     )}
 
-                    {post.mediaType === "video" && (
+                    {isVideo && (
                       <div className="absolute top-2 right-2 p-1 rounded-md bg-black/70 text-white backdrop-blur-md">
                         <Play className="w-3.5 h-3.5 fill-current" />
                       </div>

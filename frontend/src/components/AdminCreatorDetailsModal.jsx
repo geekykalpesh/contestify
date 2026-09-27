@@ -250,10 +250,10 @@ export const AdminCreatorDetailsModal = ({ creator, onClose }) => {
                       <div className="flex items-center gap-3">
                         {post.mediaUrl && (
                           <div className="w-16 h-16 rounded-xl bg-black overflow-hidden shrink-0 border border-[var(--border-main)]">
-                            {post.mediaType === "video" || post.isVideo || post.mediaUrl?.endsWith(".mp4") ? (
-                              <video src={post.mediaUrl} className="w-full h-full object-cover" muted />
+                            {post.mediaType === "video" || post.isVideo || post.mediaUrl?.match(/\.(mp4|mov|webm|mkv|avi)($|\?)/i) ? (
+                              <video src={getMediaUrl(post.mediaUrl)} className="w-full h-full object-cover" muted />
                             ) : (
-                              <img src={post.mediaUrl} alt="Post preview" className="w-full h-full object-cover" />
+                              <img src={getMediaUrl(post.mediaUrl)} alt="Post preview" className="w-full h-full object-cover" />
                             )}
                           </div>
                         )}
